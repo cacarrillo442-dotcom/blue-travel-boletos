@@ -1,0 +1,416 @@
+// ---------- Select population ----------
+
+function populateAirportSelect(select) {
+  select.innerHTML = '';
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = '-- Selecciona --';
+  select.appendChild(blank);
+  AIRPORTS.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.code;
+    opt.textContent = airportLabel(a);
+    select.appendChild(opt);
+  });
+}
+
+function populateAirlineSelect(select) {
+  select.innerHTML = '';
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = '-- Selecciona --';
+  select.appendChild(blank);
+  AIRLINES.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  const other = document.createElement('option');
+  other.value = 'OTRA';
+  other.textContent = 'Otra (especificar)';
+  select.appendChild(other);
+}
+
+// ---------- Custom catalog (persisted in this browser) ----------
+
+const LS_AIRLINES = 'bt_custom_airlines';
+const LS_AIRPORTS = 'bt_custom_airports';
+
+function loadCustomCatalog() {
+  try {
+    JSON.parse(localStorage.getItem(LS_AIRLINES) || '[]').forEach(name => {
+      if (!AIRLINES.includes(name)) AIRLINES.push(name);
+    });
+  } catch (e) { /* ignore corrupted storage */ }
+  try {
+    JSON.parse(localStorage.getItem(LS_AIRPORTS) || '[]').forEach(a => {
+      if (!AIRPORTS.some(x => x.code === a.code)) AIRPORTS.push(a);
+    });
+  } catch (e) { /* ignore corrupted storage */ }
+}
+
+function saveCustomAirline(name) {
+  const list = JSON.parse(localStorage.getItem(LS_AIRLINES) || '[]');
+  list.push(name);
+  localStorage.setItem(LS_AIRLINES, JSON.stringify(list));
+}
+
+function saveCustomAirport(airport) {
+  const list = JSON.parse(localStorage.getItem(LS_AIRPORTS) || '[]');
+  list.push(airport);
+  localStorage.setItem(LS_AIRPORTS, JSON.stringify(list));
+}
+
+function refreshAllSelects() {
+  document.querySelectorAll('.airline-select').forEach(sel => {
+    const prev = sel.value;
+    populateAirlineSelect(sel);
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  });
+  document.querySelectorAll('.airport-select').forEach(sel => {
+    const prev = sel.value;
+    populateAirportSelect(sel);
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  });
+}
+
+loadCustomCatalog();
+
+document.getElementById('addAirlineBtn').addEventListener('click', () => {
+  const input = document.getElementById('newAirlineName');
+  const name = input.value.trim().toUpperCase();
+  if (!name || AIRLINES.includes(name)) { input.value = ''; return; }
+  AIRLINES.push(name);
+  saveCustomAirline(name);
+  refreshAllSelects();
+  input.value = '';
+});
+
+document.getElementById('addAirportBtn').addEventListener('click', () => {
+  const codeInput = document.getElementById('newAirportCode');
+  const cityInput = document.getElementById('newAirportCity');
+  const countryInput = document.getElementById('newAirportCountry');
+  const nameInput = document.getElementById('newAirportName');
+  const code = codeInput.value.trim().toUpperCase();
+  const city = cityInput.value.trim();
+  const country = countryInput.value.trim();
+  const name = nameInput.value.trim();
+
+  if (!code || !city || !country || !name) {
+    alert('Completa código IATA, ciudad, país y nombre del aeropuerto.');
+    return;
+  }
+  if (AIRPORTS.some(a => a.code === code)) {
+    alert('Ese código IATA ya existe en el catálogo.');
+    return;
+  }
+
+  const airport = { code, city, country, name };
+  AIRPORTS.push(airport);
+  saveCustomAirport(airport);
+  refreshAllSelects();
+  codeInput.value = '';
+  cityInput.value = '';
+  countryInput.value = '';
+  nameInput.value = '';
+});
+
+// ---------- Passengers ----------
+
+const passengersContainer = document.getElementById('passengersContainer');
+const passengerTemplate = document.getElementById('passengerTemplate');
+
+function addPassengerRow() {
+  const node = passengerTemplate.content.cloneNode(true);
+  const row = node.querySelector('.passenger-row');
+  row.querySelector('.btn-remove').addEventListener('click', () => {
+    if (passengersContainer.querySelectorAll('.passenger-row').length > 1) row.remove();
+  });
+  passengersContainer.appendChild(node);
+}
+
+document.getElementById('addPassenger').addEventListener('click', addPassengerRow);
+addPassengerRow();
+
+// ---------- Flight blocks (ida / regreso) ----------
+
+const flightFieldsTemplate = document.getElementById('flightFieldsTemplate');
+
+function buildFlightBlock(container) {
+  const node = flightFieldsTemplate.content.cloneNode(true);
+  container.appendChild(node);
+
+  const airlineSelect = container.querySelector('.fl-airline');
+  const airlineOtherWrap = container.querySelector('.fl-airline-other-wrap');
+  populateAirlineSelect(airlineSelect);
+  airlineSelect.addEventListener('change', () => {
+    airlineOtherWrap.classList.toggle('hidden', airlineSelect.value !== 'OTRA');
+  });
+
+  container.querySelectorAll('.airport-select').forEach(populateAirportSelect);
+
+  const escalaFields = container.querySelector('.fl-escala-fields');
+  container.querySelectorAll('.fl-tipo').forEach(radio => {
+    radio.addEventListener('change', () => {
+      escalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
+    });
+  });
+}
+
+const idaContainer = document.getElementById('idaContainer');
+const regresoContainer = document.getElementById('regresoContainer');
+buildFlightBlock(idaContainer);
+buildFlightBlock(regresoContainer);
+
+document.getElementById('hasReturn').addEventListener('change', (e) => {
+  regresoContainer.classList.toggle('hidden', !e.target.checked);
+});
+
+// Prefill terms
+document.getElementById('terms').value = DEFAULT_TERMS;
+
+// ---------- Helpers ----------
+
+function formatDate(value) {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+function formatTime(value) {
+  if (!value) return '';
+  const [h, m] = value.split(':');
+  const hour = parseInt(h, 10);
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = ((hour + 11) % 12) + 1;
+  return `${String(hour12).padStart(2, '0')}:${m} ${suffix}`;
+}
+
+function readFlightBlock(container) {
+  const airlineSelect = container.querySelector('.fl-airline');
+  const airline = airlineSelect.value === 'OTRA'
+    ? container.querySelector('.fl-airline-other').value.trim()
+    : airlineSelect.value;
+
+  const tipoRadio = container.querySelector('.fl-tipo:checked');
+  const tipo = tipoRadio ? tipoRadio.value : 'DIRECTO';
+
+  return {
+    airline,
+    origin: container.querySelector('.fl-origin').value,
+    dest: container.querySelector('.fl-dest').value,
+    tipo,
+    escalaTiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
+    escalaLugar: container.querySelector('.fl-escala-lugar').value,
+    fechaSalida: formatDate(container.querySelector('.fl-fecha-salida').value),
+    horaSalida: formatTime(container.querySelector('.fl-hora-salida').value),
+    fechaLlegada: formatDate(container.querySelector('.fl-fecha-llegada').value),
+    horaLlegada: formatTime(container.querySelector('.fl-hora-llegada').value),
+  };
+}
+
+// ---------- PDF generation ----------
+
+const PRIMARY = [3, 60, 105];
+const PRIMARY_2 = [18, 111, 153];
+const TEXT = [74, 74, 74];
+const NEUTRAL = [224, 224, 224];
+const WHITE = [255, 255, 255];
+const GREEN = [39, 132, 74];
+const GRAY = [150, 150, 150];
+
+const PAGE_W = 210;
+const PAGE_H = 297;
+const MARGIN = 14;
+const BANNER_H = 78;
+
+function drawBanner(doc) {
+  try {
+    doc.addImage(BANNER_BASE64, 'PNG', 0, 0, PAGE_W, BANNER_H);
+  } catch (e) { /* banner optional */ }
+  return BANNER_H + 8;
+}
+
+function drawFooter(doc, pageNum) {
+  doc.setDrawColor(...NEUTRAL);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, PAGE_H - 14, PAGE_W - MARGIN, PAGE_H - 14);
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
+  doc.text(`Página ${pageNum}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
+}
+
+function sectionTitle(doc, y, label) {
+  doc.setFillColor(...PRIMARY_2);
+  doc.rect(MARGIN, y, 3, 5, 'F');
+  doc.setTextColor(...PRIMARY);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(label, MARGIN + 6, y + 4);
+  return y + 10;
+}
+
+function flightSummaryLines(f) {
+  const originAirport = findAirport(f.origin);
+  const destAirport = findAirport(f.dest);
+  const tipoLine = f.tipo === 'ESCALA'
+    ? `Con escala en ${f.escalaLugar ? airportLabel(findAirport(f.escalaLugar) || { code: f.escalaLugar, city: '', country: '' }) : '-'}${f.escalaTiempo ? ' · ' + f.escalaTiempo + ' hrs' : ''}`
+    : 'Vuelo directo';
+  return { originAirport, destAirport, tipoLine };
+}
+
+function drawFlightCard(doc, y, title, f, ensureSpace) {
+  ensureSpace(46);
+  y = sectionTitle(doc, y, title);
+
+  const { originAirport, destAirport, tipoLine } = flightSummaryLines(f);
+  const boxH = 38;
+  doc.setDrawColor(...NEUTRAL);
+  doc.setFillColor(248, 250, 251);
+  doc.roundedRect(MARGIN, y, PAGE_W - MARGIN * 2, boxH, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PRIMARY);
+  doc.text(f.airline || 'Aerolínea', MARGIN + 5, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...TEXT);
+  doc.text(tipoLine, MARGIN + 5, y + 13);
+
+  const colOrigin = MARGIN + 5;
+  const colDest = MARGIN + 100;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PRIMARY_2);
+  doc.text('ORIGEN', colOrigin, y + 21);
+  doc.text('DESTINO', colDest, y + 21);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT);
+  doc.text(originAirport ? `${originAirport.city}, ${originAirport.country} (${originAirport.code})` : (f.origin || '-'), colOrigin, y + 27);
+  doc.text(destAirport ? `${destAirport.city}, ${destAirport.country} (${destAirport.code})` : (f.dest || '-'), colDest, y + 27);
+
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text(`Salida: ${f.fechaSalida || '-'} ${f.horaSalida || ''}`.trim(), colOrigin, y + 33);
+  doc.text(`Llegada: ${f.fechaLlegada || '-'} ${f.horaLlegada || ''}`.trim(), colDest, y + 33);
+
+  return y + boxH + 6;
+}
+
+function drawLuggageBadge(doc, x, y, label, active) {
+  const color = active ? GREEN : GRAY;
+  doc.setFillColor(...color);
+  doc.circle(x + 1.5, y - 1.2, 1.5, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...TEXT);
+  doc.text(`${label}: ${active ? 'Sí' : 'No'}`, x + 5, y);
+}
+
+function generatePDF(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  let page = 1;
+  let y = drawBanner(doc);
+
+  function ensureSpace(needed) {
+    if (y + needed > PAGE_H - 20) {
+      drawFooter(doc, page);
+      doc.addPage();
+      page += 1;
+      y = drawBanner(doc);
+    }
+  }
+
+  // Title + reference bar
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(...PRIMARY);
+  doc.text('BOLETO DE VIAJE', MARGIN, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  const refParts = [];
+  if (data.bookingRef) refParts.push(`Código de reserva: ${data.bookingRef}`);
+  if (data.ticketNumber) refParts.push(`No. de ticket: ${data.ticketNumber}`);
+  if (refParts.length) doc.text(refParts.join('   ·   '), PAGE_W - MARGIN, y, { align: 'right' });
+  y += 8;
+
+  // Passengers
+  ensureSpace(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...TEXT);
+  doc.text('Pasajero(s):', MARGIN, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.passengers.join(', ') || '-', MARGIN + 27, y);
+  y += 9;
+
+  // Luggage
+  ensureSpace(8);
+  drawLuggageBadge(doc, MARGIN, y, 'Artículo personal', data.luggage.personal);
+  drawLuggageBadge(doc, MARGIN + 60, y, 'Equipaje de mano (10 kg)', data.luggage.mano);
+  drawLuggageBadge(doc, MARGIN + 130, y, 'Equipaje de bodega (23 kg)', data.luggage.bodega);
+  y += 12;
+
+  // Flights
+  y = drawFlightCard(doc, y, 'VUELO DE IDA', data.ida, ensureSpace);
+  if (data.hasReturn) {
+    y = drawFlightCard(doc, y, 'VUELO DE REGRESO', data.regreso, ensureSpace);
+  }
+
+  // Terms
+  if (data.terms) {
+    ensureSpace(16);
+    y = sectionTitle(doc, y, 'TÉRMINOS Y CONDICIONES');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.8);
+    doc.setTextColor(...GRAY);
+    const lines = doc.splitTextToSize(data.terms, PAGE_W - MARGIN * 2 - 10);
+    lines.forEach(line => {
+      ensureSpace(5);
+      doc.text(line, MARGIN + 5, y);
+      y += 4.2;
+    });
+  }
+
+  drawFooter(doc, page);
+
+  const firstPassenger = data.passengers[0] || 'boleto';
+  const safeName = firstPassenger.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  doc.save(`boleto-${safeName || 'blue-travel'}.pdf`);
+}
+
+// ---------- Form submit ----------
+
+document.getElementById('ticketForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const passengers = Array.from(passengersContainer.querySelectorAll('.p-name'))
+    .map(input => input.value.trim())
+    .filter(Boolean);
+
+  const data = {
+    bookingRef: document.getElementById('bookingRef').value.trim(),
+    ticketNumber: document.getElementById('ticketNumber').value.trim(),
+    passengers,
+    luggage: {
+      personal: document.getElementById('eqPersonal').checked,
+      mano: document.getElementById('eqMano').checked,
+      bodega: document.getElementById('eqBodega').checked,
+    },
+    ida: readFlightBlock(idaContainer),
+    hasReturn: document.getElementById('hasReturn').checked,
+    regreso: readFlightBlock(regresoContainer),
+    terms: document.getElementById('terms').value.trim(),
+  };
+
+  generatePDF(data);
+});
