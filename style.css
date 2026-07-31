@@ -79,13 +79,13 @@ body {
 
 .grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px 16px;
 }
 
 .grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px 16px;
 }
 
@@ -208,6 +208,8 @@ select {
   border-radius: 6px;
   color: #222;
   background: #fafbfc;
+  width: 100%;
+  min-width: 0;
 }
 
 select:focus {
