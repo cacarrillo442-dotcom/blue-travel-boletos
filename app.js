@@ -223,13 +223,37 @@ const GRAY = [150, 150, 150];
 const PAGE_W = 210;
 const PAGE_H = 297;
 const MARGIN = 14;
-const BANNER_H = 78;
+const HEADER_H = 24;
+const LOGO_ASPECT = 987 / 420; // width / height of assets/logo-blue.png
 
-function drawBanner(doc) {
+function drawHeader(doc, data) {
+  const logoH = 15;
+  const logoY = (HEADER_H - logoH) / 2;
   try {
-    doc.addImage(BANNER_BASE64, 'PNG', 0, 0, PAGE_W, BANNER_H);
-  } catch (e) { /* banner optional */ }
-  return BANNER_H + 8;
+    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, logoY, logoH * LOGO_ASPECT, logoH);
+  } catch (e) { /* logo optional */ }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(...PRIMARY);
+  doc.text('BOLETO DE VIAJE', PAGE_W - MARGIN, 10, { align: 'right' });
+
+  const refParts = [];
+  if (data.bookingRef) refParts.push(`Código de reserva: ${data.bookingRef}`);
+  if (data.ticketNumber) refParts.push(`No. de ticket: ${data.ticketNumber}`);
+  if (refParts.length) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY);
+    doc.text(refParts.join('   ·   '), PAGE_W - MARGIN, 17, { align: 'right' });
+  }
+
+  doc.setFillColor(...PRIMARY_2);
+  doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
+  doc.setFillColor(...PRIMARY);
+  doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
+
+  return HEADER_H + 1.8 + 0.7 + 10;
 }
 
 function drawFooter(doc, pageNum) {
@@ -318,30 +342,16 @@ function generatePDF(data) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
   let page = 1;
-  let y = drawBanner(doc);
+  let y = drawHeader(doc, data);
 
   function ensureSpace(needed) {
     if (y + needed > PAGE_H - 20) {
       drawFooter(doc, page);
       doc.addPage();
       page += 1;
-      y = drawBanner(doc);
+      y = drawHeader(doc, data);
     }
   }
-
-  // Title + reference bar
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
-  doc.setTextColor(...PRIMARY);
-  doc.text('BOLETO DE VIAJE', MARGIN, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...GRAY);
-  const refParts = [];
-  if (data.bookingRef) refParts.push(`Código de reserva: ${data.bookingRef}`);
-  if (data.ticketNumber) refParts.push(`No. de ticket: ${data.ticketNumber}`);
-  if (refParts.length) doc.text(refParts.join('   ·   '), PAGE_W - MARGIN, y, { align: 'right' });
-  y += 8;
 
   // Passengers
   ensureSpace(12);
