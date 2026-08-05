@@ -156,6 +156,12 @@ function buildFlightBlock(container) {
       escalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
     });
   });
+
+  const escalaTiempo = container.querySelector('.fl-escala-tiempo');
+  escalaTiempo.addEventListener('input', () => {
+    const digits = escalaTiempo.value.replace(/\D/g, '').slice(0, 4);
+    escalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+  });
 }
 
 const idaContainer = document.getElementById('idaContainer');
