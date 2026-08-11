@@ -112,8 +112,72 @@
       <textarea id="terms" rows="5"></textarea>
     </section>
 
+    <section class="card">
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="wantsInvoice" />
+        Generar también una factura de venta (PDF aparte)
+      </label>
+
+      <div id="invoiceFields" class="hidden">
+        <h3>Comprador</h3>
+        <div class="grid-2">
+          <label>Nombre / razón social
+            <input type="text" id="invBuyerName" placeholder="Si lo dejas vacío, se usa el primer pasajero" />
+          </label>
+          <label>Fecha de la factura
+            <input type="date" id="invDate" />
+          </label>
+          <label>Dirección
+            <input type="text" id="invAddress" placeholder="Ej. 21097 S Dupont Hwy" />
+          </label>
+          <label>Pagado con
+            <input type="text" id="invPayment" placeholder="Ej. VISA terminada en 5150" />
+          </label>
+          <label>Ciudad
+            <input type="text" id="invCity" placeholder="Ej. Greenwood" />
+          </label>
+          <label>Estado / Provincia
+            <input type="text" id="invState" placeholder="Ej. Maryland" />
+          </label>
+          <label>País
+            <input type="text" id="invCountry" placeholder="Ej. EE.UU." />
+          </label>
+          <label>Código postal
+            <input type="text" id="invZip" placeholder="Ej. 19950" />
+          </label>
+        </div>
+
+        <div class="card-header">
+          <h3>Descripción del cobro</h3>
+          <button type="button" class="btn-add" id="regenDescBtn">↻ Generar desde el boleto</button>
+        </div>
+        <label>Descripción
+          <textarea id="invDescription" rows="6" placeholder="Da clic en &quot;Generar desde el boleto&quot; para llenar esto automáticamente"></textarea>
+        </label>
+
+        <div class="grid-2">
+          <label>Cantidad
+            <input type="number" id="invQty" min="1" value="1" />
+          </label>
+          <label>Precio unitario
+            <input type="text" inputmode="decimal" id="invUnitPrice" placeholder="Ej. 1016.34" />
+          </label>
+          <label>Nombre del impuesto / cargo
+            <input type="text" id="invTaxLabel" value="Taxes tiquetes agencia" />
+          </label>
+          <label>Monto del impuesto / cargo
+            <input type="text" inputmode="decimal" id="invTaxAmount" placeholder="Ej. 113.00" />
+          </label>
+        </div>
+
+        <label>Notas
+          <textarea id="invNotes" rows="2"></textarea>
+        </label>
+      </div>
+    </section>
+
     <div class="actions">
-      <button type="submit" class="btn-primary">Generar boleto (PDF)</button>
+      <button type="submit" class="btn-primary" id="submitBtn">Generar boleto (PDF)</button>
     </div>
 
   </form>

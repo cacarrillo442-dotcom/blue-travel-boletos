@@ -404,16 +404,228 @@ function generatePDF(data) {
   doc.save(`boleto-${safeName || 'blue-travel'}.pdf`);
 }
 
+// ---------- Factura (opcional) ----------
+
+const DEFAULT_INVOICE_NOTES = 'Si tiene alguna pregunta o requiere asistencia, por favor contáctenos vía WhatsApp o por correo electrónico.';
+
+document.getElementById('invNotes').value = DEFAULT_INVOICE_NOTES;
+document.getElementById('invDate').valueAsDate = new Date();
+
+const wantsInvoiceCheckbox = document.getElementById('wantsInvoice');
+const invoiceFields = document.getElementById('invoiceFields');
+const submitBtn = document.getElementById('submitBtn');
+
+wantsInvoiceCheckbox.addEventListener('change', () => {
+  invoiceFields.classList.toggle('hidden', !wantsInvoiceCheckbox.checked);
+  submitBtn.textContent = wantsInvoiceCheckbox.checked ? 'Generar boleto y factura (PDF)' : 'Generar boleto (PDF)';
+});
+
+function luggageSummary(luggage) {
+  const items = [];
+  if (luggage.personal) items.push('artículo personal');
+  if (luggage.mano) items.push('equipaje de mano (10 kg)');
+  if (luggage.bodega) items.push('equipaje de bodega (23 kg)');
+  return items.length ? items.join(' + ') : 'no incluido';
+}
+
+function buildInvoiceDescription(data) {
+  const lines = [];
+  lines.push(`Tiquetes aéreos ${data.hasReturn ? 'ida y regreso' : 'solo ida'}`);
+
+  const airlines = Array.from(new Set([data.ida.airline, data.hasReturn ? data.regreso.airline : null].filter(Boolean)));
+  lines.push(`Aerolínea: ${airlines.join(' / ') || '-'}`);
+
+  const originAirport = findAirport(data.ida.origin);
+  const destAirport = findAirport(data.ida.dest);
+  const originLabel = originAirport ? `${originAirport.city} (${originAirport.code})` : (data.ida.origin || '-');
+  const destLabel = destAirport ? `${destAirport.city} (${destAirport.code})` : (data.ida.dest || '-');
+  let ruta = `${originLabel} – ${destLabel}`;
+  if (data.hasReturn) ruta += ` – ${originLabel}`;
+  lines.push(`Ruta: ${ruta}`);
+
+  let fechas = data.ida.fechaSalida || '-';
+  if (data.hasReturn && data.regreso.fechaSalida) fechas += ` – ${data.regreso.fechaSalida}`;
+  lines.push(`Fechas: ${fechas}`);
+
+  lines.push(`Pasajeros: ${data.passengers.length || 0}${data.passengers.length ? ' (' + data.passengers.join(', ') + ')' : ''}`);
+  if (data.bookingRef) lines.push(`Código reserva: ${data.bookingRef}`);
+  lines.push(`Equipaje: ${luggageSummary(data.luggage)}`);
+
+  return lines.join('\n');
+}
+
+document.getElementById('regenDescBtn').addEventListener('click', () => {
+  document.getElementById('invDescription').value = buildInvoiceDescription(collectTicketData());
+});
+
+function parseMoney(str) {
+  const n = Number((str || '').replace(/[^0-9.-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function formatMoney(n) {
+  const sign = n < 0 ? '-' : '';
+  const [intPart, decPart] = Math.abs(n).toFixed(2).split('.');
+  const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${sign}$${withThousands},${decPart}`;
+}
+
+function collectInvoiceFields() {
+  return {
+    date: formatDate(document.getElementById('invDate').value),
+    buyerName: document.getElementById('invBuyerName').value.trim(),
+    address: document.getElementById('invAddress').value.trim(),
+    city: document.getElementById('invCity').value.trim(),
+    state: document.getElementById('invState').value.trim(),
+    country: document.getElementById('invCountry').value.trim(),
+    zip: document.getElementById('invZip').value.trim(),
+    payment: document.getElementById('invPayment').value.trim(),
+    description: document.getElementById('invDescription').value.trim(),
+    qty: parseFloat(document.getElementById('invQty').value) || 1,
+    unitPrice: parseMoney(document.getElementById('invUnitPrice').value),
+    taxLabel: document.getElementById('invTaxLabel').value.trim() || 'Impuesto',
+    taxAmount: parseMoney(document.getElementById('invTaxAmount').value),
+    notes: document.getElementById('invNotes').value.trim(),
+  };
+}
+
+function generateInvoicePDF(ticketData, inv) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  doc.setFillColor(...PRIMARY);
+  doc.rect(0, 0, PAGE_W, 4, 'F');
+
+  let y = 16;
+  try {
+    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, y - 8, 10 * LOGO_ASPECT, 10);
+  } catch (e) { /* logo optional */ }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...PRIMARY_2);
+  doc.text('Blue travel', MARGIN, y + 14);
+
+  doc.setFontSize(24);
+  doc.setTextColor(...PRIMARY);
+  doc.text('Factura', MARGIN, y + 26);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  doc.text(`Fecha: ${inv.date || '-'}`, MARGIN, y + 33);
+
+  y += 42;
+
+  const buyerName = inv.buyerName || ticketData.passengers[0] || '-';
+  const col2X = MARGIN + 100;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...TEXT);
+  doc.text('Comprador', MARGIN, y);
+  doc.text('Pagado con', col2X, y);
+  y += 6;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const cityLine = [inv.city, inv.state, inv.country].filter(Boolean).join(', ');
+  const buyerLines = [buyerName, inv.address, cityLine, inv.zip ? `Código postal ${inv.zip}` : ''].filter(Boolean);
+  let by = y;
+  buyerLines.forEach(line => { doc.text(line, MARGIN, by); by += 5; });
+  doc.text(inv.payment || '-', col2X, y);
+
+  y = Math.max(by, y + 5) + 8;
+
+  doc.setDrawColor(...NEUTRAL);
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+  y += 6;
+
+  const colQty = PAGE_W - MARGIN - 60;
+  const colUnit = PAGE_W - MARGIN - 32;
+  const colTotal = PAGE_W - MARGIN;
+  const descWidth = colQty - MARGIN - 10;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PRIMARY_2);
+  doc.text('DESCRIPCIÓN', MARGIN, y);
+  doc.text('CANT.', colQty, y, { align: 'right' });
+  doc.text('P. UNITARIO', colUnit, y, { align: 'right' });
+  doc.text('P. TOTAL', colTotal, y, { align: 'right' });
+  y += 4;
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+  y += 7;
+
+  const lineTotal = inv.qty * inv.unitPrice;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT);
+  doc.text(String(inv.qty), colQty, y, { align: 'right' });
+  doc.text(formatMoney(inv.unitPrice), colUnit, y, { align: 'right' });
+  doc.text(formatMoney(lineTotal), colTotal, y, { align: 'right' });
+
+  doc.setFontSize(8.5);
+  const descLines = doc.splitTextToSize(inv.description || '-', descWidth);
+  const descTop = y;
+  descLines.forEach(line => { doc.text(line, MARGIN, y); y += 4.3; });
+
+  y = Math.max(y, descTop + 5) + 8;
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+  y += 10;
+
+  const subtotal = lineTotal;
+  const total = subtotal + inv.taxAmount;
+
+  if (inv.notes) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    const notesLines = doc.splitTextToSize(inv.notes, 95);
+    let ny = y;
+    notesLines.forEach(line => { doc.text(line, MARGIN, ny); ny += 4; });
+  }
+
+  const totalsX = PAGE_W - MARGIN;
+  const totalsLabelX = PAGE_W - MARGIN - 55;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT);
+  doc.text('Subtotal', totalsLabelX, y);
+  doc.text(formatMoney(subtotal), totalsX, y, { align: 'right' });
+  y += 6;
+  doc.text(inv.taxLabel, totalsLabelX, y);
+  doc.text(formatMoney(inv.taxAmount), totalsX, y, { align: 'right' });
+  y += 9;
+  doc.setDrawColor(...NEUTRAL);
+  doc.line(totalsLabelX, y - 5, totalsX, y - 5);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...PRIMARY_2);
+  doc.text('Total', totalsLabelX, y);
+  doc.setFontSize(13);
+  doc.setTextColor(...PRIMARY);
+  doc.text(formatMoney(total), totalsX, y + 7, { align: 'right' });
+
+  doc.setDrawColor(...NEUTRAL);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, PAGE_H - 14, PAGE_W - MARGIN, PAGE_H - 14);
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
+
+  const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  doc.save(`factura-${safeName || 'blue-travel'}.pdf`);
+}
+
 // ---------- Form submit ----------
 
-document.getElementById('ticketForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-
+function collectTicketData() {
   const passengers = Array.from(passengersContainer.querySelectorAll('.p-name'))
     .map(input => input.value.trim())
     .filter(Boolean);
 
-  const data = {
+  return {
     bookingRef: document.getElementById('bookingRef').value.trim(),
     ticketNumber: document.getElementById('ticketNumber').value.trim(),
     passengers,
@@ -427,6 +639,15 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
     regreso: readFlightBlock(regresoContainer),
     terms: document.getElementById('terms').value.trim(),
   };
+}
 
+document.getElementById('ticketForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const data = collectTicketData();
   generatePDF(data);
+
+  if (document.getElementById('wantsInvoice').checked) {
+    generateInvoicePDF(data, collectInvoiceFields());
+  }
 });

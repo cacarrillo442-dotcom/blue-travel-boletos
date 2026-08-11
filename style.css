@@ -66,6 +66,17 @@ body {
   font-weight: 600;
 }
 
+.card h3 {
+  margin: 20px 0 10px;
+  font-size: 0.9rem;
+  color: var(--color-primary-2);
+  font-weight: 600;
+}
+
+.card h3:first-of-type {
+  margin-top: 16px;
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -73,7 +84,8 @@ body {
   margin-bottom: 12px;
 }
 
-.card-header h2 {
+.card-header h2,
+.card-header h3 {
   margin: 0;
 }
 
