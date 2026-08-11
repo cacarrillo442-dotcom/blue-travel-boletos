@@ -183,20 +183,15 @@
         </div>
 
         <div class="card-header">
-          <h3>Descripción del cobro</h3>
-          <button type="button" class="btn-add" id="regenDescBtn">↻ Generar desde el boleto</button>
+          <h3>Conceptos a cobrar</h3>
+          <div class="inline-add-row" style="margin-top:0">
+            <button type="button" class="btn-add" id="regenDescBtn">↻ Generar desde el boleto</button>
+            <button type="button" class="btn-add" id="addInvItemBtn">+ Agregar concepto</button>
+          </div>
         </div>
-        <label>Descripción
-          <textarea id="invDescription" rows="6" placeholder="Da clic en &quot;Generar desde el boleto&quot; para llenar esto automáticamente"></textarea>
-        </label>
+        <div id="invItemsContainer"></div>
 
         <div class="grid-2">
-          <label>Cantidad
-            <input type="number" id="invQty" min="1" value="1" />
-          </label>
-          <label>Precio unitario
-            <input type="text" inputmode="decimal" id="invUnitPrice" placeholder="Ej. 1016.34" />
-          </label>
           <label>Nombre del impuesto / cargo
             <input type="text" id="invTaxLabel" value="Taxes tiquetes agencia" />
           </label>
@@ -228,6 +223,23 @@
     <label>Nombre del pasajero
       <input type="text" class="p-name" placeholder="Ej. Lizbeth Reyes" />
     </label>
+  </div>
+</template>
+
+<template id="invItemTemplate">
+  <div class="segment-row inv-item-row">
+    <button type="button" class="btn-remove" title="Eliminar concepto">×</button>
+    <label>Descripción
+      <textarea class="inv-item-desc" rows="4" placeholder="Ej. Tiquetes aéreos ida y regreso..."></textarea>
+    </label>
+    <div class="grid-2">
+      <label>Cantidad
+        <input type="number" class="inv-item-qty" min="1" value="1" />
+      </label>
+      <label>Precio unitario
+        <input type="text" inputmode="decimal" class="inv-item-price" placeholder="Ej. 1016.34" />
+      </label>
+    </div>
   </div>
 </template>
 

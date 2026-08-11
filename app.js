@@ -274,13 +274,14 @@ function drawFooter(doc, pageNum) {
   doc.text(`WhatsApp ${AGENCY_WHATSAPP}  ·  ${AGENCY_EMAIL}`, MARGIN, PAGE_H - 5.5);
 }
 
-function drawContactFooter(doc) {
+function drawContactFooter(doc, pageNum) {
   doc.setDrawColor(...NEUTRAL);
   doc.setLineWidth(0.3);
   doc.line(MARGIN, PAGE_H - 14, PAGE_W - MARGIN, PAGE_H - 14);
   doc.setFontSize(8);
   doc.setTextColor(...GRAY);
   doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
+  if (pageNum) doc.text(`Página ${pageNum}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
   doc.setFontSize(7.5);
   doc.text(`WhatsApp ${AGENCY_WHATSAPP}  ·  ${AGENCY_EMAIL}`, MARGIN, PAGE_H - 5.5);
 }
@@ -503,8 +504,25 @@ function buildInvoiceDescription(data) {
   return lines.join('\n');
 }
 
+const invItemsContainer = document.getElementById('invItemsContainer');
+const invItemTemplate = document.getElementById('invItemTemplate');
+
+function addInvItemRow() {
+  const node = invItemTemplate.content.cloneNode(true);
+  const row = node.querySelector('.inv-item-row');
+  row.querySelector('.btn-remove').addEventListener('click', () => {
+    if (invItemsContainer.querySelectorAll('.inv-item-row').length > 1) row.remove();
+  });
+  invItemsContainer.appendChild(node);
+  return invItemsContainer.lastElementChild;
+}
+
+document.getElementById('addInvItemBtn').addEventListener('click', () => addInvItemRow());
+addInvItemRow();
+
 document.getElementById('regenDescBtn').addEventListener('click', () => {
-  document.getElementById('invDescription').value = buildInvoiceDescription(collectTicketData());
+  const firstRow = invItemsContainer.querySelector('.inv-item-row') || addInvItemRow();
+  firstRow.querySelector('.inv-item-desc').value = buildInvoiceDescription(collectTicketData());
 });
 
 function parseMoney(str) {
@@ -533,19 +551,18 @@ function collectInvoiceFields() {
     zip: document.getElementById('invZip').value.trim(),
     payment: buildPaymentText(),
     currency: document.getElementById('invCurrency').value,
-    description: document.getElementById('invDescription').value.trim(),
-    qty: parseFloat(document.getElementById('invQty').value) || 1,
-    unitPrice: parseMoney(document.getElementById('invUnitPrice').value),
+    items: Array.from(invItemsContainer.querySelectorAll('.inv-item-row')).map(row => ({
+      description: row.querySelector('.inv-item-desc').value.trim(),
+      qty: parseFloat(row.querySelector('.inv-item-qty').value) || 1,
+      unitPrice: parseMoney(row.querySelector('.inv-item-price').value),
+    })).filter(item => item.description || item.unitPrice),
     taxLabel: document.getElementById('invTaxLabel').value.trim() || 'Impuesto',
     taxAmount: parseMoney(document.getElementById('invTaxAmount').value),
     notes: document.getElementById('invNotes').value.trim(),
   };
 }
 
-function generateInvoicePDF(ticketData, inv) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-
+function drawInvoiceHeader(doc, inv) {
   const logoH = 15;
   const logoY = (HEADER_H - logoH) / 2;
   try {
@@ -567,7 +584,24 @@ function generateInvoicePDF(ticketData, inv) {
   doc.setFillColor(...PRIMARY);
   doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
 
-  let y = HEADER_H + 1.8 + 0.7 + 10;
+  return HEADER_H + 1.8 + 0.7 + 10;
+}
+
+function generateInvoicePDF(ticketData, inv) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  let page = 1;
+  let y = drawInvoiceHeader(doc, inv);
+
+  function ensureSpace(needed) {
+    if (y + needed > PAGE_H - 20) {
+      drawContactFooter(doc, page);
+      doc.addPage();
+      page += 1;
+      y = drawInvoiceHeader(doc, inv);
+    }
+  }
 
   const buyerName = inv.buyerName || ticketData.passengers[0] || '-';
   const col2X = MARGIN + 100;
@@ -609,25 +643,47 @@ function generateInvoicePDF(ticketData, inv) {
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
   y += 7;
 
-  const lineTotal = inv.qty * inv.unitPrice;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...TEXT);
-  doc.text(String(inv.qty), colQty, y, { align: 'right' });
-  doc.text(formatMoney(inv.unitPrice, inv.currency), colUnit, y, { align: 'right' });
-  doc.text(formatMoney(lineTotal, inv.currency), colTotal, y, { align: 'right' });
+  const items = inv.items && inv.items.length ? inv.items : [{ description: '-', qty: 1, unitPrice: 0 }];
+  let subtotal = 0;
 
-  doc.setFontSize(8.5);
-  const descLines = doc.splitTextToSize(inv.description || '-', descWidth);
-  const descTop = y;
-  descLines.forEach(line => { doc.text(line, MARGIN, y); y += 4.3; });
+  items.forEach((item, idx) => {
+    doc.setFontSize(8.5);
+    const descLines = doc.splitTextToSize(item.description || '-', descWidth);
+    const rowHeight = Math.max(descLines.length * 4.3, 6) + 4;
+    ensureSpace(rowHeight);
 
-  y = Math.max(y, descTop + 5) + 8;
+    const lineTotal = item.qty * item.unitPrice;
+    subtotal += lineTotal;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...TEXT);
+    doc.text(String(item.qty), colQty, y, { align: 'right' });
+    doc.text(formatMoney(item.unitPrice, inv.currency), colUnit, y, { align: 'right' });
+    doc.text(formatMoney(lineTotal, inv.currency), colTotal, y, { align: 'right' });
+
+    doc.setFontSize(8.5);
+    const descTop = y;
+    descLines.forEach(line => { doc.text(line, MARGIN, y); y += 4.3; });
+    y = Math.max(y, descTop + 5);
+
+    if (idx < items.length - 1) {
+      y += 3;
+      doc.setDrawColor(...NEUTRAL);
+      doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+      y += 5;
+    }
+  });
+
+  y += 8;
+  ensureSpace(6);
+  doc.setDrawColor(...NEUTRAL);
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
   y += 10;
 
-  const subtotal = lineTotal;
   const total = subtotal + inv.taxAmount;
+
+  ensureSpace(35);
 
   if (inv.notes) {
     doc.setFont('helvetica', 'normal');
@@ -659,7 +715,7 @@ function generateInvoicePDF(ticketData, inv) {
   doc.setTextColor(...PRIMARY);
   doc.text(formatMoney(total, inv.currency), totalsX, y + 7, { align: 'right' });
 
-  drawContactFooter(doc);
+  drawContactFooter(doc, page);
 
   const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   doc.save(`factura-${safeName || 'blue-travel'}.pdf`);
