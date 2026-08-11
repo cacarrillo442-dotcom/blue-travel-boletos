@@ -124,14 +124,8 @@
           <label>Nombre / razón social
             <input type="text" id="invBuyerName" placeholder="Si lo dejas vacío, se usa el primer pasajero" />
           </label>
-          <label>Fecha de la factura
-            <input type="date" id="invDate" />
-          </label>
           <label>Dirección
             <input type="text" id="invAddress" placeholder="Ej. 21097 S Dupont Hwy" />
-          </label>
-          <label>Pagado con
-            <input type="text" id="invPayment" placeholder="Ej. VISA terminada en 5150" />
           </label>
           <label>Ciudad
             <input type="text" id="invCity" placeholder="Ej. Greenwood" />
@@ -144,6 +138,22 @@
           </label>
           <label>Código postal
             <input type="text" id="invZip" placeholder="Ej. 19950" />
+          </label>
+        </div>
+
+        <h3>Pago</h3>
+        <div class="grid-2">
+          <label>Fecha de la factura
+            <input type="date" id="invDate" />
+          </label>
+          <label>Pagado con
+            <input type="text" id="invPayment" placeholder="Ej. VISA terminada en 5150" />
+          </label>
+          <label>Moneda
+            <select id="invCurrency">
+              <option value="USD">Dólares (US$)</option>
+              <option value="COP">Pesos colombianos (COP $)</option>
+            </select>
           </label>
         </div>
 

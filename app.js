@@ -270,6 +270,19 @@ function drawFooter(doc, pageNum) {
   doc.setTextColor(...GRAY);
   doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
   doc.text(`Página ${pageNum}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
+  doc.setFontSize(7.5);
+  doc.text(`WhatsApp ${AGENCY_WHATSAPP}  ·  ${AGENCY_EMAIL}`, MARGIN, PAGE_H - 5.5);
+}
+
+function drawContactFooter(doc) {
+  doc.setDrawColor(...NEUTRAL);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN, PAGE_H - 14, PAGE_W - MARGIN, PAGE_H - 14);
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
+  doc.setFontSize(7.5);
+  doc.text(`WhatsApp ${AGENCY_WHATSAPP}  ·  ${AGENCY_EMAIL}`, MARGIN, PAGE_H - 5.5);
 }
 
 function sectionTitle(doc, y, label) {
@@ -406,7 +419,9 @@ function generatePDF(data) {
 
 // ---------- Factura (opcional) ----------
 
-const DEFAULT_INVOICE_NOTES = 'Si tiene alguna pregunta o requiere asistencia, por favor contáctenos vía WhatsApp o por correo electrónico.';
+const AGENCY_WHATSAPP = '+57 322 769 2145';
+const AGENCY_EMAIL = 'colbluetravel@gmail.com';
+const DEFAULT_INVOICE_NOTES = 'Gracias por su compra con Blue Travel.';
 
 document.getElementById('invNotes').value = DEFAULT_INVOICE_NOTES;
 document.getElementById('invDate').valueAsDate = new Date();
@@ -463,11 +478,14 @@ function parseMoney(str) {
   return isNaN(n) ? 0 : n;
 }
 
-function formatMoney(n) {
+const CURRENCY_PREFIX = { USD: '$', COP: 'COP $' };
+
+function formatMoney(n, currency) {
   const sign = n < 0 ? '-' : '';
   const [intPart, decPart] = Math.abs(n).toFixed(2).split('.');
   const withThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${sign}$${withThousands},${decPart}`;
+  const prefix = CURRENCY_PREFIX[currency] || '$';
+  return `${sign}${prefix}${withThousands},${decPart}`;
 }
 
 function collectInvoiceFields() {
@@ -480,6 +498,7 @@ function collectInvoiceFields() {
     country: document.getElementById('invCountry').value.trim(),
     zip: document.getElementById('invZip').value.trim(),
     payment: document.getElementById('invPayment').value.trim(),
+    currency: document.getElementById('invCurrency').value,
     description: document.getElementById('invDescription').value.trim(),
     qty: parseFloat(document.getElementById('invQty').value) || 1,
     unitPrice: parseMoney(document.getElementById('invUnitPrice').value),
@@ -493,29 +512,28 @@ function generateInvoicePDF(ticketData, inv) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, PAGE_W, 4, 'F');
-
-  let y = 16;
+  const logoH = 15;
+  const logoY = (HEADER_H - logoH) / 2;
   try {
-    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, y - 8, 10 * LOGO_ASPECT, 10);
+    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, logoY, logoH * LOGO_ASPECT, logoH);
   } catch (e) { /* logo optional */ }
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.setTextColor(...PRIMARY_2);
-  doc.text('Blue travel', MARGIN, y + 14);
-
-  doc.setFontSize(24);
+  doc.setFontSize(16);
   doc.setTextColor(...PRIMARY);
-  doc.text('Factura', MARGIN, y + 26);
+  doc.text('FACTURA', PAGE_W - MARGIN, 10, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...GRAY);
-  doc.text(`Fecha: ${inv.date || '-'}`, MARGIN, y + 33);
+  doc.text(`Fecha: ${inv.date || '-'}`, PAGE_W - MARGIN, 17, { align: 'right' });
 
-  y += 42;
+  doc.setFillColor(...PRIMARY_2);
+  doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
+  doc.setFillColor(...PRIMARY);
+  doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
+
+  let y = HEADER_H + 1.8 + 0.7 + 10;
 
   const buyerName = inv.buyerName || ticketData.passengers[0] || '-';
   const col2X = MARGIN + 100;
@@ -562,8 +580,8 @@ function generateInvoicePDF(ticketData, inv) {
   doc.setFontSize(9);
   doc.setTextColor(...TEXT);
   doc.text(String(inv.qty), colQty, y, { align: 'right' });
-  doc.text(formatMoney(inv.unitPrice), colUnit, y, { align: 'right' });
-  doc.text(formatMoney(lineTotal), colTotal, y, { align: 'right' });
+  doc.text(formatMoney(inv.unitPrice, inv.currency), colUnit, y, { align: 'right' });
+  doc.text(formatMoney(lineTotal, inv.currency), colTotal, y, { align: 'right' });
 
   doc.setFontSize(8.5);
   const descLines = doc.splitTextToSize(inv.description || '-', descWidth);
@@ -592,10 +610,10 @@ function generateInvoicePDF(ticketData, inv) {
   doc.setFontSize(9);
   doc.setTextColor(...TEXT);
   doc.text('Subtotal', totalsLabelX, y);
-  doc.text(formatMoney(subtotal), totalsX, y, { align: 'right' });
+  doc.text(formatMoney(subtotal, inv.currency), totalsX, y, { align: 'right' });
   y += 6;
   doc.text(inv.taxLabel, totalsLabelX, y);
-  doc.text(formatMoney(inv.taxAmount), totalsX, y, { align: 'right' });
+  doc.text(formatMoney(inv.taxAmount, inv.currency), totalsX, y, { align: 'right' });
   y += 9;
   doc.setDrawColor(...NEUTRAL);
   doc.line(totalsLabelX, y - 5, totalsX, y - 5);
@@ -605,14 +623,9 @@ function generateInvoicePDF(ticketData, inv) {
   doc.text('Total', totalsLabelX, y);
   doc.setFontSize(13);
   doc.setTextColor(...PRIMARY);
-  doc.text(formatMoney(total), totalsX, y + 7, { align: 'right' });
+  doc.text(formatMoney(total, inv.currency), totalsX, y + 7, { align: 'right' });
 
-  doc.setDrawColor(...NEUTRAL);
-  doc.setLineWidth(0.3);
-  doc.line(MARGIN, PAGE_H - 14, PAGE_W - MARGIN, PAGE_H - 14);
-  doc.setFontSize(8);
-  doc.setTextColor(...GRAY);
-  doc.text('Blue Travel · Agencia de Viajes', MARGIN, PAGE_H - 9);
+  drawContactFooter(doc);
 
   const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   doc.save(`factura-${safeName || 'blue-travel'}.pdf`);
