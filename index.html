@@ -146,14 +146,39 @@
           <label>Fecha de la factura
             <input type="date" id="invDate" />
           </label>
-          <label>Pagado con
-            <input type="text" id="invPayment" placeholder="Ej. VISA terminada en 5150" />
+          <label>Forma de pago
+            <select id="invPaymentMethod">
+              <option value="">-- Selecciona --</option>
+              <option value="TARJETA">Tarjeta de crédito/débito</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TRANSFERENCIA">Transferencia bancaria</option>
+              <option value="ZELLE">Zelle</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="OTRO">Otro</option>
+            </select>
           </label>
           <label>Moneda
             <select id="invCurrency">
               <option value="USD">Dólares (US$)</option>
               <option value="COP">Pesos colombianos (COP $)</option>
             </select>
+          </label>
+          <label class="pay-card-wrap hidden">Franquicia
+            <select id="invCardBrand">
+              <option value="">-- Selecciona --</option>
+              <option>Visa</option>
+              <option>Mastercard</option>
+              <option>American Express</option>
+              <option>Discover</option>
+              <option>Diners Club</option>
+              <option value="OTRA">Otra</option>
+            </select>
+          </label>
+          <label class="pay-card-wrap hidden">Terminada en (últimos 4 dígitos)
+            <input type="text" id="invCardLast4" maxlength="4" inputmode="numeric" placeholder="Ej. 5150" />
+          </label>
+          <label class="pay-other-wrap hidden">Especifica la forma de pago
+            <input type="text" id="invPaymentOther" placeholder="Ej. Cheque" />
           </label>
         </div>
 

@@ -435,6 +435,40 @@ wantsInvoiceCheckbox.addEventListener('change', () => {
   submitBtn.textContent = wantsInvoiceCheckbox.checked ? 'Generar boleto y factura (PDF)' : 'Generar boleto (PDF)';
 });
 
+const invPaymentMethod = document.getElementById('invPaymentMethod');
+const payCardWraps = document.querySelectorAll('.pay-card-wrap');
+const payOtherWrap = document.querySelector('.pay-other-wrap');
+
+invPaymentMethod.addEventListener('change', () => {
+  payCardWraps.forEach(el => el.classList.toggle('hidden', invPaymentMethod.value !== 'TARJETA'));
+  payOtherWrap.classList.toggle('hidden', invPaymentMethod.value !== 'OTRO');
+});
+
+document.getElementById('invCardLast4').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+});
+
+const PAYMENT_METHOD_LABELS = {
+  EFECTIVO: 'Efectivo',
+  TRANSFERENCIA: 'Transferencia bancaria',
+  ZELLE: 'Zelle',
+  PAYPAL: 'PayPal',
+};
+
+function buildPaymentText() {
+  const method = invPaymentMethod.value;
+  if (method === 'TARJETA') {
+    const brand = document.getElementById('invCardBrand').value;
+    const last4 = document.getElementById('invCardLast4').value.trim();
+    const brandLabel = brand === 'OTRA' ? 'Tarjeta' : (brand || 'Tarjeta');
+    return last4 ? `${brandLabel} terminada en ${last4}` : brandLabel;
+  }
+  if (method === 'OTRO') {
+    return document.getElementById('invPaymentOther').value.trim();
+  }
+  return PAYMENT_METHOD_LABELS[method] || '';
+}
+
 function luggageSummary(luggage) {
   const items = [];
   if (luggage.personal) items.push('artículo personal');
@@ -497,7 +531,7 @@ function collectInvoiceFields() {
     state: document.getElementById('invState').value.trim(),
     country: document.getElementById('invCountry').value.trim(),
     zip: document.getElementById('invZip').value.trim(),
-    payment: document.getElementById('invPayment').value.trim(),
+    payment: buildPaymentText(),
     currency: document.getElementById('invCurrency').value,
     description: document.getElementById('invDescription').value.trim(),
     qty: parseFloat(document.getElementById('invQty').value) || 1,
