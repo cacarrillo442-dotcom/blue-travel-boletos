@@ -300,6 +300,27 @@ select:focus {
   color: #9aa5ab;
 }
 
+.module-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 20px;
+  color: var(--color-primary-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.module-divider::before,
+.module-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-primary-2);
+  opacity: 0.35;
+}
+
 .catalog-subsection {
   border-top: 1px solid var(--color-neutral);
   padding-top: 14px;

@@ -211,6 +211,94 @@
     </div>
 
   </form>
+
+  <div class="module-divider">
+    <span>Otro módulo</span>
+  </div>
+
+  <form id="quoteForm">
+    <section class="card">
+      <h2>Generar Cotización</h2>
+      <p class="hint">Envía una propuesta de viaje a tu cliente antes de confirmar la compra. Es un documento independiente del boleto.</p>
+    </section>
+
+    <section class="card">
+      <h3>Datos del cliente</h3>
+      <div class="grid-2">
+        <label>Nombre del cliente
+          <input type="text" id="qClientName" placeholder="Ej. Juan Pérez" />
+        </label>
+        <label>Número de pasajeros
+          <input type="number" id="qPassengers" min="1" value="1" />
+        </label>
+        <label>Teléfono
+          <input type="text" id="qClientPhone" placeholder="Ej. +57 300 123 4567" />
+        </label>
+        <label>Correo
+          <input type="text" id="qClientEmail" placeholder="Ej. cliente@correo.com" />
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Itinerario propuesto</h3>
+      <div class="grid-3">
+        <label>Aerolínea
+          <input type="text" id="qAirline" placeholder="Ej. Avianca (o déjalo vacío si aún no se define)" />
+        </label>
+        <label>Origen
+          <select id="qOrigin" class="airport-select"></select>
+        </label>
+        <label>Destino
+          <select id="qDest" class="airport-select"></select>
+        </label>
+      </div>
+      <div class="grid-2">
+        <label>Fecha de salida
+          <input type="date" id="qDepartDate" />
+        </label>
+        <label>Fecha de regreso (opcional)
+          <input type="date" id="qReturnDate" />
+        </label>
+      </div>
+      <label>Notas del itinerario
+        <textarea id="qItineraryNotes" rows="2" placeholder="Ej. Vuelo directo, incluye 1 maleta facturada por pasajero"></textarea>
+      </label>
+    </section>
+
+    <section class="card">
+      <h3>Precio y vigencia</h3>
+      <div class="grid-3">
+        <label>Precio total
+          <input type="text" inputmode="decimal" id="qPrice" placeholder="Ej. 1200.00" />
+        </label>
+        <label>Moneda
+          <select id="qCurrency">
+            <option value="USD">Dólares (US$)</option>
+            <option value="COP">Pesos colombianos (COP $)</option>
+          </select>
+        </label>
+        <label>Válida hasta
+          <input type="date" id="qValidUntil" />
+        </label>
+      </div>
+      <label>Qué incluye / condiciones
+        <textarea id="qConditions" rows="3"></textarea>
+      </label>
+    </section>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary">Generar texto de cotización</button>
+    </div>
+
+    <section class="card hidden" id="qOutputCard">
+      <div class="card-header">
+        <h3>Mensaje listo para WhatsApp</h3>
+        <button type="button" class="btn-add" id="qCopyBtn">📋 Copiar</button>
+      </div>
+      <textarea id="qOutputText" rows="12" readonly></textarea>
+    </section>
+  </form>
 </main>
 
 <footer class="page-footer">

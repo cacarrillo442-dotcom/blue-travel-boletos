@@ -173,6 +173,9 @@ document.getElementById('hasReturn').addEventListener('change', (e) => {
   regresoContainer.classList.toggle('hidden', !e.target.checked);
 });
 
+populateAirportSelect(document.getElementById('qOrigin'));
+populateAirportSelect(document.getElementById('qDest'));
+
 // Prefill terms
 document.getElementById('terms').value = DEFAULT_TERMS;
 
@@ -752,5 +755,91 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
 
   if (document.getElementById('wantsInvoice').checked) {
     generateInvoicePDF(data, collectInvoiceFields());
+  }
+});
+
+// ---------- Cotización (texto para WhatsApp) ----------
+
+function collectQuoteFields() {
+  return {
+    clientName: document.getElementById('qClientName').value.trim(),
+    passengers: document.getElementById('qPassengers').value.trim() || '1',
+    clientPhone: document.getElementById('qClientPhone').value.trim(),
+    clientEmail: document.getElementById('qClientEmail').value.trim(),
+    airline: document.getElementById('qAirline').value.trim(),
+    origin: document.getElementById('qOrigin').value,
+    dest: document.getElementById('qDest').value,
+    departDate: formatDate(document.getElementById('qDepartDate').value),
+    returnDate: formatDate(document.getElementById('qReturnDate').value),
+    itineraryNotes: document.getElementById('qItineraryNotes').value.trim(),
+    price: parseMoney(document.getElementById('qPrice').value),
+    currency: document.getElementById('qCurrency').value,
+    validUntil: formatDate(document.getElementById('qValidUntil').value),
+    conditions: document.getElementById('qConditions').value.trim(),
+  };
+}
+
+function buildQuoteText(q) {
+  const originAirport = findAirport(q.origin);
+  const destAirport = findAirport(q.dest);
+  const originLabel = originAirport ? `${originAirport.city} (${originAirport.code})` : q.origin;
+  const destLabel = destAirport ? `${destAirport.city} (${destAirport.code})` : q.dest;
+
+  const lines = [];
+  lines.push(`¡Buen día${q.clientName ? ' ' + q.clientName : ''}! 🙋‍♀️👋`);
+  lines.push('');
+  lines.push('De acuerdo a lo conversado le envío la *COTIZACIÓN* de su viaje:');
+  lines.push('');
+  if (originLabel || destLabel) lines.push(`✈️ Ruta: ${originLabel || '-'} → ${destLabel || '-'}`);
+  if (q.airline) lines.push(`🛫 Aerolínea: ${q.airline}`);
+  let fechas = q.departDate || '-';
+  if (q.returnDate) fechas += ` — Regreso: ${q.returnDate}`;
+  lines.push(`📅 Fechas: ${fechas}`);
+  lines.push(`👤 Pasajeros: ${q.passengers}`);
+  if (q.itineraryNotes) lines.push(`📝 ${q.itineraryNotes}`);
+  lines.push('');
+  lines.push(`💰 *Precio total: ${formatMoney(q.price, q.currency)}*`);
+  if (q.validUntil) lines.push(`⏳ Cotización válida hasta: ${q.validUntil}`);
+  if (q.conditions) {
+    lines.push('');
+    lines.push(q.conditions);
+  }
+  lines.push('');
+  lines.push(
+    'Si desean realizar algún cambio de fecha con todo gusto quedo atenta ✍️, recuerde que las '
+    + 'tarifas están sujetas a disponibilidad al momento de reservar. Cualquier inquietud con gusto, '
+    + '¡muchas gracias! 🙂'
+  );
+
+  return lines.join('\n');
+}
+
+const qOutputCard = document.getElementById('qOutputCard');
+const qOutputText = document.getElementById('qOutputText');
+
+document.getElementById('quoteForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  qOutputText.value = buildQuoteText(collectQuoteFields());
+  qOutputCard.classList.remove('hidden');
+  qOutputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('qCopyBtn').addEventListener('click', () => {
+  const btn = document.getElementById('qCopyBtn');
+  const done = () => {
+    const original = '📋 Copiar';
+    btn.textContent = '✅ Copiado';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(qOutputText.value).then(done).catch(() => {
+      qOutputText.select();
+      document.execCommand('copy');
+      done();
+    });
+  } else {
+    qOutputText.select();
+    document.execCommand('copy');
+    done();
   }
 });
