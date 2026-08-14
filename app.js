@@ -877,6 +877,199 @@ document.getElementById('qCopyBtn').addEventListener('click', () => {
   }
 });
 
+// ---------- Cotización (imagen para WhatsApp) ----------
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawQuoteImageCard(q) {
+  return new Promise((resolve) => {
+    const W = 1080;
+    const H = 1350;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const build = (logoImg) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+
+      const headerH = 230;
+      ctx.fillStyle = '#033c69';
+      ctx.fillRect(0, 0, W, headerH);
+      ctx.fillStyle = '#126f99';
+      ctx.fillRect(0, headerH, W, 10);
+      ctx.fillStyle = '#ffc300';
+      ctx.fillRect(0, headerH + 10, W, 5);
+
+      if (logoImg) {
+        const logoH = 110;
+        const logoW = logoH * LOGO_ASPECT;
+        ctx.drawImage(logoImg, 60, 60, logoW, logoH);
+      }
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 46px Arial, sans-serif';
+      ctx.fillText('COTIZACIÓN', W - 60, 110);
+      ctx.font = '600 30px Arial, sans-serif';
+      ctx.fillStyle = '#cfe3ee';
+      ctx.fillText('DE VIAJE', W - 60, 150);
+
+      let y = headerH + 90;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#033c69';
+      ctx.font = 'bold 42px Arial, sans-serif';
+      ctx.fillText(q.clientName ? `¡Hola ${q.clientName}! 👋` : '¡Hola! 👋', 60, y);
+      y += 80;
+
+      const originAirport = findAirport(q.origin);
+      const destAirport = findAirport(q.dest);
+      const originCode = q.origin || '---';
+      const destCode = q.dest || '---';
+      ctx.fillStyle = '#126f99';
+      ctx.font = 'bold 62px Arial, sans-serif';
+      ctx.fillText(`${originCode}  ✈️  ${destCode}`, 60, y);
+      y += 48;
+      ctx.font = '27px Arial, sans-serif';
+      ctx.fillStyle = '#4a4a4a';
+      const routeSub = `${originAirport ? originAirport.city + ', ' + originAirport.country : ''} → ${destAirport ? destAirport.city + ', ' + destAirport.country : ''}`;
+      ctx.fillText(routeSub, 60, y);
+      y += 45;
+
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.moveTo(60, y);
+      ctx.lineTo(W - 60, y);
+      ctx.stroke();
+      y += 55;
+
+      const row = (label, value) => {
+        ctx.font = 'bold 29px Arial, sans-serif';
+        ctx.fillStyle = '#126f99';
+        ctx.fillText(label, 60, y);
+        ctx.font = '29px Arial, sans-serif';
+        ctx.fillStyle = '#4a4a4a';
+        const lines = wrapCanvasText(ctx, value, W - 60 - 340);
+        lines.forEach((line, i) => ctx.fillText(line, 340, y + i * 36));
+        y += Math.max(36, lines.length * 36) + 18;
+      };
+
+      if (q.airline) row('Aerolínea', q.airline);
+      const tipoVueloText = q.tipoVuelo === 'ESCALA'
+        ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
+        : 'Directo';
+      row('Tipo de vuelo', tipoVueloText);
+      let fechas = q.departDate || '-';
+      if (q.returnDate) fechas += ` — ${q.returnDate}`;
+      row('Fechas', fechas);
+      row('Pasajeros', String(q.passengers));
+      row('Equipaje', luggageSummary(q.luggage));
+      y += 15;
+
+      const boxH = 160;
+      ctx.fillStyle = '#033c69';
+      roundRectPath(ctx, 60, y, W - 120, boxH, 20);
+      ctx.fill();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#cfe3ee';
+      ctx.font = '28px Arial, sans-serif';
+      ctx.fillText('PRECIO TOTAL', W / 2, y + 50);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 60px Arial, sans-serif';
+      ctx.fillText(formatMoney(q.price, q.currency), W / 2, y + 122);
+      y += boxH + 40;
+
+      ctx.textAlign = 'left';
+      if (q.validUntil) {
+        ctx.font = '27px Arial, sans-serif';
+        ctx.fillStyle = '#4a4a4a';
+        ctx.fillText(`⏳ Cotización válida hasta: ${q.validUntil}`, 60, y);
+      }
+
+      const footerH = 110;
+      ctx.fillStyle = '#033c69';
+      ctx.fillRect(0, H - footerH, W, footerH);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 32px Arial, sans-serif';
+      ctx.fillText('Blue Travel · Agencia de Viajes', W / 2, H - footerH + 45);
+      ctx.font = '24px Arial, sans-serif';
+      ctx.fillStyle = '#cfe3ee';
+      ctx.fillText(`${AGENCY_WHATSAPP}   ·   ${AGENCY_EMAIL}`, W / 2, H - footerH + 80);
+
+      resolve(canvas);
+    };
+
+    const img = new Image();
+    img.onload = () => build(img);
+    img.onerror = () => build(null);
+    img.src = LOGO_BLUE_BASE64;
+  });
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach(word => {
+    const test = current ? `${current} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  });
+  if (current) lines.push(current);
+  return lines.length ? lines : [''];
+}
+
+const qImageCard = document.getElementById('qImageCard');
+const qImagePreview = document.getElementById('qImagePreview');
+let qLastCanvas = null;
+
+document.getElementById('qGenerateImageBtn').addEventListener('click', async () => {
+  const canvas = await drawQuoteImageCard(collectQuoteFields());
+  qLastCanvas = canvas;
+  qImagePreview.src = canvas.toDataURL('image/png');
+  qImageCard.classList.remove('hidden');
+  qImageCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('qDownloadImageBtn').addEventListener('click', () => {
+  if (!qLastCanvas) return;
+  const clientName = document.getElementById('qClientName').value.trim() || 'blue-travel';
+  const safeName = clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const a = document.createElement('a');
+  a.href = qLastCanvas.toDataURL('image/png');
+  a.download = `cotizacion-${safeName}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+document.getElementById('qCopyImageBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('qCopyImageBtn');
+  if (!qLastCanvas) return;
+  const original = '📋 Copiar imagen';
+  try {
+    const blob = await new Promise(resolve => qLastCanvas.toBlob(resolve, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    btn.textContent = '✅ Copiada';
+  } catch (e) {
+    btn.textContent = '⚠️ Usa "Descargar"';
+  }
+  setTimeout(() => { btn.textContent = original; }, 2000);
+});
+
 // ---------- Tabs ----------
 
 document.querySelectorAll('.tab-btn').forEach(btn => {

@@ -322,7 +322,8 @@
       </label>
     </section>
 
-    <div class="actions">
+    <div class="actions actions-split">
+      <button type="button" class="btn-secondary" id="qGenerateImageBtn">🖼️ Generar imagen para WhatsApp</button>
       <button type="submit" class="btn-primary">Generar texto de cotización</button>
     </div>
 
@@ -332,6 +333,17 @@
         <button type="button" class="btn-add" id="qCopyBtn">📋 Copiar</button>
       </div>
       <textarea id="qOutputText" rows="12" readonly></textarea>
+    </section>
+
+    <section class="card hidden" id="qImageCard">
+      <div class="card-header">
+        <h3>Imagen lista para WhatsApp</h3>
+        <div class="inline-add-row" style="margin-top:0">
+          <button type="button" class="btn-add" id="qCopyImageBtn">📋 Copiar imagen</button>
+          <button type="button" class="btn-add" id="qDownloadImageBtn">⬇️ Descargar</button>
+        </div>
+      </div>
+      <img id="qImagePreview" alt="Cotización" class="quote-image-preview" />
     </section>
   </form>
 </div>

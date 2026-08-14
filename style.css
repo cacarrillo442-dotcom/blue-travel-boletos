@@ -205,6 +205,38 @@ textarea {
   background: #022c4d;
 }
 
+.actions-split {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 11px 26px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f0f5f8;
+}
+
+.quote-image-preview {
+  display: block;
+  max-width: 100%;
+  width: 340px;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 1px solid var(--color-neutral);
+  box-shadow: 0 2px 10px rgba(3, 60, 105, 0.15);
+}
+
 .page-footer {
   text-align: center;
   padding: 20px;
