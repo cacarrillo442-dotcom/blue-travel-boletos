@@ -175,6 +175,20 @@ document.getElementById('hasReturn').addEventListener('change', (e) => {
 
 populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
+populateAirportSelect(document.getElementById('qEscalaLugar'));
+
+const qEscalaFields = document.querySelector('.q-escala-fields');
+document.querySelectorAll('.q-tipo').forEach(radio => {
+  radio.addEventListener('change', () => {
+    qEscalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
+  });
+});
+
+const qEscalaTiempo = document.getElementById('qEscalaTiempo');
+qEscalaTiempo.addEventListener('input', () => {
+  const digits = qEscalaTiempo.value.replace(/\D/g, '').slice(0, 4);
+  qEscalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+});
 
 // Prefill terms
 document.getElementById('terms').value = DEFAULT_TERMS;
@@ -771,6 +785,14 @@ function collectQuoteFields() {
     dest: document.getElementById('qDest').value,
     departDate: formatDate(document.getElementById('qDepartDate').value),
     returnDate: formatDate(document.getElementById('qReturnDate').value),
+    tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
+    escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
+    escalaLugar: document.getElementById('qEscalaLugar').value,
+    luggage: {
+      personal: document.getElementById('qEqPersonal').checked,
+      mano: document.getElementById('qEqMano').checked,
+      bodega: document.getElementById('qEqBodega').checked,
+    },
     itineraryNotes: document.getElementById('qItineraryNotes').value.trim(),
     price: parseMoney(document.getElementById('qPrice').value),
     currency: document.getElementById('qCurrency').value,
@@ -786,19 +808,24 @@ function buildQuoteText(q) {
   const destLabel = destAirport ? `${destAirport.city} (${destAirport.code})` : q.dest;
 
   const lines = [];
-  lines.push(`¡Buen día${q.clientName ? ' ' + q.clientName : ''}! 🙋‍♀️👋`);
+  const greeting = q.clientName
+    ? `¡Buen día ${q.clientName}, nuestro próximo viajero Blue! 🙋‍♀️👋`
+    : '¡Buen día, futuro viajero Blue! 🙋‍♀️👋';
+  lines.push(greeting);
   lines.push('');
-  lines.push(
-    'Soy parte del equipo de *Blue Travel* 💙✈️ y con mucho gusto le comparto la cotización que '
-    + 'conversamos — como siempre, hecha pensando en lo que más le conviene a usted y a los suyos:'
-  );
+  lines.push('De acuerdo a lo conversado te envío la *COTIZACIÓN* de tu viaje:');
   lines.push('');
   if (originLabel || destLabel) lines.push(`✈️ Ruta: ${originLabel || '-'} → ${destLabel || '-'}`);
   if (q.airline) lines.push(`🛫 Aerolínea: ${q.airline}`);
+  const tipoVueloText = q.tipoVuelo === 'ESCALA'
+    ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
+    : 'Directo';
+  lines.push(`🔁 Tipo de vuelo: ${tipoVueloText}`);
   let fechas = q.departDate || '-';
   if (q.returnDate) fechas += ` — Regreso: ${q.returnDate}`;
   lines.push(`📅 Fechas: ${fechas}`);
   lines.push(`👤 Pasajeros: ${q.passengers}`);
+  lines.push(`🎒 Equipaje: ${luggageSummary(q.luggage)}`);
   if (q.itineraryNotes) lines.push(`📝 ${q.itineraryNotes}`);
   lines.push('');
   lines.push(`💰 *Precio total: ${formatMoney(q.price, q.currency)}*`);
@@ -809,12 +836,10 @@ function buildQuoteText(q) {
   }
   lines.push('');
   lines.push(
-    'Cualquier cambio de fecha o cualquier duda que tenga, aquí estoy atenta con todo gusto ✍️ — en '
-    + '*Blue Travel* nos gusta acompañarlo como familia en cada viaje 🧡. Recuerde que las tarifas '
-    + 'están sujetas a disponibilidad al momento de reservar.'
+    'Si deseas realizar algún cambio de fecha con todo gusto quedo atenta ✍️, recuerda que las '
+    + 'tarifas están sujetas a disponibilidad al momento de reservar. Cualquier inquietud con gusto, '
+    + '¡muchas gracias! 🙂'
   );
-  lines.push('');
-  lines.push('Quedo atenta, ¡un abrazo! 🙂');
   lines.push('');
   lines.push('*Blue Travel* · Agencia de Viajes');
   lines.push(`📱 ${AGENCY_WHATSAPP}   ✉️ ${AGENCY_EMAIL}`);

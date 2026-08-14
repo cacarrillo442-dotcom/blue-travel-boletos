@@ -261,8 +261,39 @@
           <input type="date" id="qReturnDate" />
         </label>
       </div>
+
+      <div class="radio-row">
+        <span class="radio-title">Tipo de vuelo</span>
+        <label class="radio-label"><input type="radio" name="qTipoVuelo" class="q-tipo" value="DIRECTO" checked /> Directo</label>
+        <label class="radio-label"><input type="radio" name="qTipoVuelo" class="q-tipo" value="ESCALA" /> Con escala</label>
+      </div>
+      <div class="grid-2 q-escala-fields hidden">
+        <label>Tiempo de escala (hh:mm)
+          <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="qEscalaTiempo" />
+        </label>
+        <label>Lugar de escala
+          <select id="qEscalaLugar" class="airport-select"></select>
+        </label>
+      </div>
+
+      <h3>Equipaje</h3>
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="qEqPersonal" checked />
+          Artículo personal
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="qEqMano" />
+          Equipaje de mano (10 kg)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="qEqBodega" />
+          Equipaje de bodega (23 kg)
+        </label>
+      </div>
+
       <label>Notas del itinerario
-        <textarea id="qItineraryNotes" rows="2" placeholder="Ej. Vuelo directo, incluye 1 maleta facturada por pasajero"></textarea>
+        <textarea id="qItineraryNotes" rows="2" placeholder="Ej. Incluye 1 maleta facturada por pasajero"></textarea>
       </label>
     </section>
 
