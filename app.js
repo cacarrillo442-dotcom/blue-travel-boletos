@@ -788,7 +788,10 @@ function buildQuoteText(q) {
   const lines = [];
   lines.push(`¡Buen día${q.clientName ? ' ' + q.clientName : ''}! 🙋‍♀️👋`);
   lines.push('');
-  lines.push('De acuerdo a lo conversado le envío la *COTIZACIÓN* de su viaje:');
+  lines.push(
+    'Soy parte del equipo de *Blue Travel* 💙✈️ y con mucho gusto le comparto la cotización que '
+    + 'conversamos — como siempre, hecha pensando en lo que más le conviene a usted y a los suyos:'
+  );
   lines.push('');
   if (originLabel || destLabel) lines.push(`✈️ Ruta: ${originLabel || '-'} → ${destLabel || '-'}`);
   if (q.airline) lines.push(`🛫 Aerolínea: ${q.airline}`);
@@ -806,10 +809,15 @@ function buildQuoteText(q) {
   }
   lines.push('');
   lines.push(
-    'Si desean realizar algún cambio de fecha con todo gusto quedo atenta ✍️, recuerde que las '
-    + 'tarifas están sujetas a disponibilidad al momento de reservar. Cualquier inquietud con gusto, '
-    + '¡muchas gracias! 🙂'
+    'Cualquier cambio de fecha o cualquier duda que tenga, aquí estoy atenta con todo gusto ✍️ — en '
+    + '*Blue Travel* nos gusta acompañarlo como familia en cada viaje 🧡. Recuerde que las tarifas '
+    + 'están sujetas a disponibilidad al momento de reservar.'
   );
+  lines.push('');
+  lines.push('Quedo atenta, ¡un abrazo! 🙂');
+  lines.push('');
+  lines.push('*Blue Travel* · Agencia de Viajes');
+  lines.push(`📱 ${AGENCY_WHATSAPP}   ✉️ ${AGENCY_EMAIL}`);
 
   return lines.join('\n');
 }
