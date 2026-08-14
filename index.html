@@ -12,7 +12,7 @@
 <body>
 
 <header class="topbar">
-  <img src="assets/logo.png" alt="Blue Travel" class="topbar-logo" />
+  <img src="assets/logo-white.png" alt="Blue Travel" class="topbar-logo" />
   <div class="topbar-text">
     <h1>Sistema de Operación Blue</h1>
     <p>Boletos, facturas y cotizaciones para tus clientes</p>
@@ -271,9 +271,17 @@
           <input type="time" id="qArriveTime" />
         </label>
       </div>
-      <label>Fecha de regreso (opcional)
-        <input type="date" id="qReturnDate" />
-      </label>
+      <div class="grid-3">
+        <label>Fecha de regreso (opcional)
+          <input type="date" id="qReturnDate" />
+        </label>
+        <label>Hora de salida (regreso)
+          <input type="time" id="qReturnDepartTime" />
+        </label>
+        <label>Hora de llegada (regreso)
+          <input type="time" id="qReturnArriveTime" />
+        </label>
+      </div>
 
       <div class="radio-row">
         <span class="radio-title">Tipo de vuelo</span>

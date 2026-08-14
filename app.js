@@ -796,6 +796,8 @@ function collectQuoteFields() {
     departTime: formatTime(document.getElementById('qDepartTime').value),
     arriveTime: formatTime(document.getElementById('qArriveTime').value),
     returnDate: formatDate(document.getElementById('qReturnDate').value),
+    returnDepartTime: formatTime(document.getElementById('qReturnDepartTime').value),
+    returnArriveTime: formatTime(document.getElementById('qReturnArriveTime').value),
     tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
     escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
     escalaLugar: document.getElementById('qEscalaLugar').value,
@@ -832,11 +834,15 @@ function buildQuoteText(q) {
     ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
     : 'Directo';
   lines.push(`🔁 Tipo de vuelo: ${tipoVueloText}`);
-  let fechas = q.departDate || '-';
-  if (q.returnDate) fechas += ` — Regreso: ${q.returnDate}`;
-  lines.push(`📅 Fechas: ${fechas}`);
+  lines.push(`📅 Fecha de ida: ${q.departDate || '-'}`);
   if (q.departTime || q.arriveTime) {
     lines.push(`🕐 Salida: ${q.departTime || '-'}   Llegada: ${q.arriveTime || '-'}`);
+  }
+  if (q.returnDate) {
+    lines.push(`📅 Fecha de regreso: ${q.returnDate}`);
+    if (q.returnDepartTime || q.returnArriveTime) {
+      lines.push(`🕐 Salida: ${q.returnDepartTime || '-'}   Llegada: ${q.returnArriveTime || '-'}`);
+    }
   }
   lines.push(`👤 Pasajeros: ${q.passengers}`);
   lines.push(`🎒 Equipaje: ${luggageSummary(q.luggage)}`);
@@ -906,7 +912,7 @@ function roundRectPath(ctx, x, y, w, h, r) {
 function drawQuoteImageCard(q) {
   return new Promise((resolve) => {
     const W = 1080;
-    const H = 1350;
+    const H = 1600;
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
@@ -981,11 +987,15 @@ function drawQuoteImageCard(q) {
         ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
         : 'Directo';
       row('Tipo de vuelo', tipoVueloText);
-      let fechas = q.departDate || '-';
-      if (q.returnDate) fechas += ` — ${q.returnDate}`;
-      row('Fechas', fechas);
+      row('Fecha de ida', q.departDate || '-');
       if (q.departTime || q.arriveTime) {
-        row('Horario', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
+        row('Horario ida', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
+      }
+      if (q.returnDate) {
+        row('Fecha de regreso', q.returnDate);
+        if (q.returnDepartTime || q.returnArriveTime) {
+          row('Horario regreso', `Salida ${q.returnDepartTime || '-'}   Llegada ${q.returnArriveTime || '-'}`);
+        }
       }
       row('Pasajeros', String(q.passengers));
       row('Equipaje', luggageSummary(q.luggage));
