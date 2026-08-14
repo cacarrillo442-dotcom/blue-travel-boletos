@@ -1,6 +1,6 @@
-# Blue Travel · Generador de Boletos
+# Blue Travel · Sistema de Operación Blue
 
-App web gratuita para generar el PDF de boletos aéreos de Blue Travel: pasajeros, equipaje, vuelo de ida y vuelo de regreso opcional (con escala opcional), usando la marca y el catálogo de aerolíneas/destinos de la agencia.
+App web gratuita para Blue Travel: genera boletos y facturas de venta en PDF, y cotizaciones (texto o imagen) listas para WhatsApp — pasajeros, equipaje, vuelo de ida y vuelo de regreso opcional (con escala opcional), usando la marca y el catálogo de aerolíneas/destinos de la agencia.
 
 No requiere instalación ni backend: es HTML, CSS y JavaScript puro, se ejecuta entera en el navegador.
 
