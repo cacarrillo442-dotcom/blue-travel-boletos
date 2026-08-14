@@ -177,6 +177,13 @@ populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
 
+const qAirlineSelect = document.getElementById('qAirline');
+const qAirlineOtherWrap = document.querySelector('.q-airline-other-wrap');
+populateAirlineSelect(qAirlineSelect);
+qAirlineSelect.addEventListener('change', () => {
+  qAirlineOtherWrap.classList.toggle('hidden', qAirlineSelect.value !== 'OTRA');
+});
+
 const qEscalaFields = document.querySelector('.q-escala-fields');
 document.querySelectorAll('.q-tipo').forEach(radio => {
   radio.addEventListener('change', () => {
@@ -780,10 +787,14 @@ function collectQuoteFields() {
     passengers: document.getElementById('qPassengers').value.trim() || '1',
     clientPhone: document.getElementById('qClientPhone').value.trim(),
     clientEmail: document.getElementById('qClientEmail').value.trim(),
-    airline: document.getElementById('qAirline').value.trim(),
+    airline: qAirlineSelect.value === 'OTRA'
+      ? document.getElementById('qAirlineOther').value.trim()
+      : qAirlineSelect.value,
     origin: document.getElementById('qOrigin').value,
     dest: document.getElementById('qDest').value,
     departDate: formatDate(document.getElementById('qDepartDate').value),
+    departTime: formatTime(document.getElementById('qDepartTime').value),
+    arriveTime: formatTime(document.getElementById('qArriveTime').value),
     returnDate: formatDate(document.getElementById('qReturnDate').value),
     tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
     escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
@@ -824,6 +835,9 @@ function buildQuoteText(q) {
   let fechas = q.departDate || '-';
   if (q.returnDate) fechas += ` — Regreso: ${q.returnDate}`;
   lines.push(`📅 Fechas: ${fechas}`);
+  if (q.departTime || q.arriveTime) {
+    lines.push(`🕐 Salida: ${q.departTime || '-'}   Llegada: ${q.arriveTime || '-'}`);
+  }
   lines.push(`👤 Pasajeros: ${q.passengers}`);
   lines.push(`🎒 Equipaje: ${luggageSummary(q.luggage)}`);
   if (q.itineraryNotes) lines.push(`📝 ${q.itineraryNotes}`);
@@ -970,6 +984,9 @@ function drawQuoteImageCard(q) {
       let fechas = q.departDate || '-';
       if (q.returnDate) fechas += ` — ${q.returnDate}`;
       row('Fechas', fechas);
+      if (q.departTime || q.arriveTime) {
+        row('Horario', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
+      }
       row('Pasajeros', String(q.passengers));
       row('Equipaje', luggageSummary(q.luggage));
       y += 15;

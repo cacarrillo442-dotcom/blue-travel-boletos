@@ -248,7 +248,10 @@
       <h3>Itinerario propuesto</h3>
       <div class="grid-3">
         <label>Aerolínea
-          <input type="text" id="qAirline" placeholder="Ej. Avianca (o déjalo vacío si aún no se define)" />
+          <select id="qAirline" class="airline-select"></select>
+        </label>
+        <label class="q-airline-other-wrap hidden">Especifica la aerolínea
+          <input type="text" id="qAirlineOther" placeholder="Nombre de la aerolínea" />
         </label>
         <label>Origen
           <select id="qOrigin" class="airport-select"></select>
@@ -257,14 +260,20 @@
           <select id="qDest" class="airport-select"></select>
         </label>
       </div>
-      <div class="grid-2">
+      <div class="grid-3">
         <label>Fecha de salida
           <input type="date" id="qDepartDate" />
         </label>
-        <label>Fecha de regreso (opcional)
-          <input type="date" id="qReturnDate" />
+        <label>Hora de salida
+          <input type="time" id="qDepartTime" />
+        </label>
+        <label>Hora de llegada
+          <input type="time" id="qArriveTime" />
         </label>
       </div>
+      <label>Fecha de regreso (opcional)
+        <input type="date" id="qReturnDate" />
+      </label>
 
       <div class="radio-row">
         <span class="radio-title">Tipo de vuelo</span>
