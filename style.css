@@ -300,25 +300,35 @@ select:focus {
   color: #9aa5ab;
 }
 
-.module-divider {
+.tabs {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 36px 0 20px;
-  color: var(--color-primary-2);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  gap: 4px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+  background: var(--color-primary);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.module-divider::before,
-.module-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--color-primary-2);
-  opacity: 0.35;
+.tab-btn {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #b9cddc;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 18px 10px;
+  cursor: pointer;
+}
+
+.tab-btn:hover {
+  color: #fff;
+}
+
+.tab-btn.active {
+  color: #fff;
+  border-bottom-color: var(--color-alt);
 }
 
 .catalog-subsection {

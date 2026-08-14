@@ -19,7 +19,13 @@
   </div>
 </header>
 
+<nav class="tabs">
+  <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos y facturas</button>
+  <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
+</nav>
+
 <main class="container">
+<div id="ticketsPanel" class="tab-panel">
   <form id="ticketForm">
 
     <section class="card">
@@ -211,11 +217,9 @@
     </div>
 
   </form>
+</div>
 
-  <div class="module-divider">
-    <span>Otro módulo</span>
-  </div>
-
+<div id="quotesPanel" class="tab-panel hidden">
   <form id="quoteForm">
     <section class="card">
       <h2>Generar Cotización</h2>
@@ -330,6 +334,7 @@
       <textarea id="qOutputText" rows="12" readonly></textarea>
     </section>
   </form>
+</div>
 </main>
 
 <footer class="page-footer">
