@@ -39,6 +39,17 @@
           <input type="text" id="ticketNumber" placeholder="Ej. 167503321696" />
         </label>
       </div>
+      <div class="grid-2">
+        <label>Indicativo (contacto)
+          <select id="ticketContactCountryCode"></select>
+        </label>
+        <label>Teléfono de contacto
+          <input type="text" id="ticketContactPhone" placeholder="Ej. 300 123 4567" />
+        </label>
+      </div>
+      <p class="hint">
+        Con este teléfono te podemos recordar avisarle al viajero que haga el check-in antes de su vuelo.
+      </p>
     </section>
 
     <section class="card">
@@ -429,6 +440,16 @@
     <p class="hint">Tip: incluye algo como "Responde STOP si no quieres volver a recibir promociones."</p>
     <div id="promoClientsList" class="promo-list"></div>
   </section>
+
+  <section class="card hidden" id="tripsCard">
+    <h2>✈️ Próximos viajes</h2>
+    <p class="hint">
+      Viajeros con vuelo de ida en los próximos 2 días — recuérdales hacer el check-in y alistar su
+      equipaje. Cada botón abre WhatsApp con el mensaje listo; al enviarlo, marca el aviso como hecho
+      para que no vuelva a aparecer.
+    </p>
+    <div id="tripsList" class="promo-list"></div>
+  </section>
 </div>
 </main>
 
@@ -511,10 +532,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="assets/logo-blue-data.js"></script>
-<script src="assets/catalog-data.js"></script>
-<script src="assets/country-codes-data.js"></script>
-<script src="app.js"></script>
-<script type="module" src="assets/firebase-clients.js"></script>
-<script type="module" src="assets/firebase-catalog.js"></script>
+<script src="assets/catalog-data.js?v=2"></script>
+<script src="assets/country-codes-data.js?v=2"></script>
+<script src="app.js?v=2"></script>
+<script type="module" src="assets/firebase-clients.js?v=2"></script>
+<script type="module" src="assets/firebase-catalog.js?v=2"></script>
+<script type="module" src="assets/firebase-trips.js?v=2"></script>
 </body>
 </html>

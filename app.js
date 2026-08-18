@@ -183,6 +183,13 @@ populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
 populateCountryCodeSelect(document.getElementById('qClientCountryCode'), '+57');
+populateCountryCodeSelect(document.getElementById('ticketContactCountryCode'), '+57');
+
+function buildFullTicketContactPhone() {
+  const dial = document.getElementById('ticketContactCountryCode').value;
+  const number = document.getElementById('ticketContactPhone').value.trim();
+  return number ? `${dial} ${number}` : '';
+}
 
 function buildFullClientPhone() {
   const dial = document.getElementById('qClientCountryCode').value;
@@ -790,6 +797,25 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
 
   if (document.getElementById('wantsInvoice').checked) {
     generateInvoicePDF(data, collectInvoiceFields());
+  }
+
+  if (window.saveTripToCloud) {
+    const telefono = buildFullTicketContactPhone();
+    const fechaSalidaIda = idaContainer.querySelector('.fl-fecha-salida').value; // YYYY-MM-DD
+    if (telefono && fechaSalidaIda) {
+      window.saveTripToCloud({
+        pasajeros: data.passengers,
+        telefono,
+        bookingRef: data.bookingRef,
+        aerolineaIda: data.ida.airline,
+        origenIda: data.ida.origin,
+        destinoIda: data.ida.dest,
+        fechaSalidaIda,
+        horaSalidaIda: idaContainer.querySelector('.fl-hora-salida').value,
+        hasReturn: data.hasReturn,
+        fechaSalidaRegreso: data.hasReturn ? regresoContainer.querySelector('.fl-fecha-salida').value : '',
+      });
+    }
   }
 });
 
