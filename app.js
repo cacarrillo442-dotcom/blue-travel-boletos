@@ -176,6 +176,14 @@ document.getElementById('hasReturn').addEventListener('change', (e) => {
 populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
+populateCountryCodeSelect(document.getElementById('qClientCountryCode'), '+57');
+
+function buildFullClientPhone() {
+  const dial = document.getElementById('qClientCountryCode').value;
+  const number = document.getElementById('qClientPhone').value.trim();
+  return number ? `${dial} ${number}` : '';
+}
+window.buildFullClientPhone = buildFullClientPhone;
 
 const qAirlineSelect = document.getElementById('qAirline');
 const qAirlineOtherWrap = document.querySelector('.q-airline-other-wrap');
@@ -785,7 +793,7 @@ function collectQuoteFields() {
   return {
     clientName: document.getElementById('qClientName').value.trim(),
     passengers: document.getElementById('qPassengers').value.trim() || '1',
-    clientPhone: document.getElementById('qClientPhone').value.trim(),
+    clientPhone: buildFullClientPhone(),
     clientEmail: document.getElementById('qClientEmail').value.trim(),
     airline: qAirlineSelect.value === 'OTRA'
       ? document.getElementById('qAirlineOther').value.trim()

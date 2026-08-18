@@ -236,8 +236,13 @@
         <label>Número de pasajeros
           <input type="number" id="qPassengers" min="1" value="1" />
         </label>
+      </div>
+      <div class="grid-3">
+        <label>Indicativo
+          <select id="qClientCountryCode"></select>
+        </label>
         <label>Teléfono
-          <input type="text" id="qClientPhone" placeholder="Ej. +57 300 123 4567" />
+          <input type="text" id="qClientPhone" placeholder="Ej. 300 123 4567" />
         </label>
         <label>Correo
           <input type="text" id="qClientEmail" placeholder="Ej. cliente@correo.com" />
@@ -487,6 +492,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js"></script>
+<script src="assets/country-codes-data.js"></script>
 <script src="app.js"></script>
 <script type="module" src="assets/firebase-clients.js"></script>
 </body>

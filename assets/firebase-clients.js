@@ -123,7 +123,7 @@ saveClientBtn.addEventListener('click', async () => {
   }
   const nombre = document.getElementById('qClientName').value.trim();
   const correo = document.getElementById('qClientEmail').value.trim();
-  const telefono = document.getElementById('qClientPhone').value.trim();
+  const telefono = window.buildFullClientPhone ? window.buildFullClientPhone() : document.getElementById('qClientPhone').value.trim();
   if (!nombre) {
     setStatus('⚠️ Escribe al menos el nombre del cliente.', false);
     return;
