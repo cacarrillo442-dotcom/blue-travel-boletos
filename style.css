@@ -238,6 +238,32 @@ textarea {
   box-shadow: 0 2px 10px rgba(3, 60, 105, 0.15);
 }
 
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 560px;
+}
+
+.clients-table th {
+  text-align: left;
+  color: var(--color-primary);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--color-neutral);
+  white-space: nowrap;
+}
+
+.clients-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-neutral);
+  color: var(--color-text);
+}
+
+.clients-table tbody tr:hover {
+  background: #f4f8fb;
+}
+
 .page-footer {
   text-align: center;
   padding: 20px;

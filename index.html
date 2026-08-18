@@ -22,6 +22,7 @@
 <nav class="tabs">
   <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos y facturas</button>
   <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
+  <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
 </nav>
 
 <main class="container">
@@ -340,9 +341,11 @@
     </section>
 
     <div class="actions actions-split">
+      <button type="button" class="btn-secondary" id="qSaveClientBtn">💾 Guardar cliente</button>
       <button type="button" class="btn-secondary" id="qGenerateImageBtn">🖼️ Generar imagen para WhatsApp</button>
       <button type="submit" class="btn-primary">Generar texto de cotización</button>
     </div>
+    <p class="hint" id="qSaveClientStatus" style="text-align:right"></p>
 
     <section class="card hidden" id="qOutputCard">
       <div class="card-header">
@@ -363,6 +366,44 @@
       <img id="qImagePreview" alt="Cotización" class="quote-image-preview" />
     </section>
   </form>
+</div>
+
+<div id="clientsPanel" class="tab-panel hidden">
+  <section class="card" id="clientsLoginCard">
+    <h2>Iniciar sesión</h2>
+    <p class="hint">Los datos de clientes están protegidos: solo se guardan o se ven con una cuenta autorizada.</p>
+    <div class="grid-2">
+      <label>Correo
+        <input type="email" id="clientsLoginEmail" placeholder="tu@correo.com" />
+      </label>
+      <label>Contraseña
+        <input type="password" id="clientsLoginPassword" placeholder="••••••••" />
+      </label>
+    </div>
+    <p class="hint" id="clientsLoginError" style="color:#a33"></p>
+    <div class="actions">
+      <button type="button" class="btn-primary" id="clientsLoginBtn">Entrar</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="clientsLoggedInCard">
+    <div class="card-header">
+      <h2>Clientes guardados</h2>
+      <button type="button" class="btn-add" id="clientsLogoutBtn">Cerrar sesión</button>
+    </div>
+    <p class="hint" id="clientsSessionLabel"></p>
+    <div class="inline-add-row">
+      <button type="button" class="btn-add" id="clientsDownloadCsvBtn">⬇️ Descargar CSV</button>
+    </div>
+    <div style="overflow-x:auto; margin-top:14px">
+      <table class="clients-table" id="clientsTable">
+        <thead>
+          <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Ruta</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 </div>
 </main>
 
@@ -447,5 +488,6 @@
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js"></script>
 <script src="app.js"></script>
+<script type="module" src="assets/firebase-clients.js"></script>
 </body>
 </html>
