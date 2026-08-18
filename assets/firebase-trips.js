@@ -1,5 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -18,8 +20,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const tripsCol = collection(db, 'viajes');
 
+const tripsLoginCard = document.getElementById('tripsLoginCard');
 const tripsCard = document.getElementById('tripsCard');
 const tripsList = document.getElementById('tripsList');
+const tripsLoginBtn = document.getElementById('tripsLoginBtn');
+const tripsLoginEmail = document.getElementById('tripsLoginEmail');
+const tripsLoginPassword = document.getElementById('tripsLoginPassword');
+const tripsLoginError = document.getElementById('tripsLoginError');
 
 let currentTrips = [];
 let unsubscribeTrips = null;
@@ -29,14 +36,25 @@ window.saveTripToCloud = function saveTripToCloud(trip) {
     .catch(() => { /* si falla, no interrumpe la generacion del boleto */ });
 };
 
+tripsLoginBtn.addEventListener('click', async () => {
+  tripsLoginError.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, tripsLoginEmail.value.trim(), tripsLoginPassword.value);
+  } catch (e) {
+    tripsLoginError.textContent = 'No se pudo iniciar sesión. Verifica tu correo y contraseña.';
+  }
+});
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
+    tripsLoginCard.classList.add('hidden');
     tripsCard.classList.remove('hidden');
     unsubscribeTrips = onSnapshot(tripsCol, (snap) => {
       currentTrips = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderTrips();
     });
   } else {
+    tripsLoginCard.classList.remove('hidden');
     tripsCard.classList.add('hidden');
     if (unsubscribeTrips) { unsubscribeTrips(); unsubscribeTrips = null; }
     currentTrips = [];

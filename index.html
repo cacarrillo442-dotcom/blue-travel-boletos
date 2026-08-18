@@ -23,6 +23,7 @@
   <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos y facturas</button>
   <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
+  <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
 </nav>
 
 <main class="container">
@@ -441,6 +442,26 @@
     <div id="promoClientsList" class="promo-list"></div>
   </section>
 
+</div>
+
+<div id="tripsPanel" class="tab-panel hidden">
+  <section class="card" id="tripsLoginCard">
+    <h2>Iniciar sesión</h2>
+    <p class="hint">Los datos de viajeros están protegidos: solo se ven con una cuenta autorizada.</p>
+    <div class="grid-2">
+      <label>Correo
+        <input type="email" id="tripsLoginEmail" placeholder="tu@correo.com" />
+      </label>
+      <label>Contraseña
+        <input type="password" id="tripsLoginPassword" placeholder="••••••••" />
+      </label>
+    </div>
+    <p class="hint" id="tripsLoginError" style="color:#a33"></p>
+    <div class="actions">
+      <button type="button" class="btn-primary" id="tripsLoginBtn">Entrar</button>
+    </div>
+  </section>
+
   <section class="card hidden" id="tripsCard">
     <h2>✈️ Próximos viajes</h2>
     <p class="hint">
@@ -537,6 +558,6 @@
 <script src="app.js?v=2"></script>
 <script type="module" src="assets/firebase-clients.js?v=2"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
-<script type="module" src="assets/firebase-trips.js?v=2"></script>
+<script type="module" src="assets/firebase-trips.js?v=3"></script>
 </body>
 </html>
