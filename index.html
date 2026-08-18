@@ -248,6 +248,10 @@
           <input type="text" id="qClientEmail" placeholder="Ej. cliente@correo.com" />
         </label>
       </div>
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="qClientPromoConsent" />
+        El cliente autoriza recibir promociones de Blue Travel
+      </label>
     </section>
 
     <section class="card">
@@ -403,11 +407,25 @@
     <div style="overflow-x:auto; margin-top:14px">
       <table class="clients-table" id="clientsTable">
         <thead>
-          <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Ruta</th></tr>
+          <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Ruta</th><th>Promos</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
+  </section>
+
+  <section class="card hidden" id="promoCard">
+    <h2>📣 Enviar publicidad</h2>
+    <p class="hint">
+      Solo se muestran los clientes que autorizaron recibir promociones. Cada botón abre WhatsApp con
+      el mensaje ya escrito — tú revisas y das enviar, uno por uno (así lo permite WhatsApp y respeta
+      su autorización).
+    </p>
+    <label>Mensaje promocional
+      <textarea id="promoMessage" rows="4" placeholder="Escribe aquí la promoción..."></textarea>
+    </label>
+    <p class="hint">Tip: incluye algo como "Responde STOP si no quieres volver a recibir promociones."</p>
+    <div id="promoClientsList" class="promo-list"></div>
   </section>
 </div>
 </main>

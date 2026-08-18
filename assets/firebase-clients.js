@@ -31,6 +31,9 @@ const clientsTableBody = document.querySelector('#clientsTable tbody');
 const downloadCsvBtn = document.getElementById('clientsDownloadCsvBtn');
 const saveClientBtn = document.getElementById('qSaveClientBtn');
 const saveClientStatus = document.getElementById('qSaveClientStatus');
+const promoCard = document.getElementById('promoCard');
+const promoMessage = document.getElementById('promoMessage');
+const promoClientsList = document.getElementById('promoClientsList');
 
 let currentClients = [];
 let unsubscribeClients = null;
@@ -69,11 +72,13 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     loginCard.classList.add('hidden');
     loggedInCard.classList.remove('hidden');
+    promoCard.classList.remove('hidden');
     sessionLabel.textContent = `Sesión iniciada como: ${user.email}`;
     subscribeClients();
   } else {
     loginCard.classList.remove('hidden');
     loggedInCard.classList.add('hidden');
+    promoCard.classList.add('hidden');
     if (unsubscribeClients) { unsubscribeClients(); unsubscribeClients = null; }
     currentClients = [];
     renderClients();
@@ -93,16 +98,49 @@ function renderClients() {
   currentClients.forEach((c) => {
     const fecha = c.fecha && c.fecha.toDate ? c.fecha.toDate().toLocaleDateString('es-CO') : '';
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fecha}</td><td>${escapeHtml(c.nombre || '')}</td><td>${escapeHtml(c.correo || '')}</td><td>${escapeHtml(c.telefono || '')}</td><td>${escapeHtml(c.ruta || '')}</td>`;
+    tr.innerHTML = `<td>${fecha}</td><td>${escapeHtml(c.nombre || '')}</td><td>${escapeHtml(c.correo || '')}</td><td>${escapeHtml(c.telefono || '')}</td><td>${escapeHtml(c.ruta || '')}</td><td>${c.autorizaPromos ? 'Sí' : 'No'}</td>`;
     clientsTableBody.appendChild(tr);
+  });
+  renderPromoList();
+}
+
+function phoneToWhatsappDigits(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+function renderPromoList() {
+  const consenting = currentClients.filter((c) => c.autorizaPromos && c.telefono);
+  promoClientsList.innerHTML = '';
+  if (!consenting.length) {
+    promoClientsList.innerHTML = '<p class="promo-empty">Todavía no hay clientes que hayan autorizado recibir promociones.</p>';
+    return;
+  }
+  consenting.forEach((c) => {
+    const row = document.createElement('div');
+    row.className = 'promo-row';
+    const info = document.createElement('span');
+    info.className = 'promo-row-info';
+    info.innerHTML = `<strong>${escapeHtml(c.nombre || '')}</strong> — ${escapeHtml(c.telefono || '')}`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-add';
+    btn.textContent = '📲 Abrir WhatsApp';
+    btn.addEventListener('click', () => {
+      const digits = phoneToWhatsappDigits(c.telefono);
+      const text = encodeURIComponent(promoMessage.value.trim());
+      window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
+    });
+    row.appendChild(info);
+    row.appendChild(btn);
+    promoClientsList.appendChild(row);
   });
 }
 
 downloadCsvBtn.addEventListener('click', () => {
-  const header = 'Fecha,Nombre,Correo,Telefono,Ruta\n';
+  const header = 'Fecha,Nombre,Correo,Telefono,Ruta,AutorizaPromos\n';
   const rows = currentClients.map((c) => {
     const fecha = c.fecha && c.fecha.toDate ? c.fecha.toDate().toLocaleDateString('es-CO') : '';
-    return [fecha, c.nombre, c.correo, c.telefono, c.ruta]
+    return [fecha, c.nombre, c.correo, c.telefono, c.ruta, c.autorizaPromos ? 'Si' : 'No']
       .map((v) => `"${String(v || '').replace(/"/g, '""')}"`).join(',');
   }).join('\n');
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
@@ -131,11 +169,12 @@ saveClientBtn.addEventListener('click', async () => {
   const origin = document.getElementById('qOrigin').value;
   const dest = document.getElementById('qDest').value;
   const ruta = origin && dest ? `${origin} - ${dest}` : '';
+  const autorizaPromos = document.getElementById('qClientPromoConsent').checked;
 
   saveClientBtn.disabled = true;
   try {
     await addDoc(collection(db, 'clientes'), {
-      nombre, correo, telefono, ruta,
+      nombre, correo, telefono, ruta, autorizaPromos,
       fecha: serverTimestamp(),
     });
     setStatus('✅ Cliente guardado.', true);
