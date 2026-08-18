@@ -3,7 +3,7 @@ import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, onSnapshot,
+  getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -29,6 +29,8 @@ const logoutBtn = document.getElementById('clientsLogoutBtn');
 const sessionLabel = document.getElementById('clientsSessionLabel');
 const clientsTableBody = document.querySelector('#clientsTable tbody');
 const downloadCsvBtn = document.getElementById('clientsDownloadCsvBtn');
+const dedupeBtn = document.getElementById('clientsDedupeBtn');
+const dedupeStatus = document.getElementById('clientsDedupeStatus');
 const saveClientBtn = document.getElementById('qSaveClientBtn');
 const saveClientStatus = document.getElementById('qSaveClientStatus');
 const promoCard = document.getElementById('promoCard');
@@ -207,6 +209,51 @@ downloadCsvBtn.addEventListener('click', () => {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+});
+
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+dedupeBtn.addEventListener('click', async () => {
+  dedupeStatus.textContent = '';
+
+  // currentClients viene ordenado por fecha descendente: el primero de cada
+  // grupo es el mas reciente, asi que ese es el que se conserva.
+  const seen = new Map();
+  const toDelete = [];
+  currentClients.forEach((c) => {
+    const key = normalizePhone(c.telefono);
+    if (!key) return; // sin telefono no se puede comparar con seguridad
+    if (seen.has(key)) {
+      toDelete.push(c);
+    } else {
+      seen.set(key, c);
+    }
+  });
+
+  if (!toDelete.length) {
+    dedupeStatus.textContent = 'No se encontraron duplicados (se compara por teléfono).';
+    return;
+  }
+
+  const names = toDelete.map((c) => c.nombre || c.telefono).join(', ');
+  const confirmed = window.confirm(
+    `Se van a eliminar ${toDelete.length} registro(s) duplicado(s), conservando el más reciente de `
+    + `cada teléfono repetido:\n\n${names}\n\nEsta acción no se puede deshacer. ¿Continuar?`
+  );
+  if (!confirmed) return;
+
+  dedupeBtn.disabled = true;
+  let deletedCount = 0;
+  for (const c of toDelete) {
+    try {
+      await deleteDoc(doc(db, 'clientes', c.id));
+      deletedCount += 1;
+    } catch (e) { /* sigue con los demas */ }
+  }
+  dedupeBtn.disabled = false;
+  dedupeStatus.textContent = `✅ Se eliminaron ${deletedCount} duplicado(s).`;
 });
 
 saveClientBtn.addEventListener('click', async () => {
