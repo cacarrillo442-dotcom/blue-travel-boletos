@@ -87,10 +87,20 @@ function buildCheckinMessage(t) {
   const nombres = (t.pasajeros || []).join(', ') || 'viajero';
   const fecha = formatIsoDate(t.fechaSalidaIda);
   const hora = t.horaSalidaIda || '';
-  const ruta = t.origenIda && t.destinoIda ? ` (${t.origenIda} → ${t.destinoIda})` : '';
-  return `¡Hola ${nombres}! ✈️ Te recordamos que tu vuelo con *Blue Travel*${ruta} sale el ${fecha}`
-    + `${hora ? ' a las ' + hora : ''}. No olvides hacer tu check-in en línea con la aerolínea y alistar `
-    + 'tu equipaje con tiempo. ¡Buen viaje! 🧳';
+  const ruta = t.origenIda && t.destinoIda ? `${t.origenIda} → ${t.destinoIda}` : '';
+
+  const lines = [];
+  lines.push(`¡Hola ${nombres}! 🙋‍♀️👋 Ya casi es hora de volar con *Blue Travel* ✈️`);
+  lines.push('');
+  if (t.bookingRef) lines.push(`🔖 Reserva: ${t.bookingRef}`);
+  if (t.aerolineaIda) lines.push(`🛫 Aerolínea: ${t.aerolineaIda}`);
+  if (ruta) lines.push(`📍 Ruta: ${ruta}`);
+  lines.push(`📅 Sale el: ${fecha}${hora ? ' a las ' + hora : ''}`);
+  lines.push('');
+  lines.push('Recuerda hacer tu *check-in* en línea con la aerolínea y tener tu equipaje listo con tiempo 🧳');
+  lines.push('Cualquier cosa que necesites, aquí estamos 🙂 ¡Buen viaje! 💙');
+
+  return lines.join('\n');
 }
 
 function renderTrips() {
