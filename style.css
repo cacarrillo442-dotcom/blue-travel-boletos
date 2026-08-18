@@ -157,6 +157,23 @@ textarea {
   cursor: pointer;
 }
 
+.btn-remove-inline {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #f1d6d6;
+  color: #a33;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.btn-remove-inline:hover {
+  background: #e6b8b8;
+}
+
 .btn-remove:hover {
   background: #e6b8b8;
 }

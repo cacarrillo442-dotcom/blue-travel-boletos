@@ -118,7 +118,7 @@ function renderClients() {
       saveBtn.textContent = '💾 Guardar';
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
-      cancelBtn.className = 'btn-remove';
+      cancelBtn.className = 'btn-remove-inline';
       cancelBtn.textContent = '✖';
       cancelBtn.title = 'Cancelar';
       saveBtn.addEventListener('click', async () => {
@@ -153,7 +153,24 @@ function renderClients() {
         editingId = c.id;
         renderClients();
       });
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn-remove-inline';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.title = 'Eliminar cliente';
+      deleteBtn.addEventListener('click', async () => {
+        const confirmed = window.confirm(
+          `¿Eliminar a "${c.nombre || c.telefono || 'este cliente'}"? Esta acción no se puede deshacer.`
+        );
+        if (!confirmed) return;
+        try {
+          await deleteDoc(doc(db, 'clientes', c.id));
+        } catch (e) {
+          alert('No se pudo eliminar. Intenta de nuevo.');
+        }
+      });
       tr.lastElementChild.appendChild(editBtn);
+      tr.lastElementChild.appendChild(deleteBtn);
     }
 
     clientsTableBody.appendChild(tr);
