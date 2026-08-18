@@ -3,7 +3,7 @@ import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot,
+  getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, query, orderBy, onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -37,6 +37,7 @@ const promoClientsList = document.getElementById('promoClientsList');
 
 let currentClients = [];
 let unsubscribeClients = null;
+let editingId = null;
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
@@ -88,7 +89,7 @@ onAuthStateChanged(auth, (user) => {
 function subscribeClients() {
   const q = query(collection(db, 'clientes'), orderBy('fecha', 'desc'));
   unsubscribeClients = onSnapshot(q, (snap) => {
-    currentClients = snap.docs.map((d) => d.data());
+    currentClients = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderClients();
   });
 }
@@ -98,7 +99,61 @@ function renderClients() {
   currentClients.forEach((c) => {
     const fecha = c.fecha && c.fecha.toDate ? c.fecha.toDate().toLocaleDateString('es-CO') : '';
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fecha}</td><td>${escapeHtml(c.nombre || '')}</td><td>${escapeHtml(c.correo || '')}</td><td>${escapeHtml(c.telefono || '')}</td><td>${escapeHtml(c.ruta || '')}</td><td>${c.autorizaPromos ? 'Sí' : 'No'}</td>`;
+
+    if (c.id === editingId) {
+      tr.innerHTML = `
+        <td>${fecha}</td>
+        <td><input type="text" class="edit-nombre" value="${escapeHtml(c.nombre || '')}" /></td>
+        <td><input type="text" class="edit-correo" value="${escapeHtml(c.correo || '')}" /></td>
+        <td><input type="text" class="edit-telefono" value="${escapeHtml(c.telefono || '')}" /></td>
+        <td><input type="text" class="edit-ruta" value="${escapeHtml(c.ruta || '')}" /></td>
+        <td style="text-align:center"><input type="checkbox" class="edit-promos" ${c.autorizaPromos ? 'checked' : ''} /></td>
+        <td></td>
+      `;
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'btn-add';
+      saveBtn.textContent = '💾 Guardar';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn-remove';
+      cancelBtn.textContent = '✖';
+      cancelBtn.title = 'Cancelar';
+      saveBtn.addEventListener('click', async () => {
+        const updated = {
+          nombre: tr.querySelector('.edit-nombre').value.trim(),
+          correo: tr.querySelector('.edit-correo').value.trim(),
+          telefono: tr.querySelector('.edit-telefono').value.trim(),
+          ruta: tr.querySelector('.edit-ruta').value.trim(),
+          autorizaPromos: tr.querySelector('.edit-promos').checked,
+        };
+        try {
+          await updateDoc(doc(db, 'clientes', c.id), updated);
+          editingId = null;
+        } catch (e) {
+          alert('No se pudo guardar el cambio. Intenta de nuevo.');
+        }
+      });
+      cancelBtn.addEventListener('click', () => {
+        editingId = null;
+        renderClients();
+      });
+      const actionsCell = tr.lastElementChild;
+      actionsCell.appendChild(saveBtn);
+      actionsCell.appendChild(cancelBtn);
+    } else {
+      tr.innerHTML = `<td>${fecha}</td><td>${escapeHtml(c.nombre || '')}</td><td>${escapeHtml(c.correo || '')}</td><td>${escapeHtml(c.telefono || '')}</td><td>${escapeHtml(c.ruta || '')}</td><td>${c.autorizaPromos ? 'Sí' : 'No'}</td><td></td>`;
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'btn-add';
+      editBtn.textContent = '✏️ Editar';
+      editBtn.addEventListener('click', () => {
+        editingId = c.id;
+        renderClients();
+      });
+      tr.lastElementChild.appendChild(editBtn);
+    }
+
     clientsTableBody.appendChild(tr);
   });
   renderPromoList();
