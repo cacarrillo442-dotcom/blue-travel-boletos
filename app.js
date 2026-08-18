@@ -77,6 +77,10 @@ function refreshAllSelects() {
 
 loadCustomCatalog();
 
+window.AIRLINES = AIRLINES;
+window.AIRPORTS = AIRPORTS;
+window.refreshAllSelects = refreshAllSelects;
+
 document.getElementById('addAirlineBtn').addEventListener('click', () => {
   const input = document.getElementById('newAirlineName');
   const name = input.value.trim().toUpperCase();
@@ -84,6 +88,7 @@ document.getElementById('addAirlineBtn').addEventListener('click', () => {
   AIRLINES.push(name);
   saveCustomAirline(name);
   refreshAllSelects();
+  if (window.saveAirlineToCloud) window.saveAirlineToCloud(name);
   input.value = '';
 });
 
@@ -110,6 +115,7 @@ document.getElementById('addAirportBtn').addEventListener('click', () => {
   AIRPORTS.push(airport);
   saveCustomAirport(airport);
   refreshAllSelects();
+  if (window.saveAirportToCloud) window.saveAirportToCloud(airport);
   codeInput.value = '';
   cityInput.value = '';
   countryInput.value = '';
