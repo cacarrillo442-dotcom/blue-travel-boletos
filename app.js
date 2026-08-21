@@ -182,6 +182,8 @@ document.getElementById('hasReturn').addEventListener('change', (e) => {
 populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
+populateAirportSelect(document.getElementById('qReturnOrigin'));
+populateAirportSelect(document.getElementById('qReturnDest'));
 populateCountryCodeSelect(document.getElementById('qClientCountryCode'), '+57');
 populateCountryCodeSelect(document.getElementById('ticketContactCountryCode'), '+57');
 
@@ -203,6 +205,18 @@ const qAirlineOtherWrap = document.querySelector('.q-airline-other-wrap');
 populateAirlineSelect(qAirlineSelect);
 qAirlineSelect.addEventListener('change', () => {
   qAirlineOtherWrap.classList.toggle('hidden', qAirlineSelect.value !== 'OTRA');
+});
+
+const qReturnMultidestino = document.getElementById('qReturnMultidestino');
+const qReturnMultiFields = document.querySelector('.q-return-multi-fields');
+const qReturnAirlineSelect = document.getElementById('qReturnAirline');
+const qReturnAirlineOtherWrap = document.querySelector('.q-return-airline-other-wrap');
+populateAirlineSelect(qReturnAirlineSelect);
+qReturnMultidestino.addEventListener('change', () => {
+  qReturnMultiFields.classList.toggle('hidden', !qReturnMultidestino.checked);
+});
+qReturnAirlineSelect.addEventListener('change', () => {
+  qReturnAirlineOtherWrap.classList.toggle('hidden', qReturnAirlineSelect.value !== 'OTRA');
 });
 
 const qEscalaFields = document.querySelector('.q-escala-fields');
@@ -838,6 +852,14 @@ function collectQuoteFields() {
     returnDate: formatDate(document.getElementById('qReturnDate').value),
     returnDepartTime: formatTime(document.getElementById('qReturnDepartTime').value),
     returnArriveTime: formatTime(document.getElementById('qReturnArriveTime').value),
+    returnMultidestino: qReturnMultidestino.checked,
+    returnAirline: qReturnMultidestino.checked
+      ? (qReturnAirlineSelect.value === 'OTRA'
+        ? document.getElementById('qReturnAirlineOther').value.trim()
+        : qReturnAirlineSelect.value)
+      : '',
+    returnOrigin: qReturnMultidestino.checked ? document.getElementById('qReturnOrigin').value : '',
+    returnDest: qReturnMultidestino.checked ? document.getElementById('qReturnDest').value : '',
     tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
     escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
     escalaLugar: document.getElementById('qEscalaLugar').value,
@@ -879,6 +901,14 @@ function buildQuoteText(q) {
     lines.push(`🕐 Salida: ${q.departTime || '-'}   Llegada: ${q.arriveTime || '-'}`);
   }
   if (q.returnDate) {
+    if (q.returnMultidestino && (q.returnOrigin || q.returnDest || q.returnAirline)) {
+      const retOriginAirport = findAirport(q.returnOrigin);
+      const retDestAirport = findAirport(q.returnDest);
+      const retOriginLabel = retOriginAirport ? `${retOriginAirport.city} (${retOriginAirport.code})` : q.returnOrigin;
+      const retDestLabel = retDestAirport ? `${retDestAirport.city} (${retDestAirport.code})` : q.returnDest;
+      lines.push(`↩️ Ruta de regreso: ${retOriginLabel || '-'} → ${retDestLabel || '-'}`);
+      if (q.returnAirline) lines.push(`🛫 Aerolínea de regreso: ${q.returnAirline}`);
+    }
     lines.push(`📅 Fecha de regreso: ${q.returnDate}`);
     if (q.returnDepartTime || q.returnArriveTime) {
       lines.push(`🕐 Salida: ${q.returnDepartTime || '-'}   Llegada: ${q.returnArriveTime || '-'}`);
@@ -1032,6 +1062,14 @@ function drawQuoteImageCard(q) {
         row('Horario ida', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
       }
       if (q.returnDate) {
+        if (q.returnMultidestino && (q.returnOrigin || q.returnDest || q.returnAirline)) {
+          const retOriginAirport = findAirport(q.returnOrigin);
+          const retDestAirport = findAirport(q.returnDest);
+          const retOriginLabel = retOriginAirport ? `${retOriginAirport.city} (${retOriginAirport.code})` : q.returnOrigin;
+          const retDestLabel = retDestAirport ? `${retDestAirport.city} (${retDestAirport.code})` : q.returnDest;
+          row('Ruta de regreso', `${retOriginLabel || '-'} → ${retDestLabel || '-'}`);
+          if (q.returnAirline) row('Aerolínea regreso', q.returnAirline);
+        }
         row('Fecha de regreso', q.returnDate);
         if (q.returnDepartTime || q.returnArriveTime) {
           row('Horario regreso', `Salida ${q.returnDepartTime || '-'}   Llegada ${q.returnArriveTime || '-'}`);

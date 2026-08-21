@@ -305,6 +305,25 @@
         </label>
       </div>
 
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="qReturnMultidestino" />
+        El regreso es con otra aerolínea u otro aeropuerto (multidestino)
+      </label>
+      <div class="grid-3 q-return-multi-fields hidden">
+        <label>Aerolínea (regreso)
+          <select id="qReturnAirline" class="airline-select"></select>
+        </label>
+        <label class="q-return-airline-other-wrap hidden">Especifica la aerolínea
+          <input type="text" id="qReturnAirlineOther" placeholder="Nombre de la aerolínea" />
+        </label>
+        <label>Origen (regreso)
+          <select id="qReturnOrigin" class="airport-select"></select>
+        </label>
+        <label>Destino (regreso)
+          <select id="qReturnDest" class="airport-select"></select>
+        </label>
+      </div>
+
       <div class="radio-row">
         <span class="radio-title">Tipo de vuelo</span>
         <label class="radio-label"><input type="radio" name="qTipoVuelo" class="q-tipo" value="DIRECTO" checked /> Directo</label>
@@ -555,7 +574,7 @@
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 <script type="module" src="assets/firebase-clients.js?v=2"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-trips.js?v=4"></script>
