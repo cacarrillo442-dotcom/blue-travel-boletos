@@ -158,6 +158,9 @@ function buildFlightBlock(container) {
 
   const escalaFields = container.querySelector('.fl-escala-fields');
   container.querySelectorAll('.fl-tipo').forEach(radio => {
+    // Ida y regreso vienen de la misma plantilla: sin un nombre propio por
+    // bloque quedarian en el mismo grupo y marcar uno desmarcaria el otro.
+    radio.name = `tipoVuelo-${container.id}`;
     radio.addEventListener('change', () => {
       escalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
     });
@@ -250,6 +253,41 @@ function formatTime(value) {
   const suffix = hour >= 12 ? 'PM' : 'AM';
   const hour12 = ((hour + 11) % 12) + 1;
   return `${String(hour12).padStart(2, '0')}:${m} ${suffix}`;
+}
+
+// Lee el vuelo en crudo: los valores tal cual estan en el formulario. Asi se
+// pueden guardar en el historial y volver a cargarlos despues sin perder nada.
+function readFlightRaw(container) {
+  const tipoRadio = container.querySelector('.fl-tipo:checked');
+  return {
+    airlineSelect: container.querySelector('.fl-airline').value,
+    airlineOther: container.querySelector('.fl-airline-other').value.trim(),
+    origin: container.querySelector('.fl-origin').value,
+    dest: container.querySelector('.fl-dest').value,
+    tipo: tipoRadio ? tipoRadio.value : 'DIRECTO',
+    escalaTiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
+    escalaLugar: container.querySelector('.fl-escala-lugar').value,
+    fechaSalida: container.querySelector('.fl-fecha-salida').value,
+    horaSalida: container.querySelector('.fl-hora-salida').value,
+    fechaLlegada: container.querySelector('.fl-fecha-llegada').value,
+    horaLlegada: container.querySelector('.fl-hora-llegada').value,
+  };
+}
+
+// Convierte el crudo al formato con fechas y horas legibles que usa el PDF.
+function flightFromRaw(f) {
+  return {
+    airline: f.airlineSelect === 'OTRA' ? f.airlineOther : f.airlineSelect,
+    origin: f.origin,
+    dest: f.dest,
+    tipo: f.tipo,
+    escalaTiempo: f.escalaTiempo,
+    escalaLugar: f.escalaLugar,
+    fechaSalida: formatDate(f.fechaSalida),
+    horaSalida: formatTime(f.horaSalida),
+    fechaLlegada: formatDate(f.fechaLlegada),
+    horaLlegada: formatTime(f.horaLlegada),
+  };
 }
 
 function readFlightBlock(container) {
@@ -794,29 +832,108 @@ function collectTicketData() {
   };
 }
 
+// ---------- Historial de boletos ----------
+
+// Todo lo necesario para reconstruir el boleto tal como se lleno.
+function collectTicketRaw() {
+  return {
+    bookingRef: document.getElementById('bookingRef').value.trim(),
+    ticketNumber: document.getElementById('ticketNumber').value.trim(),
+    contactCountryCode: document.getElementById('ticketContactCountryCode').value,
+    contactPhone: document.getElementById('ticketContactPhone').value.trim(),
+    passengers: Array.from(passengersContainer.querySelectorAll('.p-name'))
+      .map(i => i.value.trim()).filter(Boolean),
+    luggage: {
+      personal: document.getElementById('eqPersonal').checked,
+      mano: document.getElementById('eqMano').checked,
+      bodega: document.getElementById('eqBodega').checked,
+    },
+    ida: readFlightRaw(idaContainer),
+    hasReturn: document.getElementById('hasReturn').checked,
+    regreso: readFlightRaw(regresoContainer),
+    terms: document.getElementById('terms').value.trim(),
+  };
+}
+
+function ticketDataFromRaw(raw) {
+  return {
+    bookingRef: raw.bookingRef || '',
+    ticketNumber: raw.ticketNumber || '',
+    passengers: raw.passengers || [],
+    luggage: raw.luggage || {},
+    ida: flightFromRaw(raw.ida || {}),
+    hasReturn: !!raw.hasReturn,
+    regreso: flightFromRaw(raw.regreso || {}),
+    terms: raw.terms || '',
+  };
+}
+window.ticketDataFromRaw = ticketDataFromRaw;
+window.generateTicketPDF = (data) => generatePDF(data);
+
+function fillFlightBlock(container, f) {
+  if (!f) return;
+  const airlineSel = container.querySelector('.fl-airline');
+  airlineSel.value = f.airlineSelect || '';
+  airlineSel.dispatchEvent(new Event('change'));
+  container.querySelector('.fl-airline-other').value = f.airlineOther || '';
+  container.querySelector('.fl-origin').value = f.origin || '';
+  container.querySelector('.fl-dest').value = f.dest || '';
+  const tipo = f.tipo || 'DIRECTO';
+  const radio = container.querySelector(`.fl-tipo[value="${tipo}"]`);
+  if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+  container.querySelector('.fl-escala-tiempo').value = f.escalaTiempo || '';
+  container.querySelector('.fl-escala-lugar').value = f.escalaLugar || '';
+  container.querySelector('.fl-fecha-salida').value = f.fechaSalida || '';
+  container.querySelector('.fl-hora-salida').value = f.horaSalida || '';
+  container.querySelector('.fl-fecha-llegada').value = f.fechaLlegada || '';
+  container.querySelector('.fl-hora-llegada').value = f.horaLlegada || '';
+}
+
+// Vuelve a cargar un boleto guardado en el formulario, para reusarlo o corregirlo.
+window.fillTicketForm = function fillTicketForm(raw) {
+  document.getElementById('bookingRef').value = raw.bookingRef || '';
+  document.getElementById('ticketNumber').value = raw.ticketNumber || '';
+  if (raw.contactCountryCode) {
+    document.getElementById('ticketContactCountryCode').value = raw.contactCountryCode;
+  }
+  document.getElementById('ticketContactPhone').value = raw.contactPhone || '';
+
+  passengersContainer.innerHTML = '';
+  const nombres = (raw.passengers && raw.passengers.length) ? raw.passengers : [''];
+  nombres.forEach((nombre) => {
+    addPassengerRow();
+    passengersContainer.querySelector('.passenger-row:last-child .p-name').value = nombre;
+  });
+
+  const eq = raw.luggage || {};
+  document.getElementById('eqPersonal').checked = !!eq.personal;
+  document.getElementById('eqMano').checked = !!eq.mano;
+  document.getElementById('eqBodega').checked = !!eq.bodega;
+
+  fillFlightBlock(idaContainer, raw.ida);
+  const hasReturn = !!raw.hasReturn;
+  const hasReturnBox = document.getElementById('hasReturn');
+  hasReturnBox.checked = hasReturn;
+  hasReturnBox.dispatchEvent(new Event('change'));
+  if (hasReturn) fillFlightBlock(regresoContainer, raw.regreso);
+
+  document.getElementById('terms').value = raw.terms || DEFAULT_TERMS;
+};
+
 document.getElementById('ticketForm').addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const data = collectTicketData();
+  const raw = collectTicketRaw();
+  const data = ticketDataFromRaw(raw);
   generatePDF(data);
 
-  if (window.saveTripToCloud) {
-    const telefono = buildFullTicketContactPhone();
-    const fechaSalidaIda = idaContainer.querySelector('.fl-fecha-salida').value; // YYYY-MM-DD
-    if (telefono && fechaSalidaIda) {
-      window.saveTripToCloud({
-        pasajeros: data.passengers,
-        telefono,
-        bookingRef: data.bookingRef,
-        aerolineaIda: data.ida.airline,
-        origenIda: data.ida.origin,
-        destinoIda: data.ida.dest,
-        fechaSalidaIda,
-        horaSalidaIda: idaContainer.querySelector('.fl-hora-salida').value,
-        hasReturn: data.hasReturn,
-        fechaSalidaRegreso: data.hasReturn ? regresoContainer.querySelector('.fl-fecha-salida').value : '',
-      });
-    }
+  // Un solo registro: sirve de historial y alimenta Proximos viajes.
+  if (window.saveBoletoToCloud) {
+    window.saveBoletoToCloud({
+      ...raw,
+      telefono: buildFullTicketContactPhone(),
+      resumen: `${data.ida.origin || '?'} → ${data.ida.dest || '?'}`,
+    });
   }
 });
 
@@ -847,8 +964,85 @@ document.getElementById('invPullTicketBtn').addEventListener('click', () => {
 
 document.getElementById('invoiceForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  generateInvoicePDF(collectTicketData(), collectInvoiceFields());
+  const inv = collectInvoiceFields();
+  const ticketData = collectTicketData();
+  generateInvoicePDF(ticketData, inv);
+
+  if (window.saveFacturaToCloud) {
+    window.saveFacturaToCloud({
+      ...collectInvoiceRaw(),
+      comprador: inv.buyerName || ticketData.passengers[0] || '',
+      total: invoiceTotal(inv),
+      moneda: inv.currency,
+    });
+  }
 });
+
+// Valores crudos de la factura, para poder recargarla desde el historial.
+function collectInvoiceRaw() {
+  return {
+    date: document.getElementById('invDate').value,
+    buyerName: document.getElementById('invBuyerName').value.trim(),
+    address: document.getElementById('invAddress').value.trim(),
+    city: document.getElementById('invCity').value.trim(),
+    state: document.getElementById('invState').value.trim(),
+    country: document.getElementById('invCountry').value.trim(),
+    zip: document.getElementById('invZip').value.trim(),
+    paymentMethod: document.getElementById('invPaymentMethod').value,
+    cardBrand: document.getElementById('invCardBrand').value,
+    cardLast4: document.getElementById('invCardLast4').value.trim(),
+    paymentOther: document.getElementById('invPaymentOther').value.trim(),
+    currency: document.getElementById('invCurrency').value,
+    items: Array.from(invItemsContainer.querySelectorAll('.inv-item-row')).map(row => ({
+      description: row.querySelector('.inv-item-desc').value.trim(),
+      qty: row.querySelector('.inv-item-qty').value,
+      unitPrice: row.querySelector('.inv-item-price').value.trim(),
+    })),
+    taxLabel: document.getElementById('invTaxLabel').value.trim(),
+    taxAmount: document.getElementById('invTaxAmount').value.trim(),
+    notes: document.getElementById('invNotes').value.trim(),
+  };
+}
+
+function invoiceTotal(inv) {
+  const sub = (inv.items || []).reduce((acc, it) => acc + it.qty * it.unitPrice, 0);
+  return sub + (inv.taxAmount || 0);
+}
+
+window.collectInvoiceFields = collectInvoiceFields;
+window.generateInvoiceFromRaw = function (raw) {
+  fillInvoiceForm(raw);
+  generateInvoicePDF(collectTicketData(), collectInvoiceFields());
+};
+
+window.fillInvoiceForm = function fillInvoiceForm(raw) {
+  document.getElementById('invDate').value = raw.date || '';
+  document.getElementById('invBuyerName').value = raw.buyerName || '';
+  document.getElementById('invAddress').value = raw.address || '';
+  document.getElementById('invCity').value = raw.city || '';
+  document.getElementById('invState').value = raw.state || '';
+  document.getElementById('invCountry').value = raw.country || '';
+  document.getElementById('invZip').value = raw.zip || '';
+  invPaymentMethod.value = raw.paymentMethod || '';
+  invPaymentMethod.dispatchEvent(new Event('change'));
+  document.getElementById('invCardBrand').value = raw.cardBrand || '';
+  document.getElementById('invCardLast4').value = raw.cardLast4 || '';
+  document.getElementById('invPaymentOther').value = raw.paymentOther || '';
+  document.getElementById('invCurrency').value = raw.currency || 'USD';
+
+  invItemsContainer.innerHTML = '';
+  const items = (raw.items && raw.items.length) ? raw.items : [{}];
+  items.forEach((it) => {
+    const row = addInvItemRow();
+    row.querySelector('.inv-item-desc').value = it.description || '';
+    row.querySelector('.inv-item-qty').value = it.qty || 1;
+    row.querySelector('.inv-item-price').value = it.unitPrice || '';
+  });
+
+  document.getElementById('invTaxLabel').value = raw.taxLabel || '';
+  document.getElementById('invTaxAmount').value = raw.taxAmount || '';
+  document.getElementById('invNotes').value = raw.notes || '';
+};
 
 // ---------- Cotización (texto para WhatsApp) ----------
 

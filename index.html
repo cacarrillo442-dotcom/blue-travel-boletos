@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=8" />
+<link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
 
@@ -42,6 +42,7 @@
   <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos</button>
   <button type="button" class="tab-btn" data-tab="invoicePanel">🧾 Facturas</button>
   <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
+  <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
   <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
 </nav>
@@ -442,6 +443,26 @@
   </form>
 </div>
 
+<div id="historyPanel" class="tab-panel hidden">
+  <section class="card">
+    <div class="card-header">
+      <h2>📁 Historial</h2>
+      <div class="inline-add-row" style="margin-top:0">
+        <button type="button" class="btn-add hist-filter active" data-hist="boletos">🎫 Boletos</button>
+        <button type="button" class="btn-add hist-filter" data-hist="facturas">🧾 Facturas</button>
+      </div>
+    </div>
+    <p class="hint">
+      Cada boleto y factura que generas queda guardado aquí. Puedes volver a descargar el PDF
+      o usarlo como base para uno nuevo, sin tener que escribir todo otra vez.
+    </p>
+    <label>Buscar
+      <input type="text" id="histSearch" placeholder="Nombre, código de reserva, ruta..." />
+    </label>
+    <div id="histList" class="promo-list"></div>
+  </section>
+</div>
+
 <div id="clientsPanel" class="tab-panel hidden">
   <section class="card" id="clientsLoginCard">
     <h2>Iniciar sesión</h2>
@@ -609,10 +630,11 @@
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 <script type="module" src="assets/firebase-clients.js?v=3"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
-<script type="module" src="assets/firebase-trips.js?v=6"></script>
+<script type="module" src="assets/firebase-history.js?v=1"></script>
+<script type="module" src="assets/firebase-trips.js?v=7"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>
 </body>
 </html>

@@ -31,10 +31,36 @@ const tripsLoginError = document.getElementById('tripsLoginError');
 let currentTrips = [];
 let unsubscribeTrips = null;
 
-window.saveTripToCloud = function saveTripToCloud(trip) {
-  addDoc(tripsCol, { ...trip, alertaEnviada: false, creado: serverTimestamp() })
-    .catch(() => { /* si falla, no interrumpe la generacion del boleto */ });
+// Los boletos nuevos se guardan en la coleccion 'boletos' (ver firebase-history.js)
+// y de ahi salen estas alertas. 'viajes' queda solo para los que ya estaban
+// guardados antes del cambio, para no perder ningun aviso pendiente.
+let currentBoletos = [];
+
+window.onBoletosChange = function (boletos) {
+  currentBoletos = boletos.map(boletoAViaje);
+  renderTrips();
 };
+
+// Un boleto guardado tiene la misma informacion que un viaje, con otros nombres.
+function boletoAViaje(b) {
+  const ida = b.ida || {};
+  const regreso = b.regreso || {};
+  return {
+    id: b.id,
+    _coleccion: 'boletos',
+    pasajeros: b.passengers || [],
+    telefono: b.telefono || '',
+    bookingRef: b.bookingRef || '',
+    aerolineaIda: ida.airlineSelect === 'OTRA' ? ida.airlineOther : ida.airlineSelect,
+    origenIda: ida.origin || '',
+    destinoIda: ida.dest || '',
+    fechaSalidaIda: ida.fechaSalida || '',
+    horaSalidaIda: ida.horaSalida || '',
+    hasReturn: !!b.hasReturn,
+    fechaSalidaRegreso: b.hasReturn ? (regreso.fechaSalida || '') : '',
+    alertaEnviada: !!b.alertaEnviada,
+  };
+}
 
 tripsLoginBtn.addEventListener('click', async () => {
   tripsLoginError.textContent = '';
@@ -50,7 +76,7 @@ onAuthStateChanged(auth, (user) => {
     tripsLoginCard.classList.add('hidden');
     tripsCard.classList.remove('hidden');
     unsubscribeTrips = onSnapshot(tripsCol, (snap) => {
-      currentTrips = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      currentTrips = snap.docs.map((d) => ({ id: d.id, _coleccion: 'viajes', ...d.data() }));
       renderTrips();
     });
   } else {
@@ -58,6 +84,7 @@ onAuthStateChanged(auth, (user) => {
     tripsCard.classList.add('hidden');
     if (unsubscribeTrips) { unsubscribeTrips(); unsubscribeTrips = null; }
     currentTrips = [];
+    currentBoletos = [];
   }
 });
 
@@ -104,7 +131,8 @@ function buildCheckinMessage(t) {
 }
 
 function renderTrips() {
-  const upcoming = currentTrips
+  // Boletos nuevos + viajes guardados antes del cambio, en una sola lista.
+  const upcoming = [...currentBoletos, ...currentTrips]
     .filter((t) => t.fechaSalidaIda && !t.alertaEnviada)
     .map((t) => ({ ...t, _dias: daysUntil(t.fechaSalidaIda) }))
     .filter((t) => t._dias >= 0)
@@ -156,8 +184,10 @@ function renderTrips() {
     doneBtn.textContent = '✓';
     doneBtn.title = 'Marcar como avisado';
     doneBtn.addEventListener('click', async () => {
+      // Puede venir del historial de boletos o de la coleccion antigua.
+      const col = t._coleccion === 'boletos' ? 'boletos' : 'viajes';
       try {
-        await updateDoc(doc(db, 'viajes', t.id), { alertaEnviada: true });
+        await updateDoc(doc(db, col, t.id), { alertaEnviada: true });
       } catch (e) { /* se puede reintentar */ }
     });
 

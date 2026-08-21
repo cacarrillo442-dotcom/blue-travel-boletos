@@ -670,6 +670,32 @@ textarea {
   cursor: pointer;
 }
 
+/* Boton secundario compacto, para acciones dentro de una tarjeta de lista */
+.btn-compact {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Filtro Boletos / Facturas del historial */
+.hist-filter {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+}
+
+.hist-filter:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-strong);
+}
+
+.hist-filter.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
 .trip-done-btn:hover {
   background: #eafaf0;
   border-color: #2a9d5c;
