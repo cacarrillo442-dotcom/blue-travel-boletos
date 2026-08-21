@@ -209,7 +209,6 @@ function filaFactura(f) {
     acciones: [
       boton('⬇️ PDF', 'Volver a descargar la factura', 'btn-add', () => {
         window.generateInvoiceFromRaw(f);
-        irAPestana('invoicePanel');
       }),
       boton('📋 Usar como base', 'Cargar en el formulario para reusarla', 'btn-secondary btn-compact', () => {
         window.fillInvoiceForm(f);

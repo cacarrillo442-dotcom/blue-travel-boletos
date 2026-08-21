@@ -1009,10 +1009,43 @@ function invoiceTotal(inv) {
   return sub + (inv.taxAmount || 0);
 }
 
+function paymentTextFromRaw(raw) {
+  if (raw.paymentMethod === 'TARJETA') {
+    const brandLabel = raw.cardBrand === 'OTRA' ? 'Tarjeta' : (raw.cardBrand || 'Tarjeta');
+    return raw.cardLast4 ? `${brandLabel} terminada en ${raw.cardLast4}` : brandLabel;
+  }
+  if (raw.paymentMethod === 'OTRO') return raw.paymentOther || '';
+  return PAYMENT_METHOD_LABELS[raw.paymentMethod] || '';
+}
+
+// Arma la factura desde lo guardado, sin tocar el formulario: asi volver a
+// descargar una factura vieja no borra la que estes escribiendo.
+function invoiceFieldsFromRaw(raw) {
+  return {
+    date: formatDate(raw.date),
+    buyerName: raw.buyerName || '',
+    address: raw.address || '',
+    city: raw.city || '',
+    state: raw.state || '',
+    country: raw.country || '',
+    zip: raw.zip || '',
+    payment: paymentTextFromRaw(raw),
+    currency: raw.currency || 'USD',
+    items: (raw.items || []).map((it) => ({
+      description: it.description || '',
+      qty: parseFloat(it.qty) || 1,
+      unitPrice: parseMoney(it.unitPrice),
+    })).filter((it) => it.description || it.unitPrice),
+    taxLabel: raw.taxLabel || 'Impuesto',
+    taxAmount: parseMoney(raw.taxAmount),
+    notes: raw.notes || '',
+  };
+}
+
 window.collectInvoiceFields = collectInvoiceFields;
 window.generateInvoiceFromRaw = function (raw) {
-  fillInvoiceForm(raw);
-  generateInvoicePDF(collectTicketData(), collectInvoiceFields());
+  const comprador = raw.comprador || raw.buyerName || '';
+  generateInvoicePDF({ passengers: comprador ? [comprador] : [] }, invoiceFieldsFromRaw(raw));
 };
 
 window.fillInvoiceForm = function fillInvoiceForm(raw) {
