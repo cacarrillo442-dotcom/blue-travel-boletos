@@ -235,6 +235,45 @@ function normalizePhone(phone) {
   return String(phone || '').replace(/\D/g, '');
 }
 
+// Registra al viajero al generar un boleto. Antes solo entraban clientes
+// desde Cotizaciones, asi que faltaban todos los que compraban sin cotizar.
+// Se compara por telefono, igual que "eliminar duplicados".
+window.registrarClienteDesdeBoleto = async function (datos) {
+  if (!auth.currentUser) return { estado: 'sin-sesion' };
+
+  const telefono = String(datos.telefono || '').trim();
+  const llave = normalizePhone(telefono);
+  if (!llave || !datos.nombre) return { estado: 'faltan-datos' };
+
+  const existente = currentClients.find((c) => normalizePhone(c.telefono) === llave);
+
+  try {
+    if (existente) {
+      // Solo se rellenan huecos: lo que ya este escrito no se pisa, por si
+      // se corrigio a mano.
+      const cambios = {};
+      if (!existente.nombre && datos.nombre) cambios.nombre = datos.nombre;
+      if (!existente.ruta && datos.ruta) cambios.ruta = datos.ruta;
+      if (!Object.keys(cambios).length) return { estado: 'ya-estaba', nombre: existente.nombre };
+      await updateDoc(doc(db, 'clientes', existente.id), cambios);
+      return { estado: 'completado', nombre: existente.nombre || datos.nombre };
+    }
+
+    await addDoc(collection(db, 'clientes'), {
+      nombre: datos.nombre,
+      correo: '',
+      telefono,
+      ruta: datos.ruta || '',
+      autorizaPromos: false,
+      origen: 'boleto',
+      fecha: serverTimestamp(),
+    });
+    return { estado: 'creado', nombre: datos.nombre };
+  } catch (e) {
+    return { estado: 'error', mensaje: e.message };
+  }
+};
+
 dedupeBtn.addEventListener('click', async () => {
   dedupeStatus.textContent = '';
 

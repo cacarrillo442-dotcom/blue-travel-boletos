@@ -935,12 +935,27 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
   const data = ticketDataFromRaw(raw);
   generatePDF(data);
 
+  const telefono = buildFullTicketContactPhone();
+  const ruta = `${data.ida.origin || '?'} → ${data.ida.dest || '?'}`;
+
   // Un solo registro: sirve de historial y alimenta Proximos viajes.
   if (window.saveBoletoToCloud) {
-    window.saveBoletoToCloud({
-      ...raw,
-      telefono: buildFullTicketContactPhone(),
-      resumen: `${data.ida.origin || '?'} → ${data.ida.dest || '?'}`,
+    window.saveBoletoToCloud({ ...raw, telefono, resumen: ruta });
+  }
+
+  // El comprador tambien entra a la base de clientes.
+  const aviso = document.getElementById('ticketClienteStatus');
+  if (aviso) aviso.textContent = '';
+  if (window.registrarClienteDesdeBoleto && telefono && raw.passengers[0]) {
+    window.registrarClienteDesdeBoleto({
+      nombre: raw.passengers[0],
+      telefono,
+      ruta,
+    }).then((r) => {
+      if (!aviso) return;
+      if (r.estado === 'creado') aviso.textContent = `👥 ${r.nombre} quedó guardado en tu base de clientes.`;
+      else if (r.estado === 'completado') aviso.textContent = `👥 Se completaron datos de ${r.nombre} en tu base de clientes.`;
+      else if (r.estado === 'ya-estaba') aviso.textContent = `👥 ${r.nombre} ya estaba en tu base de clientes.`;
     });
   }
 });

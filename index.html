@@ -77,7 +77,8 @@
         </label>
       </div>
       <p class="hint">
-        Con este teléfono te podemos recordar avisarle al viajero que haga el check-in antes de su vuelo.
+        Con este teléfono te recordamos avisarle al viajero que haga el check-in, y el pasajero
+        queda guardado en tu base de clientes. Si ya está, no se duplica.
       </p>
     </section>
 
@@ -162,6 +163,7 @@
     <div class="actions">
       <button type="submit" class="btn-primary" id="submitBtn">Generar boleto (PDF)</button>
     </div>
+    <p class="hint" id="ticketClienteStatus" style="text-align:right"></p>
 
   </form>
 </div>
@@ -728,8 +730,8 @@
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
-<script src="app.js?v=7"></script>
-<script type="module" src="assets/firebase-clients.js?v=3"></script>
+<script src="app.js?v=8"></script>
+<script type="module" src="assets/firebase-clients.js?v=4"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=1"></script>
 <script type="module" src="assets/firebase-history.js?v=3"></script>
