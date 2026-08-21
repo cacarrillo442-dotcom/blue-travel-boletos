@@ -85,15 +85,27 @@ onAuthStateChanged(auth, (user) => {
     promoCard.classList.add('hidden');
     if (unsubscribeClients) { unsubscribeClients(); unsubscribeClients = null; }
     currentClients = [];
+    reiniciarEsperaClientes();
     renderClients();
   }
 });
+
+// currentClients arranca vacia y solo se llena cuando llega la primera
+// respuesta de Firestore. Sin esperarla, un registro hecho en esos primeros
+// segundos no encontraria al cliente y lo duplicaria.
+let clientesCargados;
+let avisarClientesCargados;
+function reiniciarEsperaClientes() {
+  clientesCargados = new Promise((resolve) => { avisarClientesCargados = resolve; });
+}
+reiniciarEsperaClientes();
 
 function subscribeClients() {
   const q = query(collection(db, 'clientes'), orderBy('fecha', 'desc'));
   unsubscribeClients = onSnapshot(q, (snap) => {
     currentClients = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderClients();
+    avisarClientesCargados();
   });
 }
 
@@ -244,6 +256,14 @@ window.registrarClienteDesdeBoleto = async function (datos) {
   const telefono = String(datos.telefono || '').trim();
   const llave = normalizePhone(telefono);
   if (!llave || !datos.nombre) return { estado: 'faltan-datos' };
+
+  // Sin la lista completa no se puede saber si ya existe. Antes que arriesgar
+  // un duplicado, se espera; y si no llega, no se guarda y se avisa.
+  const listo = await Promise.race([
+    clientesCargados.then(() => true),
+    new Promise((r) => setTimeout(() => r(false), 8000)),
+  ]);
+  if (!listo) return { estado: 'sin-verificar' };
 
   const existente = currentClients.find((c) => normalizePhone(c.telefono) === llave);
 

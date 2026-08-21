@@ -956,6 +956,8 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
       if (r.estado === 'creado') aviso.textContent = `👥 ${r.nombre} quedó guardado en tu base de clientes.`;
       else if (r.estado === 'completado') aviso.textContent = `👥 Se completaron datos de ${r.nombre} en tu base de clientes.`;
       else if (r.estado === 'ya-estaba') aviso.textContent = `👥 ${r.nombre} ya estaba en tu base de clientes.`;
+      else if (r.estado === 'sin-verificar') aviso.textContent = '⚠️ No se pudo revisar la base de clientes, así que no se guardó para no duplicar. Agrégalo desde Clientes si hace falta.';
+      else if (r.estado === 'error') aviso.textContent = '⚠️ No se pudo guardar en la base de clientes.';
     });
   }
 });
