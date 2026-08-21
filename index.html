@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=3" />
+<link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
 
@@ -448,18 +448,17 @@
   <section class="card hidden" id="clientsLoggedInCard">
     <div class="card-header">
       <h2>Clientes guardados</h2>
-      <button type="button" class="btn-add" id="clientsLogoutBtn">Cerrar sesión</button>
+      <div class="inline-add-row" style="margin-top:0">
+        <button type="button" class="btn-add" id="clientsDownloadCsvBtn">⬇️ Descargar CSV</button>
+        <button type="button" class="btn-add" id="clientsDedupeBtn">🧹 Eliminar duplicados</button>
+      </div>
     </div>
     <p class="hint" id="clientsSessionLabel"></p>
-    <div class="inline-add-row">
-      <button type="button" class="btn-add" id="clientsDownloadCsvBtn">⬇️ Descargar CSV</button>
-      <button type="button" class="btn-add" id="clientsDedupeBtn">🧹 Eliminar duplicados</button>
-    </div>
     <p class="hint" id="clientsDedupeStatus"></p>
     <div style="overflow-x:auto; margin-top:14px">
       <table class="clients-table" id="clientsTable">
         <thead>
-          <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Ruta</th><th>Promos</th><th></th></tr>
+          <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Ruta</th><th>Promos</th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -596,7 +595,7 @@
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="app.js?v=3"></script>
-<script type="module" src="assets/firebase-clients.js?v=2"></script>
+<script type="module" src="assets/firebase-clients.js?v=3"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-trips.js?v=6"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>

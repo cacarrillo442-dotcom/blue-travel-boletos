@@ -69,7 +69,8 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-logoutBtn.addEventListener('click', () => signOut(auth));
+// El boton global de la barra superior ya cierra sesion; este es opcional.
+if (logoutBtn) logoutBtn.addEventListener('click', () => signOut(auth));
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -99,17 +100,15 @@ function subscribeClients() {
 function renderClients() {
   clientsTableBody.innerHTML = '';
   currentClients.forEach((c) => {
-    const fecha = c.fecha && c.fecha.toDate ? c.fecha.toDate().toLocaleDateString('es-CO') : '';
     const tr = document.createElement('tr');
 
     if (c.id === editingId) {
       tr.innerHTML = `
-        <td>${fecha}</td>
-        <td><input type="text" class="edit-nombre" value="${escapeHtml(c.nombre || '')}" /></td>
-        <td><input type="text" class="edit-correo" value="${escapeHtml(c.correo || '')}" /></td>
-        <td><input type="text" class="edit-telefono" value="${escapeHtml(c.telefono || '')}" /></td>
-        <td><input type="text" class="edit-ruta" value="${escapeHtml(c.ruta || '')}" /></td>
-        <td style="text-align:center"><input type="checkbox" class="edit-promos" ${c.autorizaPromos ? 'checked' : ''} /></td>
+        <td data-label="Nombre"><input type="text" class="edit-nombre" value="${escapeHtml(c.nombre || '')}" /></td>
+        <td data-label="Correo"><input type="text" class="edit-correo" value="${escapeHtml(c.correo || '')}" /></td>
+        <td data-label="Teléfono"><input type="text" class="edit-telefono" value="${escapeHtml(c.telefono || '')}" /></td>
+        <td data-label="Ruta"><input type="text" class="edit-ruta" value="${escapeHtml(c.ruta || '')}" /></td>
+        <td data-label="Promos"><input type="checkbox" class="edit-promos" ${c.autorizaPromos ? 'checked' : ''} /></td>
         <td></td>
       `;
       const saveBtn = document.createElement('button');
@@ -144,7 +143,11 @@ function renderClients() {
       actionsCell.appendChild(saveBtn);
       actionsCell.appendChild(cancelBtn);
     } else {
-      tr.innerHTML = `<td>${fecha}</td><td>${escapeHtml(c.nombre || '')}</td><td>${escapeHtml(c.correo || '')}</td><td>${escapeHtml(c.telefono || '')}</td><td>${escapeHtml(c.ruta || '')}</td><td>${c.autorizaPromos ? 'Sí' : 'No'}</td><td></td>`;
+      tr.innerHTML = `<td data-label="Nombre">${escapeHtml(c.nombre || '')}</td>`
+        + `<td data-label="Correo">${escapeHtml(c.correo || '')}</td>`
+        + `<td data-label="Teléfono">${escapeHtml(c.telefono || '')}</td>`
+        + `<td data-label="Ruta">${escapeHtml(c.ruta || '')}</td>`
+        + `<td data-label="Promos">${c.autorizaPromos ? 'Sí' : 'No'}</td><td></td>`;
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'btn-add';
