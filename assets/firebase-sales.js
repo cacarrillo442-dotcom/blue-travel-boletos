@@ -46,6 +46,7 @@ onAuthStateChanged(auth, (user) => {
       ventas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       semanas = V.agruparPorSemana(ventas);
       pintarSelectorSemanas();
+      pintarSelectorPeriodo();
       pintarSemana();
       pintarDashboard();
     });
@@ -54,6 +55,7 @@ onAuthStateChanged(auth, (user) => {
     ventas = [];
     semanas = [];
     pintarSelectorSemanas();
+    pintarSelectorPeriodo();
     pintarSemana();
     pintarDashboard();
   }
@@ -155,8 +157,50 @@ el('weekWaBtn').addEventListener('click', () => {
 
 // ---------- Dashboard ----------
 
+let periodoElegidoPorUsuario = false;
+dashPeriod.addEventListener('change', () => { periodoElegidoPorUsuario = true; });
+
+// Los meses del selector salen de los datos, para no ofrecer meses vacios.
+function pintarSelectorPeriodo() {
+  const previo = periodoElegidoPorUsuario ? dashPeriod.value : '';
+  const meses = [...new Set(ventas.map((v) => V.fechaIngreso(v).slice(0, 7)))]
+    .filter(Boolean).sort().reverse();
+
+  dashPeriod.innerHTML = '';
+  if (meses.length) {
+    const g = document.createElement('optgroup');
+    g.label = 'Mes';
+    meses.forEach((m) => {
+      const o = document.createElement('option');
+      o.value = `mes:${m}`;
+      o.textContent = V.nombreMes(m);
+      g.appendChild(o);
+    });
+    dashPeriod.appendChild(g);
+  }
+
+  const g2 = document.createElement('optgroup');
+  g2.label = 'Acumulado';
+  [['365', 'Último año'], ['0', 'Todo el histórico']].forEach(([v, t]) => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = t;
+    g2.appendChild(o);
+  });
+  dashPeriod.appendChild(g2);
+
+  if (previo && [...dashPeriod.options].some((o) => o.value === previo)) dashPeriod.value = previo;
+  else if (meses.length) dashPeriod.value = `mes:${meses[0]}`;
+}
+
+function ventasDeMes(ym) {
+  return ventas.filter((v) => V.fechaIngreso(v).startsWith(ym));
+}
+
 function ventasDelPeriodo() {
-  const dias = Number(dashPeriod.value);
+  const val = dashPeriod.value || '0';
+  if (val.startsWith('mes:')) return ventasDeMes(val.slice(4));
+  const dias = Number(val);
   if (!dias) return ventas;
   const desde = new Date();
   desde.setDate(desde.getDate() - dias);
@@ -167,14 +211,33 @@ function ventasDelPeriodo() {
 function pintarDashboard() {
   const lote = ventasDelPeriodo();
   const t = V.totales(lote);
+  const esMes = (dashPeriod.value || '').startsWith('mes:');
+
+  // Viendo un mes, se compara contra el mes anterior.
+  let nota = '';
+  let tono = '';
+  if (esMes) {
+    const previo = V.mesAnterior(dashPeriod.value.slice(4));
+    const netoPrevio = V.totales(ventasDeMes(previo)).neto;
+    if (netoPrevio) {
+      const variacion = (t.neto - netoPrevio) / netoPrevio;
+      const pct = Math.round(Math.abs(variacion) * 100);
+      nota = `${variacion >= 0 ? '▲' : '▼'} ${pct}% vs ${V.nombreMes(previo).split(' ')[0].toLowerCase()}`;
+      tono = variacion >= 0 ? 'up' : 'down';
+    }
+  }
 
   dashStats.innerHTML = [
     tile('Recaudado', V.pesos(t.bruto), { nota: `${t.ventas} ventas` }),
-    tile('Ganancia neta', V.pesos(t.neto), { destacado: true }),
+    tile('Ganancia neta', V.pesos(t.neto), { destacado: true, nota, tono }),
     tile('Costos e impuestos', V.pesos(t.costos)),
     tile('Milena · 80%', V.pesos(t.milena)),
     tile('César · 20%', V.pesos(t.cesar)),
   ].join('');
+
+  el('weeklyHint').textContent = esMes
+    ? 'Pasa el cursor sobre una barra para ver el detalle. Las semanas que cruzan de mes muestran solo los días dentro del mes elegido.'
+    : 'Pasa el cursor sobre una barra para ver el detalle.';
 
   pintarGraficaSemanal(lote);
   pintarFranquicias(lote);
@@ -195,7 +258,9 @@ function pintarGraficaSemanal(lote) {
   const alto = H - padT - padB;
   const max = Math.max(...datos.map((d) => d.neto), 1);
   const paso = ancho / datos.length;
-  const bar = Math.max(1, Math.min(4.2, paso * 0.5));   // marca delgada, con aire a los lados
+  // Proporcional al espacio disponible: con pocas semanas no se ve dispersa,
+  // y con muchas sigue siendo una marca delgada.
+  const bar = Math.max(1, Math.min(7, paso * 0.55));
 
   // Rejilla discreta: 3 lineas de referencia
   let grid = '';

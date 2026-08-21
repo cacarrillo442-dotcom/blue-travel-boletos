@@ -296,6 +296,22 @@
     return `${Number(d)} ${MESES[Number(m) - 1]}`;
   }
 
+  const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  // '2026-08' -> 'Agosto 2026'
+  function nombreMes(ym) {
+    const [y, m] = ym.split('-');
+    return `${MESES_LARGOS[Number(m) - 1]} ${y}`;
+  }
+
+  function mesAnterior(ym) {
+    let [y, m] = ym.split('-').map(Number);
+    m -= 1;
+    if (m === 0) { m = 12; y -= 1; }
+    return `${y}-${String(m).padStart(2, '0')}`;
+  }
+
   // Mensaje de reparto listo para WhatsApp.
   function textoReporteSemanal(semana) {
     if (!semana) return '';
@@ -338,6 +354,8 @@
     pesos,
     fechaCorta,
     fechaDiaMes,
+    nombreMes,
+    mesAnterior,
     textoReporteSemanal,
   };
 
