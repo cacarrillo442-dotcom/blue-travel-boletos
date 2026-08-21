@@ -149,12 +149,6 @@ el('weekCopyBtn').addEventListener('click', () => {
   } else { weekPreview.select(); document.execCommand('copy'); listo(); }
 });
 
-el('weekWaBtn').addEventListener('click', () => {
-  const s = semanaActual();
-  if (!s) return;
-  window.open(`https://wa.me/?text=${encodeURIComponent(V.textoReporteSemanal(s))}`, '_blank');
-});
-
 // ---------- Dashboard ----------
 
 let periodoElegidoPorUsuario = false;
