@@ -52,6 +52,7 @@
   <span class="tab-sep" aria-hidden="true"></span>
   <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
   <button type="button" class="tab-btn" data-tab="salesPanel">📊 Ventas</button>
+  <button type="button" class="tab-btn" data-tab="backupPanel">🛡️ Respaldo</button>
 </nav>
 
 <main class="container">
@@ -541,6 +542,53 @@
   </section>
 </div>
 
+<div id="backupPanel" class="tab-panel hidden">
+  <section class="card">
+    <h2>🛡️ Descargar respaldo</h2>
+    <p class="hint">
+      Baja a tu computador una copia de todo: clientes, boletos, facturas, ventas, viajes y
+      catálogos. Guárdala en un lugar seguro — si algo le pasa a la base de datos, con este
+      archivo recuperas la información.
+    </p>
+    <p class="hint" id="respaldoRecordatorio"></p>
+    <div class="inline-add-row">
+      <button type="button" class="btn-primary" id="respaldoBajarBtn">⬇️ Descargar respaldo</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Restaurar desde un respaldo</h2>
+    <p class="hint">
+      Solo lo vas a necesitar si se perdió o se dañó información. Vuelve a escribir lo que
+      contenga el archivo: lo que exista con el mismo identificador se reemplaza, y lo que
+      no esté en el archivo se queda como está. No borra nada.
+    </p>
+    <input type="file" id="respaldoArchivo" accept=".json" />
+    <div id="respaldoConfirmar" class="hidden">
+      <p class="hint" id="respaldoDetalle"></p>
+      <div class="inline-add-row">
+        <button type="button" class="btn-secondary btn-compact" id="respaldoRestaurarBtn">
+          Restaurar esta información
+        </button>
+      </div>
+    </div>
+    <p class="hint" id="respaldoEstado"></p>
+  </section>
+
+  <section class="card">
+    <h2>Qué hacer si algo pasa</h2>
+    <p class="hint">Los tres casos que te pueden ocurrir y cómo salir de cada uno.</p>
+    <ul class="hint" style="line-height:1.7; padding-left:18px">
+      <li><strong>Borraste algo sin querer</strong> — Restaura tu último respaldo. Solo vuelve
+        lo que estaba en el archivo; lo que hiciste después se conserva.</li>
+      <li><strong>No puedes entrar a la app</strong> — Revisa en Firebase Console que tu
+        cuenta siga activa y que las reglas incluyan tu identificador de usuario.</li>
+      <li><strong>Perdiste el acceso a Firebase</strong> — Con el archivo de respaldo puedes
+        crear un proyecto nuevo y volver a cargar todo.</li>
+    </ul>
+  </section>
+</div>
+
 <div id="historyPanel" class="tab-panel hidden">
   <section class="card">
     <div class="card-header">
@@ -736,6 +784,7 @@
 <script type="module" src="assets/firebase-numeracion.js?v=1"></script>
 <script type="module" src="assets/firebase-history.js?v=3"></script>
 <script type="module" src="assets/firebase-sales.js?v=5"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=1"></script>
 <script type="module" src="assets/firebase-trips.js?v=8"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>
 </body>
