@@ -89,7 +89,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 16px max(24px, calc((100% - 1280px) / 2 + 24px));
 }
 
 .topbar-logo {
@@ -122,9 +122,9 @@ body {
 }
 
 .container {
-  max-width: 920px;
+  max-width: 1280px;
   margin: 28px auto;
-  padding: 0 20px 56px;
+  padding: 0 24px 56px;
 }
 
 .card {
@@ -190,16 +190,18 @@ label + .grid-3 {
   margin: 0;
 }
 
+/* Los campos se reacomodan solos segun el ancho disponible: asi funcionan
+   igual en una columna ancha que dentro de la vista de dos columnas. */
 .grid-2 {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
 }
 
 .grid-3 {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
 }
 
 label {
@@ -827,9 +829,8 @@ select:focus {
 .tabs {
   display: flex;
   gap: 2px;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 0 20px;
+  /* Fondo a todo lo ancho, pero las pestanas alineadas con las tarjetas */
+  padding: 0 max(24px, calc((100% - 1280px) / 2 + 24px));
   background: var(--color-primary);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   overflow-x: auto;
@@ -873,6 +874,34 @@ select:focus {
   border-top: none;
   padding-top: 0;
   margin-top: 0;
+}
+
+/* ---------- Dos columnas en pantallas grandes ----------
+   Los formularios de boleto y cotizacion son largos; en pantallas anchas
+   las tarjetas se reparten en dos columnas y se reduce mucho el scroll. */
+@media (min-width: 1080px) {
+  #ticketForm,
+  #quoteForm {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+
+  /* Encabezados, acciones y resultados ocupan el ancho completo */
+  #ticketForm > .actions,
+  #quoteForm > .actions,
+  #quoteForm > .hint,
+  #quoteForm > .card:first-child,
+  #quoteForm > #qOutputCard,
+  #quoteForm > #qImageCard {
+    grid-column: 1 / -1;
+  }
+
+  /* La lista de clientes y de viajes se leen mejor a lo ancho */
+  #clientsPanel .clients-table {
+    min-width: 0;
+  }
 }
 
 .catalog-subsection h3 {
