@@ -670,6 +670,183 @@ textarea {
   cursor: pointer;
 }
 
+/* ---------- Dashboard de ventas ---------- */
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-tile {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.stat-tile-strong {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.stat-tile-strong .stat-label { color: #a9c1d3; }
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.stat-tile-strong .stat-value { color: #fff; }
+
+.stat-note {
+  margin-top: 6px;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+
+.stat-tile-strong .stat-note { color: #cfe3ee; }
+
+/* El signo ya dice la direccion; el color solo refuerza */
+.stat-note.up { color: #2a9d5c; }
+.stat-note.down { color: #c0392b; }
+.stat-tile-strong .stat-note.up { color: #8fe3b4; }
+.stat-tile-strong .stat-note.down { color: #ffb3a8; }
+
+.chart-wrap {
+  margin: 6px 0 8px;
+  overflow-x: auto;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  overflow: visible;
+}
+
+.grid-line {
+  stroke: var(--line);
+  stroke-width: 0.15;
+}
+
+.axis-text {
+  fill: var(--ink-soft);
+  font-size: 2.1px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.bar {
+  fill: var(--color-primary-2);
+  transition: fill 0.12s;
+}
+
+.bar-hit {
+  fill: transparent;
+}
+
+.bar-g:hover .bar {
+  fill: var(--color-primary);
+}
+
+.bar-g:hover .bar-hit {
+  fill: rgba(18, 111, 153, 0.06);
+}
+
+/* Barras horizontales por franquicia */
+.hbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.hbar-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.hbar-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hbar-track {
+  height: 10px;
+  background: var(--line-soft);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%;
+  background: var(--color-primary-2);
+  border-radius: 5px;
+}
+
+.hbar-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.hbar-count {
+  display: inline-block;
+  margin-left: 8px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+input[type="file"] {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.86rem;
+  padding: 14px;
+  width: 100%;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  cursor: pointer;
+}
+
+input[type="file"]:hover {
+  border-color: var(--color-primary-2);
+  background: #f2f6fa;
+}
+
+@media (max-width: 640px) {
+  .hbar-row {
+    grid-template-columns: 88px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+  .hbar-value {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
 /* Boton secundario compacto, para acciones dentro de una tarjeta de lista */
 .btn-compact {
   padding: 8px 14px;
