@@ -107,12 +107,12 @@ function renderTrips() {
   const upcoming = currentTrips
     .filter((t) => t.fechaSalidaIda && !t.alertaEnviada)
     .map((t) => ({ ...t, _dias: daysUntil(t.fechaSalidaIda) }))
-    .filter((t) => t._dias >= 0 && t._dias <= 2)
+    .filter((t) => t._dias >= 0)
     .sort((a, b) => a._dias - b._dias);
 
   tripsList.innerHTML = '';
   if (!upcoming.length) {
-    tripsList.innerHTML = '<p class="promo-empty">No hay viajes en los próximos 2 días pendientes de avisar.</p>';
+    tripsList.innerHTML = '<p class="promo-empty">No hay viajes pendientes de avisar.</p>';
     return;
   }
 
@@ -122,8 +122,9 @@ function renderTrips() {
     const info = document.createElement('span');
     info.className = 'promo-row-info';
     const nombres = (t.pasajeros || []).join(', ') || '(sin nombre)';
+    const diasLabel = t._dias === 0 ? 'Hoy' : t._dias === 1 ? 'Mañana' : `En ${t._dias} días`;
     info.innerHTML = `<strong>${escapeHtml(nombres)}</strong> — ${escapeHtml(t.origenIda || '')} → `
-      + `${escapeHtml(t.destinoIda || '')} · ${formatIsoDate(t.fechaSalidaIda)} · ${escapeHtml(t.telefono || '')}`;
+      + `${escapeHtml(t.destinoIda || '')} · ${formatIsoDate(t.fechaSalidaIda)} (${diasLabel}) · ${escapeHtml(t.telefono || '')}`;
 
     const btnWrap = document.createElement('span');
 
