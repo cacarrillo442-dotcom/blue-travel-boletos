@@ -876,29 +876,16 @@ select:focus {
   margin-top: 0;
 }
 
-/* ---------- Dos columnas en pantallas grandes ----------
-   Los formularios de boleto y cotizacion son largos; en pantallas anchas
-   las tarjetas se reparten en dos columnas y se reduce mucho el scroll. */
+/* Boletos y Cotizaciones se llenan en orden, de arriba abajo: una sola
+   columna de ancho comodo se sigue mejor que dos columnas en zigzag.
+   Clientes y Proximos viajes si usan todo el ancho, porque son listas. */
+#ticketForm,
+#quoteForm {
+  max-width: 940px;
+  margin: 0 auto;
+}
+
 @media (min-width: 1080px) {
-  #ticketForm,
-  #quoteForm {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 20px;
-    align-items: start;
-  }
-
-  /* Encabezados, acciones y resultados ocupan el ancho completo */
-  #ticketForm > .actions,
-  #quoteForm > .actions,
-  #quoteForm > .hint,
-  #quoteForm > .card:first-child,
-  #quoteForm > #qOutputCard,
-  #quoteForm > #qImageCard {
-    grid-column: 1 / -1;
-  }
-
-  /* La lista de clientes y de viajes se leen mejor a lo ancho */
   #clientsPanel .clients-table {
     min-width: 0;
   }
