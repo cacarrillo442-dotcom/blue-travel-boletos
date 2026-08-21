@@ -34,7 +34,8 @@ const importStats = el('importStats');
 
 let ventas = [];
 let semanas = [];
-let pendientes = null;   // lote leido del archivo, aun sin guardar
+let pendientes = null;   // solo las que no estaban guardadas
+let leidasTodas = null;  // todas las del archivo, para cuando se pide actualizar
 let unsub = null;
 
 // ---------- Datos ----------
@@ -115,7 +116,8 @@ function pintarSemana() {
 
   acciones.classList.remove('hidden');
   wrap.classList.remove('hidden');
-  weekRange.textContent = `Del sábado ${V.fechaCorta(s.inicio)} al viernes ${V.fechaCorta(s.corte)} · ${s.ventas} ventas`;
+  weekRange.textContent = `Del sábado ${V.fechaCorta(s.inicio)} al viernes ${V.fechaCorta(s.corte)}`
+    + ` · ${s.ventas} ventas · contadas por fecha de canje, cuando el dinero entra a la cuenta`;
 
   let nota = '';
   let tono = '';
@@ -159,7 +161,7 @@ function ventasDelPeriodo() {
   const desde = new Date();
   desde.setDate(desde.getDate() - dias);
   const iso = `${desde.getFullYear()}-${String(desde.getMonth() + 1).padStart(2, '0')}-${String(desde.getDate()).padStart(2, '0')}`;
-  return ventas.filter((v) => v.fecha >= iso);
+  return ventas.filter((v) => V.fechaIngreso(v) >= iso);
 }
 
 function pintarDashboard() {
@@ -299,6 +301,7 @@ salesFile.addEventListener('change', async () => {
     const posiblesRepetidas = nuevas.filter((v) => huella.has(`${v.fecha}|${Math.round(v.bruto)}`));
 
     pendientes = nuevas;
+    leidasTodas = unicas;
     const t = V.totales(nuevas);
 
     importStats.innerHTML = [
@@ -328,23 +331,35 @@ el('importCancelBtn').addEventListener('click', () => {
 });
 
 el('importConfirmBtn').addEventListener('click', async () => {
-  if (!pendientes || !pendientes.length) { importStatus.textContent = 'No hay ventas nuevas que guardar.'; return; }
+  const actualizar = el('importUpdate').checked;
+  const lote = actualizar ? leidasTodas : pendientes;
+  if (!lote || !lote.length) {
+    importStatus.textContent = actualizar
+      ? 'No hay nada que guardar.'
+      : 'No hay ventas nuevas. Si quieres refrescar las que ya estaban, marca la casilla de arriba.';
+    return;
+  }
+
   const btn = el('importConfirmBtn');
   btn.disabled = true;
-  importStatus.textContent = `Guardando ${pendientes.length} ventas…`;
+  importStatus.textContent = `Guardando ${lote.length} ventas…`;
 
   try {
     // Firestore acepta hasta 500 operaciones por lote.
-    for (let i = 0; i < pendientes.length; i += 400) {
+    for (let i = 0; i < lote.length; i += 400) {
       const batch = writeBatch(db);
-      pendientes.slice(i, i + 400).forEach((v) => {
+      lote.slice(i, i + 400).forEach((v) => {
         const { id, ...datos } = v;
         batch.set(doc(db, 'ventas', id), datos);
       });
       await batch.commit();
     }
-    importStatus.textContent = `✅ Listo: se guardaron ${pendientes.length} ventas.`;
+    importStatus.textContent = actualizar
+      ? `✅ Listo: se guardaron y actualizaron ${lote.length} ventas.`
+      : `✅ Listo: se guardaron ${lote.length} ventas.`;
     pendientes = null;
+    leidasTodas = null;
+    el('importUpdate').checked = false;
     salesFile.value = '';
     importPreview.classList.add('hidden');
   } catch (err) {

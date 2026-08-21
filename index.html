@@ -495,6 +495,14 @@
     <p class="hint" id="importStatus"></p>
     <div id="importPreview" class="hidden">
       <div class="stat-row" id="importStats"></div>
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="importUpdate" />
+        Actualizar también las que ya estaban guardadas
+      </label>
+      <p class="hint">
+        Úsalo si el archivo trae datos corregidos o campos que antes no se guardaban.
+        No duplica nada: reemplaza el registro que ya existe.
+      </p>
       <div class="inline-add-row">
         <button type="button" class="btn-primary" id="importConfirmBtn">Guardar ventas</button>
         <button type="button" class="btn-secondary btn-compact" id="importCancelBtn">Cancelar</button>
@@ -691,12 +699,12 @@
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=1"></script>
+<script src="assets/sales-parse.js?v=3"></script>
 <script src="app.js?v=6"></script>
 <script type="module" src="assets/firebase-clients.js?v=3"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-history.js?v=2"></script>
-<script type="module" src="assets/firebase-sales.js?v=1"></script>
+<script type="module" src="assets/firebase-sales.js?v=3"></script>
 <script type="module" src="assets/firebase-trips.js?v=7"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>
 </body>

@@ -87,6 +87,7 @@
     if (formato === 'wompi') {
       return {
         fecha: buscarCol(enc, 'FECHA DE TRANSACCION'),
+        canje: buscarCol(enc, 'FECHA DE CANJE'),
         bruto: buscarCol(enc, 'VALOR TOTAL'),
         neto: buscarCol(enc, 'VALOR NETO'),
         franquicia: buscarCol(enc, 'FRANQUICIA'),
@@ -100,6 +101,7 @@
       return {
         numero: buscarCol(enc, 'NUMERO DE VENTA', 'NUMERO'),
         fecha: buscarCol(enc, 'FECHA DE TRANSACCION', 'FECHA'),
+        canje: buscarCol(enc, 'FECHA DE CANJE'),
         bruto: buscarCol(enc, 'VALOR TOTAL', 'VALOR COMPRA'),
         neto: buscarCol(enc, 'VALOR NETO'),
         franquicia: buscarCol(enc, 'FRANQUICIA'),
@@ -115,7 +117,7 @@
       franquicia: buscarCol(enc, 'FRANQUICIA'),
       cliente: buscarCol(enc, 'NOMBRE COMPLETO'),
       plataforma: buscarCol(enc, 'PLATAFORMA'),
-      autorizacion: -1, tipo: -1, tarjeta: -1,
+      autorizacion: -1, tipo: -1, tarjeta: -1, canje: -1,
     };
   }
 
@@ -164,6 +166,9 @@
         numero,
         autorizacion,
         fecha,
+        // Cuando el dinero entra a la cuenta. Es la fecha que manda para
+        // las semanas; la hoja de 2025 no la trae.
+        fechaCanje: col.canje === -1 ? '' : aFechaISO(f[col.canje]),
         bruto,
         neto,
         tipo,
@@ -202,9 +207,11 @@
   }
 
   // Viernes en que cierra la semana de una fecha dada.
+  // Ojo: en getDay() el viernes es 5 (domingo = 0), no 4.
+  const VIERNES = 5;
   function corteDe(iso) {
     const d = aFecha(iso);
-    const desplazamiento = (4 - d.getDay() + 7) % 7; // 4 = viernes
+    const desplazamiento = (VIERNES - d.getDay() + 7) % 7;
     d.setDate(d.getDate() + desplazamiento);
     return isoDe(d);
   }
@@ -215,12 +222,19 @@
     return isoDe(d);
   }
 
+  // La venta cuenta en la semana en que el dinero entra a la cuenta, no en la
+  // que se hizo la transaccion. Sin fecha de canje queda la de la venta.
+  function fechaIngreso(v) {
+    return v.fechaCanje || v.fecha;
+  }
+
   // Agrupa ventas en semanas, de la mas reciente a la mas antigua.
   function agruparPorSemana(ventas) {
     const mapa = new Map();
     ventas.forEach((v) => {
-      if (!v.fecha) return;
-      const corte = corteDe(v.fecha);
+      const fecha = fechaIngreso(v);
+      if (!fecha) return;
+      const corte = corteDe(fecha);
       if (!mapa.has(corte)) {
         mapa.set(corte, { corte, inicio: inicioDeCorte(corte), ventas: 0, bruto: 0, neto: 0 });
       }
@@ -317,6 +331,7 @@
     idDe,
     corteDe,
     inicioDeCorte,
+    fechaIngreso,
     agruparPorSemana,
     totales,
     porFranquicia,
