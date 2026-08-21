@@ -117,21 +117,33 @@ function renderTrips() {
   }
 
   upcoming.forEach((t) => {
-    const row = document.createElement('div');
-    row.className = 'promo-row';
-    const info = document.createElement('span');
-    info.className = 'promo-row-info';
-    const nombres = (t.pasajeros || []).join(', ') || '(sin nombre)';
-    const diasLabel = t._dias === 0 ? 'Hoy' : t._dias === 1 ? 'Mañana' : `En ${t._dias} días`;
-    info.innerHTML = `<strong>${escapeHtml(nombres)}</strong> — ${escapeHtml(t.origenIda || '')} → `
-      + `${escapeHtml(t.destinoIda || '')} · ${formatIsoDate(t.fechaSalidaIda)} (${diasLabel}) · ${escapeHtml(t.telefono || '')}`;
+    const card = document.createElement('div');
+    card.className = 'trip-card';
 
-    const btnWrap = document.createElement('span');
+    const badgeClass = t._dias === 0 ? 'urgent' : t._dias === 1 ? 'soon' : 'later';
+    const diasLabel = t._dias === 0 ? 'Hoy' : t._dias === 1 ? 'Mañana' : `En ${t._dias} días`;
+    const nombres = (t.pasajeros || []).join(', ') || '(sin nombre)';
+    const hora = t.horaSalidaIda ? ` · ${t.horaSalidaIda}` : '';
+
+    const badge = document.createElement('div');
+    badge.className = `trip-badge ${badgeClass}`;
+    badge.textContent = diasLabel;
+
+    const info = document.createElement('div');
+    info.className = 'trip-info';
+    info.innerHTML = `
+      <div class="trip-name">${escapeHtml(nombres)}</div>
+      <div class="trip-route">✈️ ${escapeHtml(t.origenIda || '?')} → ${escapeHtml(t.destinoIda || '?')}${t.aerolineaIda ? ' · ' + escapeHtml(t.aerolineaIda) : ''}</div>
+      <div class="trip-sub">📅 ${formatIsoDate(t.fechaSalidaIda)}${hora} &nbsp;·&nbsp; 📞 ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; 🔖 ' + escapeHtml(t.bookingRef) : ''}</div>
+    `;
+
+    const actions = document.createElement('div');
+    actions.className = 'trip-actions';
 
     const waBtn = document.createElement('button');
     waBtn.type = 'button';
-    waBtn.className = 'btn-add';
-    waBtn.textContent = '📲 Abrir WhatsApp';
+    waBtn.className = 'trip-wa-btn';
+    waBtn.innerHTML = '📲 WhatsApp';
     waBtn.addEventListener('click', () => {
       const digits = phoneToWhatsappDigits(t.telefono);
       const text = encodeURIComponent(buildCheckinMessage(t));
@@ -140,8 +152,8 @@ function renderTrips() {
 
     const doneBtn = document.createElement('button');
     doneBtn.type = 'button';
-    doneBtn.className = 'btn-remove-inline';
-    doneBtn.textContent = '✅';
+    doneBtn.className = 'trip-done-btn';
+    doneBtn.textContent = '✓';
     doneBtn.title = 'Marcar como avisado';
     doneBtn.addEventListener('click', async () => {
       try {
@@ -149,10 +161,11 @@ function renderTrips() {
       } catch (e) { /* se puede reintentar */ }
     });
 
-    btnWrap.appendChild(waBtn);
-    btnWrap.appendChild(doneBtn);
-    row.appendChild(info);
-    row.appendChild(btnWrap);
-    tripsList.appendChild(row);
+    actions.appendChild(waBtn);
+    actions.appendChild(doneBtn);
+    card.appendChild(badge);
+    card.appendChild(info);
+    card.appendChild(actions);
+    tripsList.appendChild(card);
   });
 }

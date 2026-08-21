@@ -314,6 +314,128 @@ textarea {
   font-style: italic;
 }
 
+.trip-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--color-neutral);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(3, 60, 105, 0.06);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.trip-card:hover {
+  box-shadow: 0 3px 10px rgba(3, 60, 105, 0.1);
+  border-color: #cfe0ea;
+}
+
+.trip-badge {
+  flex: 0 0 auto;
+  min-width: 62px;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.trip-badge.urgent {
+  background: #fdeaea;
+  color: #c0392b;
+}
+
+.trip-badge.soon {
+  background: #fff4e0;
+  color: #b8730a;
+}
+
+.trip-badge.later {
+  background: #e7f0f7;
+  color: var(--color-primary-2);
+}
+
+.trip-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trip-name {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+
+.trip-route {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 3px;
+}
+
+.trip-sub {
+  font-size: 0.78rem;
+  color: #8a97a0;
+}
+
+.trip-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-wa-btn {
+  background: #25d366;
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.trip-wa-btn:hover {
+  background: #1ebc59;
+}
+
+.trip-done-btn {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--color-neutral);
+  background: #fff;
+  color: #2a9d5c;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trip-done-btn:hover {
+  background: #eafaf0;
+  border-color: #2a9d5c;
+}
+
+@media (max-width: 640px) {
+  .trip-card {
+    flex-wrap: wrap;
+  }
+
+  .trip-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}
+
 .page-footer {
   text-align: center;
   padding: 20px;
