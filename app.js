@@ -662,10 +662,17 @@ function drawInvoiceHeader(doc, inv) {
   doc.setTextColor(...PRIMARY);
   doc.text('FACTURA', PAGE_W - MARGIN, 10, { align: 'right' });
 
+  if (inv.numero) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...PRIMARY_2);
+    doc.text(`No. ${inv.numero}`, PAGE_W - MARGIN, 16, { align: 'right' });
+  }
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...GRAY);
-  doc.text(`Fecha: ${inv.date || '-'}`, PAGE_W - MARGIN, 17, { align: 'right' });
+  doc.text(`Fecha: ${inv.date || '-'}`, PAGE_W - MARGIN, inv.numero ? 21 : 17, { align: 'right' });
 
   doc.setFillColor(...PRIMARY_2);
   doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
@@ -806,7 +813,8 @@ function generateInvoicePDF(ticketData, inv) {
   drawContactFooter(doc, page);
 
   const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  doc.save(`factura-${safeName || 'blue-travel'}.pdf`);
+  const numero = inv.numero ? `${String(inv.numero).replace(/[^A-Za-z0-9-]/g, '')}-` : '';
+  doc.save(`factura-${numero}${safeName || 'blue-travel'}.pdf`);
 }
 
 // ---------- Form submit ----------
@@ -962,15 +970,32 @@ document.getElementById('invPullTicketBtn').addEventListener('click', () => {
     : 'El formulario de boleto está vacío. Llénalo primero en la pestaña Boletos.';
 });
 
-document.getElementById('invoiceForm').addEventListener('submit', (e) => {
+document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
   const inv = collectInvoiceFields();
   const ticketData = collectTicketData();
+
+  // El consecutivo se pide antes de dibujar el PDF, para que quede impreso.
+  if (window.tomarNumeroFactura) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Generando…'; }
+    try {
+      inv.numero = await window.tomarNumeroFactura();
+    } catch (err) {
+      alert('No se pudo asignar el número consecutivo. Revisa tu conexión e intenta de nuevo.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Generar factura (PDF)'; }
+      return;
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Generar factura (PDF)'; }
+    if (window.refrescarNumeracion) window.refrescarNumeracion();
+  }
+
   generateInvoicePDF(ticketData, inv);
 
   if (window.saveFacturaToCloud) {
     window.saveFacturaToCloud({
       ...collectInvoiceRaw(),
+      numero: inv.numero || '',
       comprador: inv.buyerName || ticketData.passengers[0] || '',
       total: invoiceTotal(inv),
       moneda: inv.currency,
@@ -1022,6 +1047,8 @@ function paymentTextFromRaw(raw) {
 // descargar una factura vieja no borra la que estes escribiendo.
 function invoiceFieldsFromRaw(raw) {
   return {
+    // Al reimprimir se conserva el numero original: no se toma uno nuevo.
+    numero: raw.numero || '',
     date: formatDate(raw.date),
     buyerName: raw.buyerName || '',
     address: raw.address || '',

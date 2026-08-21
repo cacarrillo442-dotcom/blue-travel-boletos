@@ -178,6 +178,31 @@
         <button type="button" class="btn-add" id="invPullTicketBtn">📋 Traer datos del boleto</button>
       </div>
       <p class="hint" id="invPullStatus"></p>
+
+      <details style="margin-top:16px">
+        <summary class="hint" style="cursor:pointer">
+          🔢 Numeración · <span id="numeracionActual">cargando…</span>
+        </summary>
+        <p class="hint">
+          Cada factura recibe un número consecutivo que no se repite. Ajusta aquí el prefijo
+          o el número desde el que quieres arrancar; solo tendrás que tocarlo una vez.
+        </p>
+        <div class="grid-3">
+          <label>Prefijo
+            <input type="text" id="numPrefijo" maxlength="8" placeholder="Ej. FV" />
+          </label>
+          <label>Siguiente número
+            <input type="number" id="numSiguiente" min="1" step="1" />
+          </label>
+          <label>Dígitos
+            <input type="number" id="numDigitos" min="1" max="10" step="1" />
+          </label>
+        </div>
+        <div class="inline-add-row">
+          <button type="button" class="btn-add" id="numGuardarBtn">Guardar numeración</button>
+        </div>
+        <p class="hint" id="numEstado"></p>
+      </details>
     </section>
 
     <section class="card">
@@ -703,10 +728,11 @@
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 <script type="module" src="assets/firebase-clients.js?v=3"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
-<script type="module" src="assets/firebase-history.js?v=2"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=1"></script>
+<script type="module" src="assets/firebase-history.js?v=3"></script>
 <script type="module" src="assets/firebase-sales.js?v=5"></script>
 <script type="module" src="assets/firebase-trips.js?v=8"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>

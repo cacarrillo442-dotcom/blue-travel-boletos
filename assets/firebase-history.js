@@ -97,7 +97,7 @@ function textoBuscableBoleto(b) {
 
 function textoBuscableFactura(f) {
   return [
-    f.comprador, f.buyerName, f.city, f.country,
+    f.numero, f.comprador, f.buyerName, f.city, f.country,
     (f.items || []).map((i) => i.description).join(' '),
   ].filter(Boolean).join(' ').toLowerCase();
 }
@@ -199,7 +199,8 @@ function filaFactura(f) {
     : 'Sin concepto';
 
   return fila({
-    titulo: escapeHtml(comprador),
+    titulo: escapeHtml(comprador)
+      + (f.numero ? ` <span class="trip-leg">${escapeHtml(f.numero)}</span>` : ''),
     sub: `🧾 ${escapeHtml(desc)}`,
     meta: [
       f.date ? '📅 ' + formatIsoDate(f.date) : '',
