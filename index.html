@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=10" />
+<link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body>
 
@@ -38,14 +38,20 @@
   <button type="button" class="btn-add" id="gateLogoutBtn" style="margin-left:auto">Cerrar sesión</button>
 </header>
 
+<!-- Orden por como se usa: primero lo que se genera, luego el seguimiento
+     al cliente, y al final lo de consulta y administracion. -->
 <nav class="tabs">
   <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos</button>
-  <button type="button" class="tab-btn" data-tab="invoicePanel">🧾 Facturas</button>
   <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
-  <button type="button" class="tab-btn" data-tab="salesPanel">📊 Ventas</button>
-  <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
+  <button type="button" class="tab-btn" data-tab="invoicePanel">🧾 Facturas</button>
+
+  <span class="tab-sep" aria-hidden="true"></span>
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
   <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
+
+  <span class="tab-sep" aria-hidden="true"></span>
+  <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
+  <button type="button" class="tab-btn" data-tab="salesPanel">📊 Ventas</button>
 </nav>
 
 <main class="container">

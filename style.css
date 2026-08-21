@@ -1065,6 +1065,16 @@ select:focus {
   transition: color 0.15s, border-color 0.15s;
 }
 
+/* Separa los grupos de pestanas sin gritar */
+.tab-sep {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 18px;
+  margin: 0 10px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .tab-btn:hover {
   color: #fff;
 }
