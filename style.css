@@ -621,6 +621,26 @@ textarea {
   margin-bottom: 3px;
 }
 
+/* Distingue el aviso de ida del de regreso dentro de la misma lista */
+.trip-leg {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  background: #e7f0f7;
+  color: var(--color-primary-2);
+}
+
+.trip-leg.vuelta {
+  background: #f3ecfa;
+  color: #7048a8;
+}
+
 .trip-route {
   font-size: 0.86rem;
   font-weight: 600;

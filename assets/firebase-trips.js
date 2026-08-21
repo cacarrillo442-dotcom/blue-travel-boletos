@@ -57,8 +57,13 @@ function boletoAViaje(b) {
     fechaSalidaIda: ida.fechaSalida || '',
     horaSalidaIda: ida.horaSalida || '',
     hasReturn: !!b.hasReturn,
+    aerolineaRegreso: regreso.airlineSelect === 'OTRA' ? regreso.airlineOther : regreso.airlineSelect,
+    origenRegreso: regreso.origin || '',
+    destinoRegreso: regreso.dest || '',
     fechaSalidaRegreso: b.hasReturn ? (regreso.fechaSalida || '') : '',
+    horaSalidaRegreso: regreso.horaSalida || '',
     alertaEnviada: !!b.alertaEnviada,
+    alertaRegresoEnviada: !!b.alertaRegresoEnviada,
   };
 }
 
@@ -112,29 +117,70 @@ function phoneToWhatsappDigits(phone) {
 
 function buildCheckinMessage(t) {
   const nombres = (t.pasajeros || []).join(', ') || 'viajero';
-  const fecha = formatIsoDate(t.fechaSalidaIda);
-  const hora = t.horaSalidaIda || '';
-  const ruta = t.origenIda && t.destinoIda ? `${t.origenIda} → ${t.destinoIda}` : '';
+  const esRegreso = t._tramo === 'regreso';
+  const fecha = formatIsoDate(t._fecha);
+  const hora = t._hora || '';
+  const ruta = t._origen && t._destino ? `${t._origen} → ${t._destino}` : '';
 
   const lines = [];
-  lines.push(`¡Hola ${nombres}! 🙋‍♀️👋 Ya casi es hora de volar con *Blue Travel* ✈️`);
+  lines.push(esRegreso
+    ? `¡Hola ${nombres}! 🙋‍♀️👋 Esperamos que la hayas pasado increíble. Ya se acerca tu regreso ✈️`
+    : `¡Hola ${nombres}! 🙋‍♀️👋 Ya casi es hora de volar con *Blue Travel* ✈️`);
   lines.push('');
   if (t.bookingRef) lines.push(`🔖 Reserva: ${t.bookingRef}`);
-  if (t.aerolineaIda) lines.push(`🛫 Aerolínea: ${t.aerolineaIda}`);
-  if (ruta) lines.push(`📍 Ruta: ${ruta}`);
-  lines.push(`📅 Sale el: ${fecha}${hora ? ' a las ' + hora : ''}`);
+  if (t._aerolinea) lines.push(`🛫 Aerolínea: ${t._aerolinea}`);
+  if (ruta) lines.push(`📍 ${esRegreso ? 'Ruta de regreso' : 'Ruta'}: ${ruta}`);
+  lines.push(`📅 ${esRegreso ? 'Regresas el' : 'Sale el'}: ${fecha}${hora ? ' a las ' + hora : ''}`);
   lines.push('');
   lines.push('Recuerda hacer tu *check-in* en línea con la aerolínea y tener tu equipaje listo con tiempo 🧳');
-  lines.push('Cualquier cosa que necesites, aquí estamos 🙂 ¡Buen viaje! 💙');
+  lines.push(esRegreso
+    ? 'Cualquier cosa que necesites, aquí estamos 🙂 ¡Buen regreso a casa! 💙'
+    : 'Cualquier cosa que necesites, aquí estamos 🙂 ¡Buen viaje! 💙');
 
   return lines.join('\n');
+}
+
+// Un viaje de ida y vuelta necesita dos avisos: al salir y al regresar. Cada
+// tramo se marca por separado, porque se avisan en semanas distintas.
+function tramosPendientes(t) {
+  const out = [];
+
+  if (t.fechaSalidaIda && !t.alertaEnviada) {
+    out.push({
+      ...t,
+      _tramo: 'ida',
+      _campoAlerta: 'alertaEnviada',
+      _fecha: t.fechaSalidaIda,
+      _hora: t.horaSalidaIda || '',
+      _origen: t.origenIda || '',
+      _destino: t.destinoIda || '',
+      _aerolinea: t.aerolineaIda || '',
+    });
+  }
+
+  if (t.hasReturn && t.fechaSalidaRegreso && !t.alertaRegresoEnviada) {
+    out.push({
+      ...t,
+      _tramo: 'regreso',
+      _campoAlerta: 'alertaRegresoEnviada',
+      _fecha: t.fechaSalidaRegreso,
+      _hora: t.horaSalidaRegreso || '',
+      // Los viajes viejos no guardaron la ruta de regreso; si falta, se
+      // asume la de ida al reves.
+      _origen: t.origenRegreso || t.destinoIda || '',
+      _destino: t.destinoRegreso || t.origenIda || '',
+      _aerolinea: t.aerolineaRegreso || t.aerolineaIda || '',
+    });
+  }
+
+  return out;
 }
 
 function renderTrips() {
   // Boletos nuevos + viajes guardados antes del cambio, en una sola lista.
   const upcoming = [...currentBoletos, ...currentTrips]
-    .filter((t) => t.fechaSalidaIda && !t.alertaEnviada)
-    .map((t) => ({ ...t, _dias: daysUntil(t.fechaSalidaIda) }))
+    .flatMap(tramosPendientes)
+    .map((t) => ({ ...t, _dias: daysUntil(t._fecha) }))
     .filter((t) => t._dias >= 0)
     .sort((a, b) => a._dias - b._dias);
 
@@ -151,7 +197,8 @@ function renderTrips() {
     const badgeClass = t._dias === 0 ? 'urgent' : t._dias === 1 ? 'soon' : 'later';
     const diasLabel = t._dias === 0 ? 'Hoy' : t._dias === 1 ? 'Mañana' : `En ${t._dias} días`;
     const nombres = (t.pasajeros || []).join(', ') || '(sin nombre)';
-    const hora = t.horaSalidaIda ? ` · ${t.horaSalidaIda}` : '';
+    const hora = t._hora ? ` · ${t._hora}` : '';
+    const esRegreso = t._tramo === 'regreso';
 
     const badge = document.createElement('div');
     badge.className = `trip-badge ${badgeClass}`;
@@ -160,9 +207,11 @@ function renderTrips() {
     const info = document.createElement('div');
     info.className = 'trip-info';
     info.innerHTML = `
-      <div class="trip-name">${escapeHtml(nombres)}</div>
-      <div class="trip-route">✈️ ${escapeHtml(t.origenIda || '?')} → ${escapeHtml(t.destinoIda || '?')}${t.aerolineaIda ? ' · ' + escapeHtml(t.aerolineaIda) : ''}</div>
-      <div class="trip-sub">📅 ${formatIsoDate(t.fechaSalidaIda)}${hora} &nbsp;·&nbsp; 📞 ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; 🔖 ' + escapeHtml(t.bookingRef) : ''}</div>
+      <div class="trip-name">${escapeHtml(nombres)}
+        <span class="trip-leg ${esRegreso ? 'vuelta' : ''}">${esRegreso ? '↩️ regreso' : '🛫 ida'}</span>
+      </div>
+      <div class="trip-route">✈️ ${escapeHtml(t._origen || '?')} → ${escapeHtml(t._destino || '?')}${t._aerolinea ? ' · ' + escapeHtml(t._aerolinea) : ''}</div>
+      <div class="trip-sub">📅 ${formatIsoDate(t._fecha)}${hora} &nbsp;·&nbsp; 📞 ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; 🔖 ' + escapeHtml(t.bookingRef) : ''}</div>
     `;
 
     const actions = document.createElement('div');
@@ -183,11 +232,13 @@ function renderTrips() {
     doneBtn.className = 'trip-done-btn';
     doneBtn.textContent = '✓';
     doneBtn.title = 'Marcar como avisado';
+    doneBtn.title = esRegreso ? 'Marcar el regreso como avisado' : 'Marcar la ida como avisada';
     doneBtn.addEventListener('click', async () => {
-      // Puede venir del historial de boletos o de la coleccion antigua.
+      // Puede venir del historial de boletos o de la coleccion antigua, y
+      // cada tramo lleva su propia marca.
       const col = t._coleccion === 'boletos' ? 'boletos' : 'viajes';
       try {
-        await updateDoc(doc(db, col, t.id), { alertaEnviada: true });
+        await updateDoc(doc(db, col, t.id), { [t._campoAlerta]: true });
       } catch (e) { /* se puede reintentar */ }
     });
 
