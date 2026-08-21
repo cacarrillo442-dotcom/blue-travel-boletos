@@ -19,6 +19,49 @@ body {
   color-scheme: light;
 }
 
+.app-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  padding: 24px;
+}
+
+.app-gate-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  box-shadow: 0 10px 30px rgba(3, 60, 105, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.app-gate-logo {
+  height: 48px;
+  width: auto;
+  margin: 0 auto 4px;
+}
+
+.app-gate-card h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+.app-gate-card label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .topbar {
   background: var(--color-primary);
   color: var(--color-secondary);
