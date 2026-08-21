@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=7" />
+<link rel="stylesheet" href="style.css?v=8" />
 </head>
 <body>
 
@@ -39,7 +39,8 @@
 </header>
 
 <nav class="tabs">
-  <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos y facturas</button>
+  <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos</button>
+  <button type="button" class="tab-btn" data-tab="invoicePanel">🧾 Facturas</button>
   <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
   <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
@@ -150,13 +151,28 @@
       <textarea id="terms" rows="5"></textarea>
     </section>
 
-    <section class="card">
-      <label class="checkbox-label toggle-return">
-        <input type="checkbox" id="wantsInvoice" />
-        Generar también una factura de venta (PDF aparte)
-      </label>
+    <div class="actions">
+      <button type="submit" class="btn-primary" id="submitBtn">Generar boleto (PDF)</button>
+    </div>
 
-      <div id="invoiceFields" class="hidden">
+  </form>
+</div>
+
+<div id="invoicePanel" class="tab-panel hidden">
+  <form id="invoiceForm">
+    <section class="card">
+      <h2>Factura de venta</h2>
+      <p class="hint">
+        Documento independiente del boleto. Con el botón de abajo traes los datos que ya
+        escribiste en la pestaña de Boletos, y desde aquí ajustas lo que necesites.
+      </p>
+      <div class="inline-add-row">
+        <button type="button" class="btn-add" id="invPullTicketBtn">📋 Traer datos del boleto</button>
+      </div>
+      <p class="hint" id="invPullStatus"></p>
+    </section>
+
+    <section class="card">
         <h3>Comprador</h3>
         <div class="grid-2">
           <label>Nombre / razón social
@@ -241,11 +257,10 @@
         <label>Notas
           <textarea id="invNotes" rows="2"></textarea>
         </label>
-      </div>
     </section>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" id="submitBtn">Generar boleto (PDF)</button>
+      <button type="submit" class="btn-primary">Generar factura (PDF)</button>
     </div>
 
   </form>
@@ -594,7 +609,7 @@
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 <script type="module" src="assets/firebase-clients.js?v=3"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-trips.js?v=6"></script>

@@ -185,6 +185,13 @@ label + .grid-3 {
   margin-bottom: 12px;
 }
 
+/* Cuando el encabezado con botones va tras un grupo de campos, necesita aire */
+.grid-2 + .card-header,
+.grid-3 + .card-header,
+label + .card-header {
+  margin-top: 28px;
+}
+
 .card-header h2,
 .card-header h3 {
   margin: 0;
@@ -880,6 +887,7 @@ select:focus {
    columna de ancho comodo se sigue mejor que dos columnas en zigzag.
    Clientes y Proximos viajes si usan todo el ancho, porque son listas. */
 #ticketForm,
+#invoiceForm,
 #quoteForm {
   max-width: 940px;
   margin: 0 auto;

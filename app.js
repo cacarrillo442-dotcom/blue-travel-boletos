@@ -486,15 +486,6 @@ const DEFAULT_INVOICE_NOTES = 'Gracias por su compra con Blue Travel.';
 document.getElementById('invNotes').value = DEFAULT_INVOICE_NOTES;
 document.getElementById('invDate').valueAsDate = new Date();
 
-const wantsInvoiceCheckbox = document.getElementById('wantsInvoice');
-const invoiceFields = document.getElementById('invoiceFields');
-const submitBtn = document.getElementById('submitBtn');
-
-wantsInvoiceCheckbox.addEventListener('change', () => {
-  invoiceFields.classList.toggle('hidden', !wantsInvoiceCheckbox.checked);
-  submitBtn.textContent = wantsInvoiceCheckbox.checked ? 'Generar boleto y factura (PDF)' : 'Generar boleto (PDF)';
-});
-
 const invPaymentMethod = document.getElementById('invPaymentMethod');
 const payCardWraps = document.querySelectorAll('.pay-card-wrap');
 const payOtherWrap = document.querySelector('.pay-other-wrap');
@@ -809,10 +800,6 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
   const data = collectTicketData();
   generatePDF(data);
 
-  if (document.getElementById('wantsInvoice').checked) {
-    generateInvoicePDF(data, collectInvoiceFields());
-  }
-
   if (window.saveTripToCloud) {
     const telefono = buildFullTicketContactPhone();
     const fechaSalidaIda = idaContainer.querySelector('.fl-fecha-salida').value; // YYYY-MM-DD
@@ -831,6 +818,36 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
       });
     }
   }
+});
+
+// ---------- Factura de venta (pestaña aparte) ----------
+
+// Trae al formulario de factura lo que ya este escrito en el de boleto.
+document.getElementById('invPullTicketBtn').addEventListener('click', () => {
+  const data = collectTicketData();
+  const status = document.getElementById('invPullStatus');
+  const traidos = [];
+
+  const primerPasajero = data.passengers[0];
+  if (primerPasajero) {
+    document.getElementById('invBuyerName').value = primerPasajero;
+    traidos.push('comprador');
+  }
+
+  if (data.ida.origin || data.ida.dest || data.bookingRef) {
+    const firstRow = invItemsContainer.querySelector('.inv-item-row') || addInvItemRow();
+    firstRow.querySelector('.inv-item-desc').value = buildInvoiceDescription(data);
+    traidos.push('concepto a cobrar');
+  }
+
+  status.textContent = traidos.length
+    ? `Listo: se trajo ${traidos.join(' y ')} desde el boleto. Revisa y ajusta lo que necesites.`
+    : 'El formulario de boleto está vacío. Llénalo primero en la pestaña Boletos.';
+});
+
+document.getElementById('invoiceForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  generateInvoicePDF(collectTicketData(), collectInvoiceFields());
 });
 
 // ---------- Cotización (texto para WhatsApp) ----------
