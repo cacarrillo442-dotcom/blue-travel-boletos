@@ -50,10 +50,16 @@ onAuthStateChanged(auth, (user) => {
       render();
       // Proximos viajes se alimenta de estos mismos boletos.
       if (typeof window.onBoletosChange === 'function') window.onBoletosChange(boletos);
+      if (window.limpiarFalloConexion) window.limpiarFalloConexion('boletos');
+    }, (err) => {
+      if (window.reportarFalloConexion) window.reportarFalloConexion('boletos', err);
     });
     unsubFacturas = onSnapshot(query(facturasCol, orderBy('creado', 'desc')), (snap) => {
       facturas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
+      if (window.limpiarFalloConexion) window.limpiarFalloConexion('facturas');
+    }, (err) => {
+      if (window.reportarFalloConexion) window.reportarFalloConexion('facturas', err);
     });
   } else {
     if (unsubBoletos) { unsubBoletos(); unsubBoletos = null; }

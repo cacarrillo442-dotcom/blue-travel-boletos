@@ -107,6 +107,9 @@ function subscribeClients() {
     renderClients();
     pintarResumenCampanas();
     avisarClientesCargados();
+    if (window.limpiarFalloConexion) window.limpiarFalloConexion('clientes');
+  }, (err) => {
+    if (window.reportarFalloConexion) window.reportarFalloConexion('clientes', err);
   });
 }
 

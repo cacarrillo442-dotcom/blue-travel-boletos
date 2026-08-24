@@ -49,6 +49,9 @@ onAuthStateChanged(auth, (user) => {
       pintarSelectorPeriodo();
       pintarSemana();
       pintarDashboard();
+      if (window.limpiarFalloConexion) window.limpiarFalloConexion('ventas');
+    }, (err) => {
+      if (window.reportarFalloConexion) window.reportarFalloConexion('ventas', err);
     });
   } else {
     if (unsub) { unsub(); unsub = null; }

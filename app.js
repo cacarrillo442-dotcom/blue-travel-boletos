@@ -1474,3 +1474,40 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+// ---------- Aviso de conexión perdida ----------
+
+// Los listeners de Firestore mueren en silencio si se cae la red o el equipo
+// se duerme: la pantalla se queda con datos viejos sin avisar. Cada modulo
+// reporta aqui su fallo para que al menos se vea.
+(function () {
+  const aviso = document.getElementById('conexionAviso');
+  const texto = document.getElementById('conexionTexto');
+  const caidos = new Set();
+
+  let sinPermiso = false;
+
+  function pintar() {
+    if (!caidos.size) { aviso.classList.add('hidden'); return; }
+    texto.textContent = sinPermiso
+      ? 'Tu sesión ya no tiene permiso para ver estos datos. Vuelve a iniciar sesión.'
+      : `Se perdió la conexión con la base de datos (${[...caidos].join(', ')}). Los datos en pantalla pueden estar desactualizados.`;
+    aviso.classList.remove('hidden');
+  }
+
+  window.reportarFalloConexion = function (donde, error) {
+    caidos.add(donde);
+    if (error && error.code === 'permission-denied') sinPermiso = true;
+    pintar();
+  };
+
+  window.limpiarFalloConexion = function (donde) {
+    if (!caidos.delete(donde)) return;
+    if (!caidos.size) sinPermiso = false;
+    pintar();
+  };
+
+  document.getElementById('conexionRecargar').addEventListener('click', () => {
+    window.location.reload();
+  });
+})();

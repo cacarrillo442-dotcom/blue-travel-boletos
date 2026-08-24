@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=12" />
+<link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
 
@@ -25,6 +25,11 @@
     <p class="hint" id="gateError" style="color:#a33"></p>
     <button type="button" class="btn-primary" id="gateLoginBtn" style="width:100%">Entrar</button>
   </div>
+</div>
+
+<div id="conexionAviso" class="conexion-aviso hidden">
+  <span id="conexionTexto">Se perdió la conexión con la base de datos.</span>
+  <button type="button" id="conexionRecargar">Recargar</button>
 </div>
 
 <div id="appShell" class="hidden">
@@ -793,14 +798,14 @@
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
-<script src="app.js?v=9"></script>
-<script type="module" src="assets/firebase-clients.js?v=6"></script>
-<script type="module" src="assets/firebase-catalog.js?v=2"></script>
+<script src="app.js?v=11"></script>
+<script type="module" src="assets/firebase-clients.js?v=7"></script>
+<script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=1"></script>
-<script type="module" src="assets/firebase-history.js?v=3"></script>
-<script type="module" src="assets/firebase-sales.js?v=5"></script>
+<script type="module" src="assets/firebase-history.js?v=4"></script>
+<script type="module" src="assets/firebase-sales.js?v=6"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
-<script type="module" src="assets/firebase-trips.js?v=8"></script>
+<script type="module" src="assets/firebase-trips.js?v=9"></script>
 <script type="module" src="assets/firebase-gate.js?v=1"></script>
 </body>
 </html>

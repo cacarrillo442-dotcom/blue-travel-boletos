@@ -83,6 +83,40 @@ body {
   gap: 6px;
 }
 
+/* Aviso de conexion perdida: visible sin tapar la app */
+.conexion-aviso {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #fff4e0;
+  border-bottom: 1px solid #f0d9ac;
+  color: #8a5a08;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.conexion-aviso button {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #d9a441;
+  background: #fff;
+  color: #8a5a08;
+  cursor: pointer;
+}
+
+.conexion-aviso button:hover {
+  background: #fdf0d8;
+}
+
 .topbar {
   background: var(--color-primary);
   color: var(--color-secondary);

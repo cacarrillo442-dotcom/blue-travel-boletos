@@ -83,6 +83,9 @@ onAuthStateChanged(auth, (user) => {
     unsubscribeTrips = onSnapshot(tripsCol, (snap) => {
       currentTrips = snap.docs.map((d) => ({ id: d.id, _coleccion: 'viajes', ...d.data() }));
       renderTrips();
+      if (window.limpiarFalloConexion) window.limpiarFalloConexion('viajes');
+    }, (err) => {
+      if (window.reportarFalloConexion) window.reportarFalloConexion('viajes', err);
     });
   } else {
     tripsLoginCard.classList.remove('hidden');

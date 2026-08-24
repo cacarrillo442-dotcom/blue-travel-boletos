@@ -31,6 +31,9 @@ onSnapshot(airlinesCol, (snap) => {
     }
   });
   if (changed && window.refreshAllSelects) window.refreshAllSelects();
+}, () => {
+  // El catalogo tiene copia en este navegador, asi que un fallo aqui no
+  // deja al usuario sin opciones: no vale la pena alarmarlo.
 });
 
 onSnapshot(airportsCol, (snap) => {
@@ -44,6 +47,9 @@ onSnapshot(airportsCol, (snap) => {
     }
   });
   if (changed && window.refreshAllSelects) window.refreshAllSelects();
+}, () => {
+  // El catalogo tiene copia en este navegador, asi que un fallo aqui no
+  // deja al usuario sin opciones: no vale la pena alarmarlo.
 });
 
 window.saveAirlineToCloud = function saveAirlineToCloud(name) {
