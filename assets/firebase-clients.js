@@ -105,6 +105,7 @@ function subscribeClients() {
   unsubscribeClients = onSnapshot(q, (snap) => {
     currentClients = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderClients();
+    pintarResumenCampanas();
     avisarClientesCargados();
   });
 }
@@ -245,6 +246,71 @@ downloadCsvBtn.addEventListener('click', () => {
 
 function normalizePhone(phone) {
   return String(phone || '').replace(/\D/g, '');
+}
+
+// ---------- Exportar para campañas de correo ----------
+
+function correoValido(c) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(c || '').trim());
+}
+
+// Solo los que autorizaron y tienen un correo utilizable. Importar contactos
+// sin consentimiento puede costar la suspension de la cuenta en Brevo,
+// MailerLite o Mailchimp, aparte de lo que exige la ley de Habeas Data.
+function contactosParaCampanas() {
+  const vistos = new Set();
+  return currentClients.filter((c) => {
+    if (!c.autorizaPromos) return false;
+    const correo = String(c.correo || '').trim().toLowerCase();
+    if (!correoValido(correo) || vistos.has(correo)) return false;
+    vistos.add(correo);
+    return true;
+  });
+}
+
+function pintarResumenCampanas() {
+  const aviso = document.getElementById('campanasResumen');
+  if (!aviso) return;
+  const listos = contactosParaCampanas().length;
+  const autorizan = currentClients.filter((c) => c.autorizaPromos).length;
+  const sinCorreo = autorizan - listos;
+
+  if (!currentClients.length) { aviso.textContent = ''; return; }
+  if (!listos) {
+    aviso.textContent = autorizan
+      ? `Ninguno de los ${autorizan} clientes que autorizan promociones tiene un correo válido guardado.`
+      : 'Todavía ningún cliente ha autorizado recibir promociones.';
+    return;
+  }
+  aviso.textContent = `${listos} contacto(s) listos para exportar`
+    + (sinCorreo > 0 ? ` · ${sinCorreo} autorizan pero no tienen correo válido` : '')
+    + ` · de ${currentClients.length} clientes en total.`;
+}
+
+const campanasBtn = document.getElementById('clientsCampaignCsvBtn');
+if (campanasBtn) {
+  campanasBtn.addEventListener('click', () => {
+    const contactos = contactosParaCampanas();
+    if (!contactos.length) {
+      pintarResumenCampanas();
+      return;
+    }
+    const header = 'EMAIL,NOMBRE,TELEFONO,RUTA\n';
+    const rows = contactos.map((c) => [
+      String(c.correo || '').trim().toLowerCase(), c.nombre, c.telefono, c.ruta,
+    ].map((v) => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    // BOM para que los acentos se vean bien al abrirlo en Excel
+    const blob = new Blob(['﻿' + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contactos-campanas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
 }
 
 // Registra al viajero al generar un boleto. Antes solo entraban clientes

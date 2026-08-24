@@ -632,10 +632,25 @@
       <h2>Clientes guardados</h2>
       <div class="inline-add-row" style="margin-top:0">
         <button type="button" class="btn-add" id="clientsDownloadCsvBtn">⬇️ Descargar CSV</button>
+        <button type="button" class="btn-add" id="clientsCampaignCsvBtn">📧 Exportar para campañas</button>
         <button type="button" class="btn-add" id="clientsDedupeBtn">🧹 Eliminar duplicados</button>
       </div>
     </div>
     <p class="hint" id="clientsSessionLabel"></p>
+    <p class="hint" id="campanasResumen"></p>
+    <details>
+      <summary class="hint" style="cursor:pointer">📧 Cómo usar el archivo de campañas</summary>
+      <p class="hint">
+        Exporta solo a quienes <strong>autorizaron promociones</strong> y tienen un correo válido.
+        Importa ese archivo en <strong>Brevo</strong>, <strong>MailerLite</strong> o Mailchimp: al
+        subirlo te pedirán emparejar las columnas (EMAIL, NOMBRE, TELEFONO, RUTA).
+      </p>
+      <p class="hint">
+        No importes contactos que no autorizaron: además de ir contra la ley de Habeas Data, esas
+        plataformas suspenden cuentas por eso. Los clientes que entran desde Boletos no traen correo
+        ni autorización, así que no aparecerán aquí.
+      </p>
+    </details>
     <p class="hint" id="clientsDedupeStatus"></p>
     <div style="overflow-x:auto; margin-top:14px">
       <table class="clients-table" id="clientsTable">
@@ -779,7 +794,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
 <script src="app.js?v=9"></script>
-<script type="module" src="assets/firebase-clients.js?v=5"></script>
+<script type="module" src="assets/firebase-clients.js?v=6"></script>
 <script type="module" src="assets/firebase-catalog.js?v=2"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=1"></script>
 <script type="module" src="assets/firebase-history.js?v=3"></script>
