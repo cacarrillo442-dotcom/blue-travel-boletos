@@ -17,8 +17,13 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Cada tipo de documento lleva su propio contador, en su propio documento.
+const CONTADORES = {
+  facturacion: { prefijo: 'FV', siguiente: 1, digitos: 4 },
+  cupones: { prefijo: 'CP', siguiente: 1, digitos: 4 },
+};
+
 const refNumeracion = doc(db, 'config', 'facturacion');
-const POR_DEFECTO = { prefijo: 'FV', siguiente: 1, digitos: 4 };
 
 const el = (id) => document.getElementById(id);
 
@@ -28,16 +33,21 @@ function formatear(cfg, n) {
 }
 
 // Toma el siguiente numero y lo incrementa en una sola operacion atomica, para
-// que dos facturas hechas al tiempo nunca reciban el mismo.
-window.tomarNumeroFactura = async function tomarNumeroFactura() {
+// que dos documentos hechos al tiempo nunca reciban el mismo.
+window.tomarNumeroConsecutivo = async function tomarNumeroConsecutivo(tipo) {
+  const base = CONTADORES[tipo];
+  if (!base) throw new Error(`No hay contador definido para "${tipo}"`);
+  const ref = doc(db, 'config', tipo);
   return runTransaction(db, async (tx) => {
-    const snap = await tx.get(refNumeracion);
-    const cfg = snap.exists() ? { ...POR_DEFECTO, ...snap.data() } : { ...POR_DEFECTO };
+    const snap = await tx.get(ref);
+    const cfg = snap.exists() ? { ...base, ...snap.data() } : { ...base };
     const numero = formatear(cfg, cfg.siguiente);
-    tx.set(refNumeracion, { ...cfg, siguiente: cfg.siguiente + 1 });
+    tx.set(ref, { ...cfg, siguiente: cfg.siguiente + 1 });
     return numero;
   });
 };
+
+window.tomarNumeroFactura = () => window.tomarNumeroConsecutivo('facturacion');
 
 // ---------- Ajustes visibles en la pestana de Facturas ----------
 
@@ -46,7 +56,9 @@ async function pintarConfig() {
   if (!aviso) return;
   try {
     const snap = await getDoc(refNumeracion);
-    const cfg = snap.exists() ? { ...POR_DEFECTO, ...snap.data() } : { ...POR_DEFECTO };
+    const cfg = snap.exists()
+      ? { ...CONTADORES.facturacion, ...snap.data() }
+      : { ...CONTADORES.facturacion };
     el('numPrefijo').value = cfg.prefijo || '';
     el('numSiguiente').value = cfg.siguiente;
     el('numDigitos').value = cfg.digitos;

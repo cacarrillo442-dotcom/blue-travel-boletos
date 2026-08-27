@@ -54,6 +54,7 @@
   <span class="tab-sep" aria-hidden="true"></span>
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
   <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
+  <button type="button" class="tab-btn" data-tab="couponsPanel">🎟️ Cupones</button>
 
   <span class="tab-sep" aria-hidden="true"></span>
   <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
@@ -548,6 +549,61 @@
   </section>
 </div>
 
+<div id="couponsPanel" class="tab-panel hidden">
+  <section class="card">
+    <h2>🎟️ Generar cupón</h2>
+    <p class="hint">
+      El cupón sale a nombre del cliente, con un número consecutivo y una imagen lista para
+      enviar. Vence a los <strong>90 días</strong> de generado.
+    </p>
+    <div class="grid-2">
+      <label>Cliente
+        <select id="cuponCliente"></select>
+      </label>
+      <label>Valor del descuento
+        <select id="cuponValor">
+          <option value="20">US$20</option>
+          <option value="30">US$30</option>
+          <option value="50">US$50</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint">
+      Solo aparecen los clientes que ya están en tu base. Si falta alguien, guárdalo primero
+      desde Cotizaciones o generándole un boleto.
+    </p>
+    <div class="actions">
+      <button type="button" class="btn-primary" id="cuponGenerarBtn">Generar cupón</button>
+    </div>
+    <p class="hint" id="cuponEstado" style="text-align:right"></p>
+  </section>
+
+  <section class="card hidden" id="cuponVista">
+    <div class="card-header">
+      <h2>Cupón listo</h2>
+      <div class="inline-add-row" style="margin-top:0">
+        <button type="button" class="btn-add" id="cuponCopiarBtn">📋 Copiar imagen</button>
+        <button type="button" class="btn-add" id="cuponDescargarBtn">⬇️ Descargar</button>
+      </div>
+    </div>
+    <img id="cuponImagen" alt="Cupón Blue Travel" class="quote-image-preview" />
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Cupones generados</h2>
+      <select id="cuponFiltro" style="width:auto; min-width:170px">
+        <option value="vigente">Vigentes</option>
+        <option value="redimido">Redimidos</option>
+        <option value="vencido">Vencidos</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+    <p class="hint" id="cuponResumen"></p>
+    <div id="cuponLista" class="promo-list"></div>
+  </section>
+</div>
+
 <div id="backupPanel" class="tab-panel hidden">
   <section class="card">
     <h2>🛡️ Descargar respaldo</h2>
@@ -799,10 +855,12 @@
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
+<script src="assets/cupon-imagen.js?v=2"></script>
 <script src="app.js?v=11"></script>
-<script type="module" src="assets/firebase-clients.js?v=7"></script>
+<script type="module" src="assets/firebase-clients.js?v=8"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=1"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=2"></script>
+<script type="module" src="assets/firebase-cupones.js?v=1"></script>
 <script type="module" src="assets/firebase-history.js?v=4"></script>
 <script type="module" src="assets/firebase-sales.js?v=6"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>

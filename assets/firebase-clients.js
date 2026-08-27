@@ -107,6 +107,8 @@ function subscribeClients() {
     renderClients();
     pintarResumenCampanas();
     avisarClientesCargados();
+    // Cupones se alimenta de esta misma lista.
+    if (typeof window.onClientesChange === 'function') window.onClientesChange(currentClients);
     if (window.limpiarFalloConexion) window.limpiarFalloConexion('clientes');
   }, (err) => {
     if (window.reportarFalloConexion) window.reportarFalloConexion('clientes', err);
@@ -250,6 +252,8 @@ downloadCsvBtn.addEventListener('click', () => {
 function normalizePhone(phone) {
   return String(phone || '').replace(/\D/g, '');
 }
+
+window.obtenerClientes = () => currentClients;
 
 // ---------- Exportar para campañas de correo ----------
 
