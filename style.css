@@ -88,15 +88,83 @@ body {
 }
 
 .app-gate {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  /* El degradado respira muy despacio: se nota que esta vivo sin distraer
+     de escribir la contrasena. */
+  background-size: 160% 160%;
+  animation: respirar 22s ease-in-out infinite;
   padding: 24px;
 }
 
+@keyframes respirar {
+  0%, 100% { background-position: 0% 0%; }
+  50%      { background-position: 100% 100%; }
+}
+
+/* ---------- Aviones del fondo ----------
+   El avion y su estela son el gesto del logo de Blue Travel. Cruzan la
+   pantalla despacio y con distinta duracion, para que no parezcan un desfile
+   sincronizado. Van detras de la tarjeta y no reciben clics. */
+.gate-cielo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.estela {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.38);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  /* Cada ruta declara pathLength="1000", asi que la estela se dibuja igual
+     aunque las curvas midan distinto. Con un numero fijo, la ruta mas larga
+     se quedaba sin sus ultimos pixeles. */
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.avion {
+  fill: rgba(255, 255, 255, 0.85);
+  /* Sin ruta declarada el avion se quedaria pegado en la esquina: si el
+     navegador no entiende offset-path, mejor que no se dibuje (ver abajo). */
+  offset-rotate: auto;
+  opacity: 0;
+}
+
+.estela-1, .avion-1 { animation: volar 13s ease-in-out infinite; }
+.estela-2, .avion-2 { animation: volar 17s ease-in-out 4s infinite; }
+.estela-3, .avion-3 { animation: volar 21s ease-in-out 9s infinite; }
+
+.avion-1 { offset-path: path('M-80 640 C 260 560, 560 430, 1280 210'); }
+.avion-2 { offset-path: path('M-80 300 C 300 250, 700 190, 1280 40'); }
+.avion-3 { offset-path: path('M-80 780 C 340 720, 780 660, 1280 520'); }
+
+/* La estela se dibuja detras del avion y despues se desvanece entera */
+@keyframes volar {
+  0%   { stroke-dashoffset: 1000; offset-distance: 0%;   opacity: 0; }
+  8%   { opacity: 1; }
+  70%  { stroke-dashoffset: 0;    offset-distance: 100%; opacity: 1; }
+  85%  { stroke-dashoffset: 0;    offset-distance: 100%; opacity: 0; }
+  100% { stroke-dashoffset: 0;    offset-distance: 100%; opacity: 0; }
+}
+
+/* Navegadores sin offset-path: sin ruta el avion se amontona en el origen,
+   asi que se muestra solo la estela. */
+@supports not (offset-path: path('M0 0 L1 1')) {
+  .avion { display: none; }
+}
+
 .app-gate-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 380px;
   background: #fff;
@@ -106,6 +174,32 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  animation: entrar 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Hay quien marca en su sistema que prefiere menos movimiento, casi siempre
+   porque le marea o le distrae. Ahi la pantalla se queda quieta: el
+   degradado y la tarjeta se ven igual, solo que sin animarse. */
+@media (prefers-reduced-motion: reduce) {
+  .app-gate,
+  .app-gate-card,
+  .estela,
+  .avion {
+    animation: none;
+  }
+
+  .estela {
+    stroke-dashoffset: 0;
+  }
+
+  .avion {
+    display: none;
+  }
 }
 
 .app-gate-logo {

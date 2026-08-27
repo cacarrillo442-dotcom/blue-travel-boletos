@@ -7,11 +7,22 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=23" />
+<link rel="stylesheet" href="style.css?v=27" />
 </head>
 <body>
 
 <div id="appGate" class="app-gate">
+  <!-- Aviones cruzando el fondo, con su estela. Es el mismo gesto del logo.
+       Decorativo: no lleva texto y queda oculto a los lectores de pantalla. -->
+  <svg class="gate-cielo" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+    <path id="ruta1" class="estela estela-1" pathLength="1000" d="M-80 640 C 260 560, 560 430, 1280 210" />
+    <path id="ruta2" class="estela estela-2" pathLength="1000" d="M-80 300 C 300 250, 700 190, 1280 40" />
+    <path id="ruta3" class="estela estela-3" pathLength="1000" d="M-80 780 C 340 720, 780 660, 1280 520" />
+    <path class="avion avion-1" d="M-17 -11 L21 0 L-17 11 L-7 0 Z" />
+    <path class="avion avion-2" d="M-13 -8.5 L16 0 L-13 8.5 L-5.5 0 Z" />
+    <path class="avion avion-3" d="M-11 -7 L14 0 L-11 7 L-4.5 0 Z" />
+  </svg>
+
   <div class="app-gate-card">
     <img src="assets/logo-blue.png" alt="Blue Travel" class="app-gate-logo" />
     <h1>Sistema de Operación Blue</h1>
