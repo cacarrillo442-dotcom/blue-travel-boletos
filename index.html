@@ -55,6 +55,7 @@
   <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
   <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
   <button type="button" class="tab-btn" data-tab="couponsPanel">🎟️ Cupones</button>
+  <button type="button" class="tab-btn" data-tab="pricesPanel">🔎 Precios</button>
 
   <span class="tab-sep" aria-hidden="true"></span>
   <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
@@ -549,6 +550,82 @@
   </section>
 </div>
 
+<div id="pricesPanel" class="tab-panel hidden">
+  <section class="card">
+    <h2>🔎 Precios de mercado</h2>
+    <p class="hint">
+      Compara los tres aeropuertos de Washington de una sola vez y te dice desde cuál sale
+      más barato. Son <strong>precios de referencia del mercado</strong>, no tarifas tuyas:
+      úsalos para decidir qué promocionar, no para publicar la cifra tal cual.
+    </p>
+    <div class="grid-3">
+      <label>Salida
+        <select id="precioOrigen">
+          <option value="WAS">Washington (compara IAD, BWI y DCA)</option>
+          <option value="IAD">Solo Dulles (IAD)</option>
+          <option value="BWI">Solo Baltimore (BWI)</option>
+          <option value="DCA">Solo Reagan (DCA)</option>
+        </select>
+      </label>
+      <label>Destino
+        <select id="precioDestino">
+          <option value="SAL">San Salvador (SAL)</option>
+          <option value="MEX">Ciudad de México (MEX)</option>
+          <option value="TGU">Tegucigalpa (TGU)</option>
+          <option value="SAP">San Pedro Sula (SAP)</option>
+          <option value="GUA">Guatemala (GUA)</option>
+          <option value="MGA">Managua (MGA)</option>
+          <option value="SJO">San José (SJO)</option>
+          <option value="MIA">Miami (MIA)</option>
+          <option value="BOG">Bogotá (BOG)</option>
+        </select>
+      </label>
+      <label>Mes (opcional)
+        <input type="month" id="precioMes" />
+      </label>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn-primary" id="precioBuscarBtn">Buscar precios</button>
+    </div>
+    <p class="hint" id="precioEstado" style="text-align:right"></p>
+  </section>
+
+  <section class="card hidden" id="precioResultado">
+    <h2>Resultado</h2>
+    <div class="stat-row" id="precioResumen"></div>
+    <h3>Ofertas encontradas</h3>
+    <div id="precioLista" class="promo-list"></div>
+  </section>
+
+  <section class="card hidden" id="precioPublicidad">
+    <div class="card-header">
+      <h2>Publicidad</h2>
+      <div class="inline-add-row" style="margin-top:0">
+        <button type="button" class="btn-add" id="precioCopiarTextoBtn">📋 Copiar texto</button>
+        <button type="button" class="btn-add" id="precioCopiarImagenBtn">🖼️ Copiar imagen</button>
+        <button type="button" class="btn-add" id="precioDescargarBtn">⬇️ Descargar</button>
+      </div>
+    </div>
+    <p class="hint">
+      Ajusta el precio al que <strong>tú</strong> vas a vender antes de publicar. En Colombia
+      estás obligado a cumplir el precio que anuncies.
+    </p>
+    <div class="grid-2">
+      <label>Precio a publicar (US$)
+        <input type="number" id="precioPublicar" min="0" step="1" />
+      </label>
+      <label>Vigencia del anuncio
+        <input type="text" id="precioVigencia" placeholder="Ej. Reserva antes del 15 de septiembre" />
+      </label>
+    </div>
+    <img id="precioImagen" alt="Publicidad Blue Travel" class="quote-image-preview" style="margin-top:16px" />
+    <details style="margin-top:14px">
+      <summary class="hint" style="cursor:pointer">Ver el texto para WhatsApp</summary>
+      <textarea id="precioTexto" rows="10" readonly style="margin-top:10px"></textarea>
+    </details>
+  </section>
+</div>
+
 <div id="couponsPanel" class="tab-panel hidden">
   <section class="card">
     <h2>🎟️ Generar cupón</h2>
@@ -856,11 +933,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/sales-parse.js?v=4"></script>
 <script src="assets/cupon-imagen.js?v=2"></script>
+<script src="assets/publicidad-imagen.js?v=1"></script>
+<script src="assets/precios-datos.js?v=1"></script>
 <script src="app.js?v=11"></script>
 <script type="module" src="assets/firebase-clients.js?v=8"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
 <script type="module" src="assets/firebase-cupones.js?v=1"></script>
+<script src="assets/precios-ui.js?v=1"></script>
 <script type="module" src="assets/firebase-history.js?v=4"></script>
 <script type="module" src="assets/firebase-sales.js?v=6"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
