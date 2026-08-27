@@ -178,6 +178,15 @@
     marcarEnLaBarra('navConteoViajes', viajes.length);
     marcarEnLaBarra('navConteoCupones', cupones.length);
 
+    // El saludo dice de una vez como esta el dia, para no tener que bajar
+    // a contar las tarjetas.
+    const estado = el('inicioEstado');
+    if (estado) {
+      estado.textContent = total
+        ? `Tienes ${total} ${total === 1 ? 'cosa' : 'cosas'} esperándote.`
+        : 'No tienes nada pendiente. Buen día para vender.';
+    }
+
     if (!destino) return;
 
     if (contador) {
