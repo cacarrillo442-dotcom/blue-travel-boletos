@@ -31,6 +31,26 @@
   box-sizing: border-box;
 }
 
+/* ---------- Cifras ----------
+   Poppins trae los digitos de anchos distintos: el 1 mide casi la mitad que
+   el 4, asi que una columna de precios queda desalineada. Pedirle
+   `tabular-nums` no sirve, porque la fuente no incluye esa caracteristica.
+   La del sistema si la tiene y ya esta instalada: cero peso extra. */
+.cifras,
+.stat-value,
+.trip-badge,
+.hbar-value,
+.axis-text {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los telefonos e importes de la tabla de clientes tambien son columnas */
+.clients-table td:nth-child(3) {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Iconos ----------
    Trazo del mismo grosor en todos y heredan el color del texto, para que
    funcionen igual sobre el azul de la barra que sobre las tarjetas claras. */
@@ -828,7 +848,7 @@ textarea {
 .axis-text {
   fill: var(--ink-soft);
   font-size: 2.1px;
-  font-family: 'Poppins', sans-serif;
+  /* La familia la define el bloque de cifras: son ejes numericos. */
 }
 
 .bar {
