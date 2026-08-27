@@ -45,24 +45,43 @@
     tarjetaPublicidad.classList.add('hidden');
 
     try {
-      const { ofertas, fallos } = await P.compararOrigenes(aeropuertos, destino, mes);
+      let { ofertas, fallos } = await P.compararOrigenes(aeropuertos, destino, mes);
+      let mesIgnorado = false;
+
+      // Filtrar por mes suele dejar la busqueda en cero, porque la cache no
+      // cubre todos los meses. Antes de rendirse, se reintenta sin el mes.
+      if (!ofertas.length && mes) {
+        estado.textContent = 'Sin resultados para ese mes, buscando otras fechas…';
+        const reintento = await P.compararOrigenes(aeropuertos, destino, '');
+        if (reintento.ofertas.length) {
+          ofertas = reintento.ofertas;
+          fallos = reintento.fallos;
+          mesIgnorado = true;
+        }
+      }
 
       if (!ofertas.length) {
         estado.textContent = '';
         tarjetaResultado.classList.remove('hidden');
         resumen.innerHTML = '';
         lista.innerHTML = `<p class="promo-empty">
-          No hay precios guardados para ${escapeHtml(P.nombreDe(destino))} en este momento.
-          Los datos vienen de una caché que no cubre todas las rutas — por ejemplo Honduras
-          no aparece. Prueba otro destino o vuelve más tarde.
+          No hay precios guardados para ${escapeHtml(P.nombreDe(destino))}${mes ? ' en ninguna fecha' : ''}.
+          Los datos vienen de una caché que no cubre todas las rutas: las de Honduras, por
+          ejemplo, nunca aparecen. Prueba otro destino o vuelve más tarde.
         </p>`;
+        tarjetaPublicidad.classList.add('hidden');
         return;
       }
 
       pintarResultado(ofertas, fallos, destino);
-      estado.textContent = fallos.length
-        ? `No se pudo consultar ${fallos.join(', ')}.`
-        : '';
+
+      const avisos = [];
+      if (mesIgnorado) {
+        const [a, m] = mesInput.value.split('-');
+        avisos.push(`No había precios para ${m}/${a}; estos son de otras fechas.`);
+      }
+      if (fallos.length) avisos.push(`No se pudo consultar ${fallos.join(', ')}.`);
+      estado.textContent = avisos.join(' ');
     } catch (e) {
       estado.textContent = `No se pudo consultar: ${e.message}`;
     }
