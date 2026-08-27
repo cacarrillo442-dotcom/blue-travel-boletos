@@ -205,7 +205,11 @@ onAuthStateChanged(auth, (user) => {
 
 cuponFiltro.addEventListener('change', pintarLista);
 
+window.obtenerCupones = () => cupones;
+window.estadoDeCupon = estadoDe;
+
 function pintarLista() {
+  if (window.pintarInicio) window.pintarInicio();
   if (!cuponLista) return;
   const filtro = cuponFiltro.value;
   const visibles = cupones.filter((c) => filtro === 'todos' || estadoDe(c) === filtro);

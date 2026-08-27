@@ -985,6 +985,130 @@ textarea {
   cursor: pointer;
 }
 
+/* ---------- Pantalla de Inicio ---------- */
+
+.inicio-saludo {
+  margin: 2px 0 18px;
+}
+
+.inicio-saludo h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink-strong);
+}
+
+.inicio-saludo p {
+  margin: 3px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.inicio-periodo {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* Cuando no hay nada pendiente eso tambien es una respuesta, no un vacio */
+.inicio-libre {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: #edf7f1;
+  color: #2f6b4a;
+  font-size: 0.9rem;
+}
+
+.conteo-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--color-alt);
+  color: #6b4d00;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.inicio-atajos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.atajo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.08s;
+}
+
+.atajo:hover {
+  border-color: var(--color-primary-2);
+  box-shadow: var(--shadow);
+}
+
+.atajo:active {
+  transform: translateY(1px);
+}
+
+.atajo .ic {
+  width: 21px;
+  height: 21px;
+  margin-bottom: 5px;
+  color: var(--color-primary-2);
+}
+
+.atajo strong {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.atajo span {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.inicio-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.resumen-dato {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.resumen-dato .cifras {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
 /* ---------- Dashboard de ventas ---------- */
 
 .stat-row {

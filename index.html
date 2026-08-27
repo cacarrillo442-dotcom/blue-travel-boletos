@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=19" />
+<link rel="stylesheet" href="style.css?v=20" />
 </head>
 <body>
 
@@ -49,8 +49,11 @@
   </div>
 
   <nav class="sidebar-nav" aria-label="Secciones">
+    <button type="button" class="tab-btn active" data-tab="homePanel" aria-current="page"
+      data-desc="Cómo va la semana y qué quedó pendiente."><svg class="ic" aria-hidden="true"><use href="#ic-inicio"></use></svg><span>Inicio</span></button>
+
     <p class="nav-grupo">Generar</p>
-    <button type="button" class="tab-btn active" data-tab="ticketsPanel" aria-current="page"
+    <button type="button" class="tab-btn" data-tab="ticketsPanel"
       data-desc="Arma el boleto del pasajero y descárgalo en PDF."><svg class="ic" aria-hidden="true"><use href="#ic-boleto"></use></svg><span>Boletos</span></button>
     <button type="button" class="tab-btn" data-tab="quotesPanel"
       data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
@@ -89,13 +92,64 @@
   <button type="button" class="menu-btn" id="menuBtn" aria-label="Abrir el menú"
     aria-controls="sidebar" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#ic-menu"></use></svg></button>
   <div class="topbar-text">
-    <h1 id="seccionTitulo">Boletos</h1>
-    <p id="seccionDesc">Arma el boleto del pasajero y descárgalo en PDF.</p>
+    <h1 id="seccionTitulo">Inicio</h1>
+    <p id="seccionDesc">Cómo va la semana y qué quedó pendiente.</p>
   </div>
 </header>
 
 <main class="container">
-<div id="ticketsPanel" class="tab-panel">
+<div id="homePanel" class="tab-panel">
+
+  <div class="inicio-saludo">
+    <h2 id="inicioSaludo">Hola</h2>
+    <p id="inicioFecha"></p>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <h2 id="inicioSemanaTitulo">La semana</h2>
+      <button type="button" class="btn-secondary btn-compact inicio-accion" data-ir="salesPanel">Ver ventas</button>
+    </div>
+    <div id="inicioSemana"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Necesita tu atención <span id="inicioPendientesCuenta" class="conteo-pill hidden"></span></h2>
+    </div>
+    <div id="inicioPendientes" class="promo-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>¿Qué vas a hacer?</h2>
+    <div class="inicio-atajos">
+      <button type="button" class="atajo inicio-accion" data-ir="ticketsPanel">
+        <svg class="ic" aria-hidden="true"><use href="#ic-boleto"></use></svg>
+        <strong>Emitir un boleto</strong>
+        <span>Genera el PDF y guárdalo</span>
+      </button>
+      <button type="button" class="atajo inicio-accion" data-ir="quotesPanel">
+        <svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg>
+        <strong>Cotizar un viaje</strong>
+        <span>Listo para enviar por WhatsApp</span>
+      </button>
+      <button type="button" class="atajo inicio-accion" data-ir="invoicePanel">
+        <svg class="ic" aria-hidden="true"><use href="#ic-factura"></use></svg>
+        <strong>Hacer una factura</strong>
+        <span>Cuando el cliente la pide</span>
+      </button>
+      <button type="button" class="atajo inicio-accion" data-ir="pricesPanel">
+        <svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg>
+        <strong>Revisar precios</strong>
+        <span>Cómo está el mercado hoy</span>
+      </button>
+    </div>
+    <div id="inicioResumen" class="inicio-resumen"></div>
+  </section>
+
+</div>
+
+<div id="ticketsPanel" class="tab-panel hidden">
   <form id="ticketForm">
 
     <section class="card">
@@ -999,7 +1053,7 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=2"></script>
+<script src="assets/iconos.js?v=3"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
@@ -1009,15 +1063,16 @@
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=12"></script>
-<script type="module" src="assets/firebase-clients.js?v=10"></script>
+<script src="assets/inicio.js?v=2"></script>
+<script type="module" src="assets/firebase-clients.js?v=11"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
-<script type="module" src="assets/firebase-cupones.js?v=2"></script>
+<script type="module" src="assets/firebase-cupones.js?v=3"></script>
 <script src="assets/precios-ui.js?v=8"></script>
 <script type="module" src="assets/firebase-history.js?v=5"></script>
-<script type="module" src="assets/firebase-sales.js?v=8"></script>
+<script type="module" src="assets/firebase-sales.js?v=9"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
-<script type="module" src="assets/firebase-trips.js?v=11"></script>
+<script type="module" src="assets/firebase-trips.js?v=12"></script>
 <script type="module" src="assets/firebase-gate.js?v=2"></script>
 </body>
 </html>

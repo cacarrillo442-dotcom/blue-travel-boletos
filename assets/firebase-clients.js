@@ -114,6 +114,7 @@ function subscribeClients() {
 }
 
 function renderClients() {
+  if (window.pintarInicio) window.pintarInicio();
   clientsTableBody.innerHTML = '';
   currentClients.forEach((c) => {
     const tr = document.createElement('tr');

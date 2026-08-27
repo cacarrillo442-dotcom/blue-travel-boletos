@@ -179,13 +179,23 @@ function tramosPendientes(t) {
   return out;
 }
 
-function renderTrips() {
-  // Boletos nuevos + viajes guardados antes del cambio, en una sola lista.
-  const upcoming = [...currentBoletos, ...currentTrips]
+// Boletos nuevos + viajes guardados antes del cambio, en una sola lista,
+// del mas cercano al mas lejano. La pantalla de Inicio muestra los primeros,
+// asi que sale de aqui y no de una copia de esta logica.
+function avisosPendientes() {
+  return [...currentBoletos, ...currentTrips]
     .flatMap(tramosPendientes)
     .map((t) => ({ ...t, _dias: daysUntil(t._fecha) }))
     .filter((t) => t._dias >= 0)
     .sort((a, b) => a._dias - b._dias);
+}
+
+window.avisosPendientes = avisosPendientes;
+
+function renderTrips() {
+  // Inicio resume estos mismos avisos: se entera cada vez que cambian.
+  if (window.pintarInicio) window.pintarInicio();
+  const upcoming = avisosPendientes();
 
   tripsList.innerHTML = '';
   if (!upcoming.length) {

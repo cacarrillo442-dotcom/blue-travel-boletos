@@ -209,7 +209,11 @@ function ventasDelPeriodo() {
   return ventas.filter((v) => V.fechaIngreso(v) >= iso);
 }
 
+// Inicio muestra el cierre de la semana mas reciente, calculado aqui mismo.
+window.obtenerSemanas = () => semanas;
+
 function pintarDashboard() {
+  if (window.pintarInicio) window.pintarInicio();
   const lote = ventasDelPeriodo();
   const t = V.totales(lote);
   const esMes = (dashPeriod.value || '').startsWith('mes:');
