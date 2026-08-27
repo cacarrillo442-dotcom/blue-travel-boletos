@@ -1452,28 +1452,68 @@ document.getElementById('qDownloadImageBtn').addEventListener('click', () => {
 document.getElementById('qCopyImageBtn').addEventListener('click', async () => {
   const btn = document.getElementById('qCopyImageBtn');
   if (!qLastCanvas) return;
-  const original = '📋 Copiar imagen';
+  // Guardar el contenido real: si se restaura un texto fijo, el icono del
+  // boton desaparece para siempre.
+  const original = btn.innerHTML;
   try {
     const blob = await new Promise(resolve => qLastCanvas.toBlob(resolve, 'image/png'));
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    btn.textContent = '✅ Copiada';
+    btn.innerHTML = window.icono('check', 'ic-izq') + 'Copiada';
   } catch (e) {
-    btn.textContent = '⚠️ Usa "Descargar"';
+    btn.innerHTML = window.icono('alerta', 'ic-izq') + 'Usa Descargar';
   }
-  setTimeout(() => { btn.textContent = original; }, 2000);
+  setTimeout(() => { btn.innerHTML = original; }, 2000);
 });
 
-// ---------- Tabs ----------
+// ---------- Navegación ----------
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+(function () {
+  const sidebar = document.getElementById('sidebar');
+  const velo = document.getElementById('sidebarVelo');
+  const menuBtn = document.getElementById('menuBtn');
+  const titulo = document.getElementById('seccionTitulo');
+  const desc = document.getElementById('seccionDesc');
+
+  // En movil la barra es un cajon que tapa el contenido: se cierra sola al
+  // elegir modulo, al tocar fuera y con Escape.
+  function cerrarMenu() {
+    if (!sidebar || !sidebar.classList.contains('abierto')) return;
+    sidebar.classList.remove('abierto');
+    velo.hidden = true;
+    menuBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      const abierto = sidebar.classList.toggle('abierto');
+      velo.hidden = !abierto;
+      menuBtn.setAttribute('aria-expanded', String(abierto));
+    });
+  }
+  if (velo) velo.addEventListener('click', cerrarMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarMenu(); });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.removeAttribute('aria-current');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-current', 'page');
+      document.getElementById(btn.dataset.tab).classList.remove('hidden');
+
+      // El encabezado repite en que modulo estas: en la barra lateral el
+      // nombre queda arriba a la izquierda, lejos de donde se trabaja.
+      if (titulo) titulo.textContent = btn.textContent.trim();
+      if (desc) desc.textContent = btn.dataset.desc || '';
+
+      cerrarMenu();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   });
-});
+})();
 
 // ---------- Aviso de conexión perdida ----------
 

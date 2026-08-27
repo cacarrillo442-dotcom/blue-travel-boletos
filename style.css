@@ -164,48 +164,262 @@ body {
   background: #fdf0d8;
 }
 
-.topbar {
-  background: var(--color-primary);
-  color: var(--color-secondary);
+/* ---------- Estructura: barra lateral + area de trabajo ----------
+   La navegacion vertical deja ver los diez modulos de una vez y agrupados,
+   en vez de una fila de pestanas que se cortaba. El ancho que le quita a las
+   tarjetas es poco: las pantallas son mas anchas que altas. */
+.layout {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px max(24px, calc((100% - 1280px) / 2 + 24px));
+  min-height: 100vh;
+  align-items: flex-start;
 }
 
-.topbar-logo {
-  height: 48px;
+.sidebar {
+  flex: 0 0 244px;
+  width: 244px;
+  align-self: stretch;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+}
+
+.area {
+  flex: 1 1 auto;
+  /* Sin esto el contenido ancho (tablas, graficas) estira el flex y empuja
+     la barra lateral fuera de la pantalla. */
+  min-width: 0;
+}
+
+.sidebar-marca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 20px 18px 18px;
+}
+
+.sidebar-logo {
+  height: 38px;
   width: auto;
 }
 
-.topbar-text h1 {
-  margin: 0;
-  font-size: 1.25rem;
+.sidebar-marca-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.sidebar-marca-texto strong {
+  font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.topbar-text p {
-  margin: 3px 0 0;
-  font-size: 0.83rem;
+.sidebar-marca-texto span {
+  font-size: 0.72rem;
   color: #a9c1d3;
 }
 
-/* Cerrar sesion: discreto sobre el azul, no compite con las pestanas */
-#gateLogoutBtn {
+.sidebar-nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 10px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.nav-grupo {
+  margin: 16px 0 6px;
+  padding-left: 12px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7d99ad;
+}
+
+.nav-grupo:first-child {
+  margin-top: 4px;
+}
+
+.sidebar-nav .tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 1px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #b8ccdb;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+.sidebar-nav .tab-btn .ic {
+  width: 1.15em;
+  height: 1.15em;
+  opacity: 0.85;
+}
+
+.sidebar-nav .tab-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+/* El activo se marca con el amarillo de la marca: es el unico punto de color
+   de la barra, asi que se encuentra sin leer. */
+.sidebar-nav .tab-btn.active {
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--color-alt);
+}
+
+.sidebar-nav .tab-btn.active .ic {
+  opacity: 1;
+  color: var(--color-alt);
+}
+
+.sidebar-pie {
+  padding: 12px 18px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#gateLogoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d6e3ed;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.83rem;
   font-weight: 500;
+  cursor: pointer;
 }
 
 #gateLogoutBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* El velo y el boton de menu solo existen cuando la barra es cajon (movil) */
+.sidebar-velo {
+  display: none;
+}
+
+.menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-strong);
+  cursor: pointer;
+}
+
+.menu-btn .ic {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Encabezado del area ----------
+   Con la barra lateral el nombre del modulo queda lejos del contenido, asi
+   que el encabezado repite donde estas parado y para que sirve. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 15px max(28px, calc((100% - 1280px) / 2 + 28px));
+}
+
+.topbar-text h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--ink-strong);
+}
+
+.topbar-text p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
 }
 
 .container {
   max-width: 1280px;
-  margin: 28px auto;
-  padding: 0 24px 56px;
+  margin: 26px auto;
+  padding: 0 28px 56px;
+}
+
+/* ---------- La barra como cajon ----------
+   Debajo de 900px no cabe al lado del contenido, asi que se esconde y se
+   abre encima con el boton de menu. */
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.abierto {
+    transform: none;
+  }
+
+  .sidebar-velo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(3, 26, 45, 0.45);
+  }
+
+  .sidebar-velo[hidden] {
+    display: none;
+  }
+
+  .menu-btn {
+    display: inline-flex;
+  }
+
+  /* Con el dedo hace falta mas blanco que con el mouse: los diez modulos
+     siguen cabiendo sin scroll. */
+  .sidebar-nav .tab-btn {
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }
 
 .card {
@@ -1189,54 +1403,6 @@ select:focus {
   margin-top: 16px;
 }
 
-.tabs {
-  display: flex;
-  gap: 2px;
-  /* Fondo a todo lo ancho, pero las pestanas alineadas con las tarjetas */
-  padding: 0 max(24px, calc((100% - 1280px) / 2 + 24px));
-  background: var(--color-primary);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.tab-btn {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.87rem;
-  font-weight: 600;
-  color: #a9c1d3;
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid transparent;
-  padding: 14px 18px 11px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-/* Separa los grupos de pestanas sin gritar */
-.tab-sep {
-  flex: 0 0 auto;
-  align-self: center;
-  width: 1px;
-  height: 18px;
-  margin: 0 10px;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.tab-btn:hover {
-  color: #fff;
-}
-
-.tab-btn.active {
-  color: #fff;
-  border-bottom-color: var(--color-alt);
-}
-
 .catalog-subsection {
   border-top: 1px solid var(--color-neutral);
   padding-top: 14px;
@@ -1316,17 +1482,9 @@ select:focus {
     display: none;
   }
 
-  .topbar-logo {
-    height: 36px;
-  }
-
-  .tabs {
-    padding: 0 10px;
-  }
-
-  .tab-btn {
-    padding: 13px 13px 10px;
-    font-size: 0.82rem;
+  .topbar {
+    padding: 11px 14px;
+    gap: 11px;
   }
 
   .actions, .actions-split {

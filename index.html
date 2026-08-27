@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=17" />
+<link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
 
@@ -35,33 +35,64 @@
 
 <div id="appShell" class="hidden">
 
-<header class="topbar">
-  <img src="assets/logo-white.png" alt="Blue Travel" class="topbar-logo" />
-  <div class="topbar-text">
-    <h1>Sistema de Operación Blue</h1>
-    <p>Boletos, facturas y cotizaciones para tus clientes</p>
-  </div>
-  <button type="button" class="btn-add" id="gateLogoutBtn" style="margin-left:auto">Cerrar sesión</button>
-</header>
+<div class="layout">
 
 <!-- Orden por como se usa: primero lo que se genera, luego el seguimiento
      al cliente, y al final lo de consulta y administracion. -->
-<nav class="tabs">
-  <button type="button" class="tab-btn active" data-tab="ticketsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-boleto"></use></svg>Boletos</button>
-  <button type="button" class="tab-btn" data-tab="quotesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cotizacion"></use></svg>Cotizaciones</button>
-  <button type="button" class="tab-btn" data-tab="invoicePanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-factura"></use></svg>Facturas</button>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-marca">
+    <img src="assets/logo-white.png" alt="" class="sidebar-logo" />
+    <div class="sidebar-marca-texto">
+      <strong>Blue Travel</strong>
+      <span>Sistema de Operación</span>
+    </div>
+  </div>
 
-  <span class="tab-sep" aria-hidden="true"></span>
-  <button type="button" class="tab-btn" data-tab="clientsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-clientes"></use></svg>Clientes</button>
-  <button type="button" class="tab-btn" data-tab="tripsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-viajes"></use></svg>Próximos viajes</button>
-  <button type="button" class="tab-btn" data-tab="couponsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cupon"></use></svg>Cupones</button>
-  <button type="button" class="tab-btn" data-tab="pricesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>Precios</button>
+  <nav class="sidebar-nav" aria-label="Secciones">
+    <p class="nav-grupo">Generar</p>
+    <button type="button" class="tab-btn active" data-tab="ticketsPanel" aria-current="page"
+      data-desc="Arma el boleto del pasajero y descárgalo en PDF."><svg class="ic" aria-hidden="true"><use href="#ic-boleto"></use></svg><span>Boletos</span></button>
+    <button type="button" class="tab-btn" data-tab="quotesPanel"
+      data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
+    <button type="button" class="tab-btn" data-tab="invoicePanel"
+      data-desc="Emite la factura cuando el cliente la pide."><svg class="ic" aria-hidden="true"><use href="#ic-factura"></use></svg><span>Facturas</span></button>
 
-  <span class="tab-sep" aria-hidden="true"></span>
-  <button type="button" class="tab-btn" data-tab="historyPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-historial"></use></svg>Historial</button>
-  <button type="button" class="tab-btn" data-tab="salesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-ventas"></use></svg>Ventas</button>
-  <button type="button" class="tab-btn" data-tab="backupPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-respaldo"></use></svg>Respaldo</button>
-</nav>
+    <p class="nav-grupo">Clientes</p>
+    <button type="button" class="tab-btn" data-tab="clientsPanel"
+      data-desc="Tu base de contactos y las listas para campañas."><svg class="ic" aria-hidden="true"><use href="#ic-clientes"></use></svg><span>Clientes</span></button>
+    <button type="button" class="tab-btn" data-tab="tripsPanel"
+      data-desc="A quién le toca recordarle el check-in."><svg class="ic" aria-hidden="true"><use href="#ic-viajes"></use></svg><span>Próximos viajes</span></button>
+    <button type="button" class="tab-btn" data-tab="couponsPanel"
+      data-desc="Genera cupones y lleva el control de los que ya se usaron."><svg class="ic" aria-hidden="true"><use href="#ic-cupon"></use></svg><span>Cupones</span></button>
+    <button type="button" class="tab-btn" data-tab="pricesPanel"
+      data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
+
+    <p class="nav-grupo">Consulta</p>
+    <button type="button" class="tab-btn" data-tab="historyPanel"
+      data-desc="Todo lo que has generado, listo para volver a usar."><svg class="ic" aria-hidden="true"><use href="#ic-historial"></use></svg><span>Historial</span></button>
+    <button type="button" class="tab-btn" data-tab="salesPanel"
+      data-desc="Ingresos, reparto semanal y cierre por mes."><svg class="ic" aria-hidden="true"><use href="#ic-ventas"></use></svg><span>Ventas</span></button>
+    <button type="button" class="tab-btn" data-tab="backupPanel"
+      data-desc="Guarda una copia de todo, por si algo pasa."><svg class="ic" aria-hidden="true"><use href="#ic-respaldo"></use></svg><span>Respaldo</span></button>
+  </nav>
+
+  <div class="sidebar-pie">
+    <button type="button" id="gateLogoutBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-salir"></use></svg>Cerrar sesión</button>
+  </div>
+</aside>
+
+<div class="sidebar-velo" id="sidebarVelo" hidden></div>
+
+<div class="area">
+
+<header class="topbar">
+  <button type="button" class="menu-btn" id="menuBtn" aria-label="Abrir el menú"
+    aria-controls="sidebar" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#ic-menu"></use></svg></button>
+  <div class="topbar-text">
+    <h1 id="seccionTitulo">Boletos</h1>
+    <p id="seccionDesc">Arma el boleto del pasajero y descárgalo en PDF.</p>
+  </div>
+</header>
 
 <main class="container">
 <div id="ticketsPanel" class="tab-panel">
@@ -889,6 +920,9 @@
   <p>Blue Travel · Agencia de Viajes</p>
 </footer>
 
+</div><!-- .area -->
+</div><!-- .layout -->
+
 </div>
 
 <template id="passengerTemplate">
@@ -965,7 +999,7 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=1"></script>
+<script src="assets/iconos.js?v=2"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
@@ -974,7 +1008,7 @@
 <script src="assets/cupon-imagen.js?v=2"></script>
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 <script type="module" src="assets/firebase-clients.js?v=10"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
