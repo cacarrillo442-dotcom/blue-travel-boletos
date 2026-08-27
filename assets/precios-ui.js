@@ -30,6 +30,99 @@
     </div>`;
   }
 
+  // ---------- Rutas propias, sacadas de los boletos vendidos ----------
+
+  function agruparRutas(boletos) {
+    const mapa = new Map();
+    (boletos || []).forEach((b) => {
+      const ida = b.ida || {};
+      if (!ida.origin || !ida.dest) return;
+      const llave = `${ida.origin}-${ida.dest}`;
+      if (!mapa.has(llave)) {
+        mapa.set(llave, { origen: ida.origin, destino: ida.dest, veces: 0, ultima: '' });
+      }
+      const r = mapa.get(llave);
+      r.veces += 1;
+      const fecha = ida.fechaSalida || '';
+      if (fecha > r.ultima) r.ultima = fecha;
+    });
+    return [...mapa.values()].sort((a, b) => b.veces - a.veces || (a.ultima < b.ultima ? 1 : -1));
+  }
+
+  window.onBoletosParaRutas = function (boletos) {
+    const cont = el('precioRutasLista');
+    const resumenRutas = el('precioRutasResumen');
+    if (!cont) return;
+
+    const rutas = agruparRutas(boletos);
+    resumenRutas.textContent = rutas.length
+      ? `${rutas.length} ruta(s) en ${boletos.length} boleto(s)`
+      : '';
+
+    if (!rutas.length) {
+      cont.innerHTML = `<p class="promo-empty">
+        Todavía no hay boletos guardados con ruta. A medida que generes boletos,
+        aquí van a aparecer tus rutas para consultarlas de un clic.
+      </p>`;
+      return;
+    }
+
+    cont.innerHTML = '';
+    rutas.slice(0, 10).forEach((r) => {
+      const card = document.createElement('div');
+      card.className = 'trip-card';
+
+      const badge = document.createElement('div');
+      badge.className = 'trip-badge later';
+      badge.textContent = r.veces === 1 ? '1 vez' : `${r.veces} veces`;
+
+      const info = document.createElement('div');
+      info.className = 'trip-info';
+      info.innerHTML = `
+        <div class="trip-name">${escapeHtml(P.nombreDe(r.origen))} → ${escapeHtml(P.nombreDe(r.destino))}
+          <span class="trip-leg">${escapeHtml(r.origen)}–${escapeHtml(r.destino)}</span>
+        </div>
+        <div class="trip-sub">${r.ultima ? 'Último vuelo vendido: ' + P.fechaCorta(r.ultima) : ''}</div>
+      `;
+
+      const acciones = document.createElement('div');
+      acciones.className = 'trip-actions';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-add';
+      btn.textContent = '🔎 Ver precio';
+      btn.addEventListener('click', () => consultarRuta(r.origen, r.destino));
+      acciones.appendChild(btn);
+
+      card.appendChild(badge);
+      card.appendChild(info);
+      card.appendChild(acciones);
+      cont.appendChild(card);
+    });
+  };
+
+  // Deja la ruta puesta en el buscador aunque no este en las listas fijas.
+  function asegurarOpcion(select, valor, texto) {
+    if (![...select.options].some((o) => o.value === valor)) {
+      const o = document.createElement('option');
+      o.value = valor;
+      o.textContent = texto;
+      select.appendChild(o);
+    }
+    select.value = valor;
+  }
+
+  function consultarRuta(origen, destino) {
+    const grupo = Object.entries(P.GRUPOS_ORIGEN)
+      .find(([, g]) => g.aeropuertos.includes(origen));
+    asegurarOpcion(origenSel, grupo ? grupo[0] : origen,
+      grupo ? `${grupo[1].nombre} (compara ${grupo[1].aeropuertos.join(', ')})` : `${P.nombreDe(origen)} (${origen})`);
+    asegurarOpcion(destinoSel, destino, `${P.nombreDe(destino)} (${destino})`);
+    mesInput.value = '';
+    el('precioBuscarBtn').click();
+    document.getElementById('precioEstado').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   // ---------- Buscar ----------
 
   el('precioBuscarBtn').addEventListener('click', async () => {
