@@ -821,6 +821,58 @@ textarea {
   fill: rgba(18, 111, 153, 0.06);
 }
 
+/* Niveles de precio: el color acompaña, nunca informa solo — el nivel va
+   tambien en el detalle de cada barra y en la leyenda. */
+.linea-precio {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.35;
+  stroke-linejoin: round;
+}
+
+.punto {
+  stroke: #fff;
+  stroke-width: 0.3;
+}
+
+.punto-hit {
+  fill: transparent;
+}
+
+.punto.nivel-bajo { fill: #2a9d5c; }
+.punto.nivel-medio { fill: var(--color-primary-2); }
+.punto.nivel-alto { fill: #c0392b; }
+.punto-g:hover .punto { r: 1.5; }
+.punto-g:hover .punto-hit { fill: rgba(18, 111, 153, 0.08); }
+
+.umbral-line {
+  stroke: var(--ink-soft);
+  stroke-width: 0.18;
+  stroke-dasharray: 1.2 1.2;
+}
+
+.nivel-leyenda {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+.nivel-punto {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.nivel-punto.bajo { background: #2a9d5c; }
+.nivel-punto.medio { background: var(--color-primary-2); }
+.nivel-punto.alto { background: #c0392b; }
+
 /* Barras horizontales por franquicia */
 .hbar-list {
   display: flex;

@@ -30,6 +30,155 @@
     </div>`;
   }
 
+  // ---------- Precio dia a dia ----------
+
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  function nombreMes(iso) {
+    const [a, m] = iso.split('-');
+    return `${MESES[Number(m) - 1]} ${a}`;
+  }
+
+  const diarioRuta = el('precioDiarioRuta');
+
+  diarioRuta.addEventListener('change', cargarDiario);
+
+  async function cargarDiario() {
+    const destino = diarioRuta.value;
+    const aviso = el('precioDiarioAviso');
+    const grafica = el('precioDiarioGrafica');
+    const resumenDiario = el('precioDiarioResumen');
+    const leyenda = el('precioDiarioLeyenda');
+
+    aviso.textContent = `Buscando precios de ${P.nombreDe(destino)}…`;
+    grafica.innerHTML = '';
+    resumenDiario.classList.add('hidden');
+    leyenda.classList.add('hidden');
+
+    try {
+      const mejor = await P.mejorCalendario(P.GRUPOS_ORIGEN.WAS.aeropuertos, destino, 4);
+
+      if (!mejor) {
+        aviso.innerHTML = `No hay precios diarios guardados para
+          <strong>${escapeHtml(P.nombreDe(destino))}</strong> en los próximos meses.
+          Esta fuente solo tiene lo que alguien ya buscó, y esta ruta no está cubierta.`;
+        return;
+      }
+
+      const analisis = P.clasificar(mejor.dias);
+      pintarDiario(mejor, analisis, destino);
+    } catch (e) {
+      aviso.textContent = `No se pudo consultar: ${e.message}`;
+    }
+  }
+
+  function pintarDiario(mejor, a, destino) {
+    const aviso = el('precioDiarioAviso');
+    const resumenDiario = el('precioDiarioResumen');
+    const leyenda = el('precioDiarioLeyenda');
+
+    let explicacion;
+    if (a.suficiente) {
+      explicacion = 'El nivel compara cada día contra el resto del mes en esta misma ruta.';
+    } else if (a.motivo === 'sin-variacion') {
+      explicacion = `<strong>El precio está parejo todo el mes</strong>
+        (de ${P.dolares(a.minimo)} a ${P.dolares(a.maximo)}, apenas
+        ${Math.round(a.variacion * 100)}% de diferencia), así que no tiene sentido
+        marcar días como baratos o caros: cualquier fecha te sirve igual.`;
+    } else {
+      explicacion = `Con menos de ${a.muestraMinima} días no alcanza para decir
+        si un precio está alto o bajo.`;
+    }
+
+    aviso.innerHTML = `<strong>${escapeHtml(P.nombreDe(mejor.origen))} → ${escapeHtml(P.nombreDe(destino))}</strong>
+      · ${mejor.dias.length} día(s) con precio en ${nombreMes(mejor.mes)}. ${explicacion}`;
+
+    const masBarato = mejor.dias.reduce((x, y) => (y.precio < x.precio ? y : x));
+    const tiles = [
+      `<div class="stat-tile stat-tile-strong"><div class="stat-label">Día más barato</div>
+        <div class="stat-value">${P.dolares(masBarato.precio)}</div>
+        <div class="stat-note">${P.fechaCorta(masBarato.fecha)}</div></div>`,
+      `<div class="stat-tile"><div class="stat-label">Promedio del mes</div>
+        <div class="stat-value">${P.dolares(a.promedio)}</div></div>`,
+      `<div class="stat-tile"><div class="stat-label">Más caro</div>
+        <div class="stat-value">${P.dolares(a.maximo)}</div></div>`,
+    ];
+    if (a.suficiente) {
+      tiles.push(`<div class="stat-tile"><div class="stat-label">Se considera barato</div>
+        <div class="stat-value">≤ ${P.dolares(a.corteBajo)}</div>
+        <div class="stat-note">caro desde ${P.dolares(a.corteAlto)}</div></div>`);
+    }
+    resumenDiario.innerHTML = tiles.join('');
+    resumenDiario.classList.remove('hidden');
+    leyenda.classList.toggle('hidden', !a.suficiente);
+
+    dibujarGrafica(mejor.dias, a);
+  }
+
+  // Linea con un punto por dia. Con barras desde cero, un rango de US$229 a
+  // US$260 se veria plano y no diria nada; en una linea el eje puede ajustarse
+  // al rango real sin mentir, porque el valor lo da la posicion, no el largo.
+  function dibujarGrafica(dias, a) {
+    const cont = el('precioDiarioGrafica');
+    const orden = [...dias].sort((x, y) => (x.fecha < y.fecha ? -1 : 1));
+    if (!orden.length) { cont.innerHTML = ''; return; }
+
+    const W = 100, H = 44;
+    const padL = 11, padR = 2, padT = 4, padB = 8;
+    const ancho = W - padL - padR;
+    const alto = H - padT - padB;
+
+    const precios = orden.map((d) => d.precio);
+    const min = Math.min(...precios);
+    const max = Math.max(...precios);
+    const respiro = (max - min) * 0.15 || Math.max(1, max * 0.02);
+    const desde = min - respiro;
+    const hasta = max + respiro;
+    const enY = (p) => padT + alto - ((p - desde) / (hasta - desde)) * alto;
+    const enX = (i) => (orden.length === 1
+      ? padL + ancho / 2
+      : padL + (i / (orden.length - 1)) * ancho);
+
+    let fondo = '';
+    [min, (min + max) / 2, max].forEach((val) => {
+      const y = enY(val);
+      fondo += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" class="grid-line" />`;
+      fondo += `<text x="${padL - 1.5}" y="${y + 1}" class="axis-text" text-anchor="end">$${Math.round(val)}</text>`;
+    });
+
+    if (a.suficiente) {
+      [a.corteBajo, a.corteAlto].forEach((val) => {
+        const y = enY(val);
+        fondo += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" class="umbral-line" />`;
+      });
+    }
+
+    const linea = orden.map((d, i) => `${enX(i)},${enY(d.precio)}`).join(' ');
+    const trazo = `<polyline points="${linea}" class="linea-precio" />`;
+
+    const puntos = orden.map((d, i) => {
+      const nivel = a.suficiente ? a.nivelDe(d.precio) : 'medio';
+      const x = enX(i);
+      const y = enY(d.precio);
+      return `<g class="punto-g">
+        <circle cx="${x}" cy="${y}" r="2.4" class="punto-hit" />
+        <circle cx="${x}" cy="${y}" r="1" class="punto nivel-${nivel}" />
+        <title>${P.fechaCorta(d.fecha)}\n${P.dolares(d.precio)}${a.suficiente ? ` · nivel ${nivel}` : ''}${d.escalas ? `\n${d.escalas} escala(s)` : ''}</title>
+      </g>`;
+    }).join('');
+
+    const etiquetas = orden.map((d, i) => {
+      if (i !== 0 && i !== orden.length - 1) return '';
+      return `<text x="${enX(i)}" y="${H - 1.5}" class="axis-text"
+        text-anchor="${i === 0 ? 'start' : 'end'}">${Number(d.fecha.slice(8))}</text>`;
+    }).join('');
+
+    cont.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img"
+      aria-label="Precio por día, de ${P.dolares(min)} a ${P.dolares(max)}">
+      ${fondo}${trazo}${puntos}${etiquetas}</svg>`;
+  }
+
   // ---------- Rutas propias, sacadas de los boletos vendidos ----------
 
   function agruparRutas(boletos) {

@@ -17,6 +17,7 @@
     MEX: 'Ciudad de México', MIA: 'Miami', BOG: 'Bogotá', MDE: 'Medellín',
     CTG: 'Cartagena', MGA: 'Managua', GUA: 'Guatemala', SJO: 'San José',
     PTY: 'Panamá', ORL: 'Orlando', MCO: 'Orlando', JFK: 'Nueva York',
+    PUJ: 'Punta Cana', CUN: 'Cancún', SDQ: 'Santo Domingo', SJU: 'San Juan',
   };
 
   function nombreDe(iata) {
@@ -147,6 +148,87 @@
       .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
   }
 
+  // Los meses siguientes al actual, en el formato que pide la API.
+  function proximosMeses(cantidad) {
+    const hoy = new Date();
+    const out = [];
+    for (let i = 0; i < cantidad; i++) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`);
+    }
+    return out;
+  }
+
+  // La cache no cubre los proximos 30 dias de forma pareja: cada ruta tiene su
+  // mes con datos. Se buscan varios y se devuelve el que mejor cobertura tenga.
+  async function mejorCalendario(aeropuertos, destino, cantidadMeses = 4) {
+    const meses = proximosMeses(cantidadMeses);
+    const combinaciones = [];
+    aeropuertos.forEach((o) => meses.forEach((m) => combinaciones.push({ origen: o, mes: m })));
+
+    const intentos = await Promise.allSettled(
+      combinaciones.map(async (c) => ({
+        ...c,
+        dias: await calendario(c.origen, destino, c.mes),
+      })),
+    );
+
+    let mejor = null;
+    intentos.forEach((r) => {
+      if (r.status !== 'fulfilled') return;
+      if (!mejor || r.value.dias.length > mejor.dias.length) mejor = r.value;
+    });
+    return mejor && mejor.dias.length ? mejor : null;
+  }
+
+  // Alto, medio o bajo respecto a la propia ruta: se parte su rango observado
+  // en tercios. Comparar contra otras rutas no tendria sentido, porque un
+  // vuelo a Guatemala y uno a Punta Cana no cuestan lo mismo.
+  const MUESTRA_MINIMA = 5;
+  // Si entre el dia mas barato y el mas caro no hay al menos esta diferencia,
+  // partir en tercios solo amplifica ruido: se veria "alto" un dia que esta
+  // cinco dolares por encima del mas barato.
+  const VARIACION_MINIMA = 0.10;
+
+  function clasificar(dias) {
+    const precios = dias.map((d) => d.precio).sort((a, b) => a - b);
+    const base = {
+      total: precios.length,
+      muestraMinima: MUESTRA_MINIMA,
+      minimo: precios[0],
+      maximo: precios[precios.length - 1],
+      promedio: precios.length
+        ? Math.round(precios.reduce((a, b) => a + b, 0) / precios.length) : 0,
+    };
+
+    if (precios.length < MUESTRA_MINIMA) {
+      return { ...base, suficiente: false, motivo: 'pocos-datos' };
+    }
+
+    const variacion = base.minimo ? (base.maximo - base.minimo) / base.minimo : 0;
+    if (variacion < VARIACION_MINIMA) {
+      return {
+        ...base,
+        suficiente: false,
+        motivo: 'sin-variacion',
+        variacion,
+        variacionMinima: VARIACION_MINIMA,
+      };
+    }
+
+    const percentil = (p) => precios[Math.min(precios.length - 1, Math.floor(precios.length * p))];
+    const corteBajo = percentil(1 / 3);
+    const corteAlto = percentil(2 / 3);
+    return {
+      ...base,
+      suficiente: true,
+      variacion,
+      corteBajo,
+      corteAlto,
+      nivelDe: (p) => (p <= corteBajo ? 'bajo' : p >= corteAlto ? 'alto' : 'medio'),
+    };
+  }
+
   async function destinosDesde(origen) {
     const datos = await pedir('destinos', { origin: origen });
     const raiz = (datos && datos.data) || {};
@@ -190,6 +272,8 @@
     compararOrigenes,
     ahorroEntreOrigenes,
     calendario,
+    mejorCalendario,
+    clasificar,
     destinosDesde,
     dolares,
     fechaCorta,

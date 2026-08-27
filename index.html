@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=13" />
+<link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
 
@@ -590,6 +590,32 @@
     <p class="hint" id="precioEstado" style="text-align:right"></p>
   </section>
 
+  <section class="card">
+    <div class="card-header">
+      <h2>Precio día a día</h2>
+      <select id="precioDiarioRuta" style="width:auto; min-width:230px">
+        <option value="SAL">Washington → San Salvador</option>
+        <option value="GUA">Washington → Guatemala</option>
+        <option value="MEX">Washington → Ciudad de México</option>
+        <option value="PUJ">Washington → Punta Cana</option>
+        <option value="CUN">Washington → Cancún</option>
+      </select>
+    </div>
+    <p class="hint" id="precioDiarioAviso">
+      Muestra cómo se mueve el precio a lo largo de un mes y si cada día está barato o caro
+      <strong>para esa misma ruta</strong>. Elige una ruta para empezar.
+    </p>
+    <div class="stat-row hidden" id="precioDiarioResumen"></div>
+    <div id="precioDiarioGrafica" class="chart-wrap"></div>
+    <div id="precioDiarioLeyenda" class="hidden">
+      <div class="nivel-leyenda">
+        <span><i class="nivel-punto bajo"></i> Bajo</span>
+        <span><i class="nivel-punto medio"></i> Medio</span>
+        <span><i class="nivel-punto alto"></i> Alto</span>
+      </div>
+    </div>
+  </section>
+
   <section class="card" id="precioRutasCard">
     <div class="card-header">
       <h2>Tus rutas más vendidas</h2>
@@ -946,13 +972,13 @@
 <script src="assets/sales-parse.js?v=4"></script>
 <script src="assets/cupon-imagen.js?v=2"></script>
 <script src="assets/publicidad-imagen.js?v=2"></script>
-<script src="assets/precios-datos.js?v=3"></script>
+<script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=11"></script>
 <script type="module" src="assets/firebase-clients.js?v=8"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
 <script type="module" src="assets/firebase-cupones.js?v=1"></script>
-<script src="assets/precios-ui.js?v=4"></script>
+<script src="assets/precios-ui.js?v=7"></script>
 <script type="module" src="assets/firebase-history.js?v=4"></script>
 <script type="module" src="assets/firebase-sales.js?v=6"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
