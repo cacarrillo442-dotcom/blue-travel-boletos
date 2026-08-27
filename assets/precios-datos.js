@@ -23,6 +23,38 @@
     return NOMBRES[iata] || iata;
   }
 
+  // La API devuelve la aerolinea como codigo de dos letras; para buscar el
+  // vuelo a mano hace falta el nombre.
+  const AEROLINEAS = {
+    AV: 'Avianca', TA: 'Avianca El Salvador', CM: 'Copa', AA: 'American',
+    UA: 'United', DL: 'Delta', F9: 'Frontier', NK: 'Spirit', B6: 'JetBlue',
+    WN: 'Southwest', AS: 'Alaska', AC: 'Air Canada', PD: 'Porter',
+    AM: 'Aeroméxico', Y4: 'Volaris', VB: 'Viva Aerobus', LA: 'LATAM',
+    IB: 'Iberia', UX: 'Air Europa', AF: 'Air France', KL: 'KLM',
+    // Entre comillas: una clave no puede empezar por numero sin ellas.
+    TK: 'Turkish', JA: 'JetSMART', P5: 'Wingo', '9R': 'Satena',
+  };
+
+  function aerolineaDe(codigo) {
+    return AEROLINEAS[codigo] || codigo || '';
+  }
+
+  // La duracion viene en minutos.
+  function duracion(minutos) {
+    if (!minutos || typeof minutos !== 'number') return '';
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  // '2026-11-13T16:25:00-05:00' -> '16:25'. Se respeta la hora local del
+  // aeropuerto, que es la que el usuario va a ver al buscar el vuelo.
+  function hora(iso) {
+    if (!iso) return '';
+    const m = String(iso).match(/T(\d{2}):(\d{2})/);
+    return m ? `${m[1]}:${m[2]}` : '';
+  }
+
   async function pedir(ruta, params) {
     const url = new URL(`${INTERMEDIARIO}/${ruta}`);
     Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
@@ -45,9 +77,18 @@
           destino,
           precio: o.price,
           aerolinea: o.airline || '',
+          aerolineaNombre: aerolineaDe(o.airline),
           vuelo: o.flight_number || '',
+          // Se guarda la marca de tiempo completa: la hora hace falta para
+          // poder ubicar el vuelo despues.
+          salidaISO: o.departure_at || '',
+          regresoISO: o.return_at || '',
           salida: (o.departure_at || '').slice(0, 10),
           regreso: (o.return_at || '').slice(0, 10),
+          horaSalida: hora(o.departure_at),
+          horaRegreso: hora(o.return_at),
+          duracionIda: o.duration_to || o.duration || null,
+          duracionRegreso: o.duration_back || null,
           escalas: typeof o.transfers === 'number' ? o.transfers : null,
           expira: o.expires_at || '',
         });
@@ -130,10 +171,22 @@
     return `${d}/${m}/${y}`;
   }
 
+  // Para verificar el precio a mano: abre la busqueda ya armada.
+  function enlaceGoogleFlights(o) {
+    const partes = [`Flights from ${o.origen} to ${o.destino}`];
+    if (o.salida) partes.push(`on ${o.salida}`);
+    if (o.regreso) partes.push(`returning ${o.regreso}`);
+    return `https://www.google.com/travel/flights?q=${encodeURIComponent(partes.join(' '))}`;
+  }
+
   global.Precios = {
     INTERMEDIARIO,
     GRUPOS_ORIGEN,
     nombreDe,
+    aerolineaDe,
+    duracion,
+    hora,
+    enlaceGoogleFlights,
     compararOrigenes,
     ahorroEntreOrigenes,
     calendario,

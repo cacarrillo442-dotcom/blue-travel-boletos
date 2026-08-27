@@ -29,7 +29,7 @@
     lineas.push(`✈️ *${d.origenNombre.toUpperCase()} → ${d.destinoNombre.toUpperCase()}*`);
     lineas.push('');
     lineas.push(`Desde *${dolares(d.precio)}* por trayecto 🙌`);
-    if (d.aerolinea) lineas.push(`🛫 Aerolínea: ${d.aerolinea}`);
+    if (d.aerolineaNombre || d.aerolinea) lineas.push(`🛫 Aerolínea: ${d.aerolineaNombre || d.aerolinea}`);
     if (d.salida) lineas.push(`📅 Salidas desde el ${fechaLarga(d.salida)}`);
     lineas.push('');
     if (d.vigencia) { lineas.push(`⏳ ${d.vigencia}`); lineas.push(''); }
@@ -90,7 +90,7 @@
         // Detalles
         let y = 848;
         const detalles = [];
-        if (d.aerolinea) detalles.push(`Aerolínea ${d.aerolinea}`);
+        if (d.aerolineaNombre || d.aerolinea) detalles.push(`Aerolínea ${d.aerolineaNombre || d.aerolinea}`);
         if (d.salida) detalles.push(`Salidas desde el ${fechaLarga(d.salida)}`);
         if (detalles.length) {
           ctx.fillStyle = '#ffffff';

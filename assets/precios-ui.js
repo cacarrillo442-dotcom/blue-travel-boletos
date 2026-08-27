@@ -117,18 +117,43 @@
 
       const info = document.createElement('div');
       info.className = 'trip-info';
+
+      // Todo lo necesario para ir a buscar el vuelo y confirmar el precio.
+      const vuelo = o.vuelo ? `${o.aerolinea}${o.vuelo}` : '';
       const escalas = o.escalas === 0 ? 'directo'
         : o.escalas ? `${o.escalas} escala${o.escalas === 1 ? '' : 's'}` : '';
+      const ruta = [
+        escapeHtml(o.aerolineaNombre),
+        vuelo ? `vuelo ${escapeHtml(vuelo)}` : '',
+        escalas,
+        P.duracion(o.duracionIda),
+      ].filter(Boolean).join(' · ');
+
+      const ida = `Sale ${P.fechaCorta(o.salida)}${o.horaSalida ? ' a las ' + o.horaSalida : ''}`;
+      const vuelta = o.regreso
+        ? ` &nbsp;·&nbsp; Vuelve ${P.fechaCorta(o.regreso)}${o.horaRegreso ? ' a las ' + o.horaRegreso : ''}`
+        : '';
+
       info.innerHTML = `
         <div class="trip-name">${escapeHtml(P.nombreDe(o.origen))} → ${escapeHtml(P.nombreDe(o.destino))}
-          <span class="trip-leg">${escapeHtml(o.origen)}</span>
+          <span class="trip-leg">${escapeHtml(o.origen)}–${escapeHtml(o.destino)}</span>
         </div>
-        <div class="trip-route">✈️ ${escapeHtml(o.aerolinea)}${escalas ? ' · ' + escalas : ''}</div>
-        <div class="trip-sub">📅 Sale ${P.fechaCorta(o.salida)}${o.regreso ? ' · vuelve ' + P.fechaCorta(o.regreso) : ''}</div>
+        <div class="trip-route">✈️ ${ruta}</div>
+        <div class="trip-sub">📅 ${ida}${vuelta}</div>
       `;
 
       const acciones = document.createElement('div');
       acciones.className = 'trip-actions';
+
+      const verificar = document.createElement('a');
+      verificar.href = P.enlaceGoogleFlights(o);
+      verificar.target = '_blank';
+      verificar.rel = 'noopener';
+      verificar.className = 'btn-secondary btn-compact';
+      verificar.textContent = '🔍 Verificar';
+      verificar.title = 'Abre la búsqueda para confirmar el precio real';
+      acciones.appendChild(verificar);
+
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn-add';
@@ -170,6 +195,8 @@
       salida: mejorOferta.salida,
       vigencia: el('precioVigencia').value.trim(),
     };
+    datos.aerolineaNombre = mejorOferta.aerolineaNombre;
+    datos.horaSalida = mejorOferta.horaSalida;
     el('precioTexto').value = window.textoPublicidad(datos);
     lienzo = await window.dibujarPublicidad(datos);
     el('precioImagen').src = lienzo.toDataURL('image/png');
