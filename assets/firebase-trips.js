@@ -3,7 +3,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, onSnapshot,
+  getFirestore, collection, updateDoc, doc, onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {

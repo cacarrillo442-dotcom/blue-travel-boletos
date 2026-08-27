@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot,
@@ -25,7 +25,6 @@ const loginEmail = document.getElementById('clientsLoginEmail');
 const loginPassword = document.getElementById('clientsLoginPassword');
 const loginBtn = document.getElementById('clientsLoginBtn');
 const loginError = document.getElementById('clientsLoginError');
-const logoutBtn = document.getElementById('clientsLogoutBtn');
 const sessionLabel = document.getElementById('clientsSessionLabel');
 const clientsTableBody = document.querySelector('#clientsTable tbody');
 const downloadCsvBtn = document.getElementById('clientsDownloadCsvBtn');
@@ -69,8 +68,7 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// El boton global de la barra superior ya cierra sesion; este es opcional.
-if (logoutBtn) logoutBtn.addEventListener('click', () => signOut(auth));
+// Cerrar sesion vive en la barra superior (firebase-gate.js), no aqui.
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
