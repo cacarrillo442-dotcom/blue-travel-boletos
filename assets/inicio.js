@@ -151,14 +151,34 @@
     return div;
   }
 
+  // El mismo conteo, marcado en la barra lateral: asi se ve que hay trabajo
+  // sin tener que estar parado en Inicio. Vacio se oculta solo (`:empty`),
+  // porque un cero tambien pide atencion sin merecerla.
+  function marcarEnLaBarra(id, cuantos) {
+    const pill = el(id);
+    if (!pill) return;
+    pill.textContent = cuantos ? String(cuantos) : '';
+    const boton = pill.closest('.tab-btn');
+    if (boton) {
+      const modulo = boton.querySelector('span').textContent;
+      boton.setAttribute('aria-label', cuantos
+        ? `${modulo}: ${cuantos} ${cuantos === 1 ? 'pendiente' : 'pendientes'}`
+        : modulo);
+    }
+  }
+
   function pintarPendientes() {
     const destino = el('inicioPendientes');
     const contador = el('inicioPendientesCuenta');
-    if (!destino) return;
 
     const viajes = viajesUrgentes();
     const cupones = cuponesPorVencer();
     const total = viajes.length + cupones.length;
+
+    marcarEnLaBarra('navConteoViajes', viajes.length);
+    marcarEnLaBarra('navConteoCupones', cupones.length);
+
+    if (!destino) return;
 
     if (contador) {
       contador.textContent = total ? `${total} ${total === 1 ? 'pendiente' : 'pendientes'}` : '';

@@ -276,17 +276,47 @@ body {
   color: #fff;
 }
 
-/* El activo se marca con el amarillo de la marca: es el unico punto de color
-   de la barra, asi que se encuentra sin leer. */
+/* Donde estas parado ya se ve por el fondo y el texto en blanco: la barrita
+   solo lo remata. El amarillo no se gasta aqui (ver "El amarillo" abajo). */
 .sidebar-nav .tab-btn.active {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  box-shadow: inset 3px 0 0 var(--color-alt);
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.55);
 }
 
 .sidebar-nav .tab-btn.active .ic {
   opacity: 1;
-  color: var(--color-alt);
+}
+
+/* ---------- El amarillo ----------
+   #ffc300 es el color de la marca y en la interfaz significa una sola cosa:
+   ALGO TE ESTA ESPERANDO. Nada mas. Si tambien adornara subtitulos o marcara
+   donde estas parado, dejaria de saltar cuando de verdad hay trabajo por
+   hacer: el ojo se acostumbra a lo que ve en todas partes.
+
+   Sigue usandose libremente en lo que ve el cliente (cupones, publicidad,
+   PDFs), donde es identidad de marca y no una senal. */
+.nav-conteo,
+.conteo-pill {
+  background: var(--color-alt);
+  /* Marron oscuro y no blanco: sobre amarillo el blanco no se alcanza a leer */
+  color: #6b4d00;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.nav-conteo {
+  margin-left: auto;
+  min-width: 21px;
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.nav-conteo:empty {
+  display: none;
 }
 
 .sidebar-pie {
@@ -439,11 +469,12 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Subtitulo de seccion con una linea de acento a la izquierda */
+/* Subtitulo de seccion. La linea de la izquierda solo separa: va en azul
+   claro, no en amarillo, porque aqui no hay nada que atender. */
 .card h3 {
   margin: 28px 0 14px;
   padding-left: 10px;
-  border-left: 3px solid var(--color-alt);
+  border-left: 3px solid var(--color-primary-2);
   font-size: 0.82rem;
   color: var(--color-primary);
   font-weight: 700;
@@ -1024,15 +1055,12 @@ textarea {
   font-size: 0.9rem;
 }
 
+/* Color y forma salen del bloque "El amarillo" */
 .conteo-pill {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 9px;
-  border-radius: 999px;
-  background: var(--color-alt);
-  color: #6b4d00;
   font-size: 0.72rem;
-  font-weight: 700;
   vertical-align: 2px;
 }
 
@@ -1558,7 +1586,7 @@ select:focus {
 .catalog-subsection h3 {
   margin: 0 0 12px;
   padding-left: 10px;
-  border-left: 3px solid var(--color-alt);
+  border-left: 3px solid var(--color-primary-2);
   font-size: 0.78rem;
   color: var(--color-primary);
   font-weight: 700;

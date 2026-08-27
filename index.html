@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20" />
+<link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
 
@@ -64,9 +64,9 @@
     <button type="button" class="tab-btn" data-tab="clientsPanel"
       data-desc="Tu base de contactos y las listas para campañas."><svg class="ic" aria-hidden="true"><use href="#ic-clientes"></use></svg><span>Clientes</span></button>
     <button type="button" class="tab-btn" data-tab="tripsPanel"
-      data-desc="A quién le toca recordarle el check-in."><svg class="ic" aria-hidden="true"><use href="#ic-viajes"></use></svg><span>Próximos viajes</span></button>
+      data-desc="A quién le toca recordarle el check-in."><svg class="ic" aria-hidden="true"><use href="#ic-viajes"></use></svg><span>Próximos viajes</span><span class="nav-conteo" id="navConteoViajes"></span></button>
     <button type="button" class="tab-btn" data-tab="couponsPanel"
-      data-desc="Genera cupones y lleva el control de los que ya se usaron."><svg class="ic" aria-hidden="true"><use href="#ic-cupon"></use></svg><span>Cupones</span></button>
+      data-desc="Genera cupones y lleva el control de los que ya se usaron."><svg class="ic" aria-hidden="true"><use href="#ic-cupon"></use></svg><span>Cupones</span><span class="nav-conteo" id="navConteoCupones"></span></button>
     <button type="button" class="tab-btn" data-tab="pricesPanel"
       data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
 
@@ -1063,7 +1063,7 @@
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=12"></script>
-<script src="assets/inicio.js?v=2"></script>
+<script src="assets/inicio.js?v=3"></script>
 <script type="module" src="assets/firebase-clients.js?v=11"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
