@@ -146,7 +146,11 @@ weekPicker.addEventListener('change', pintarSemana);
 
 el('weekCopyBtn').addEventListener('click', () => {
   const btn = el('weekCopyBtn');
-  const listo = () => { btn.textContent = '✅ Copiado'; setTimeout(() => { btn.textContent = '📋 Copiar texto'; }, 1500); };
+  const original = btn.innerHTML;
+  const listo = () => {
+    btn.innerHTML = window.icono('check', 'ic-izq') + 'Copiado';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(weekPreview.value).then(listo).catch(() => { weekPreview.select(); document.execCommand('copy'); listo(); });
   } else { weekPreview.select(); document.execCommand('copy'); listo(); }

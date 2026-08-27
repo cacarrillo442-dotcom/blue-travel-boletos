@@ -130,11 +130,11 @@ function renderClients() {
       const saveBtn = document.createElement('button');
       saveBtn.type = 'button';
       saveBtn.className = 'btn-add';
-      saveBtn.textContent = '💾 Guardar';
+      saveBtn.innerHTML = window.icono('guardar','ic-izq') + 'Guardar';
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
       cancelBtn.className = 'btn-remove-inline';
-      cancelBtn.textContent = '✖';
+      cancelBtn.innerHTML = window.icono('eliminar');
       cancelBtn.title = 'Cancelar';
       saveBtn.addEventListener('click', async () => {
         const updated = {
@@ -167,7 +167,7 @@ function renderClients() {
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'btn-add';
-      editBtn.textContent = '✏️ Editar';
+      editBtn.innerHTML = window.icono('guardar','ic-izq') + 'Editar';
       editBtn.addEventListener('click', () => {
         editingId = c.id;
         renderClients();
@@ -175,7 +175,7 @@ function renderClients() {
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
       deleteBtn.className = 'btn-remove-inline';
-      deleteBtn.textContent = '🗑️';
+      deleteBtn.innerHTML = window.icono('eliminar');
       deleteBtn.title = 'Eliminar cliente';
       deleteBtn.addEventListener('click', async () => {
         const confirmed = window.confirm(
@@ -217,7 +217,7 @@ function renderPromoList() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn-add';
-    btn.textContent = '📲 Abrir WhatsApp';
+    btn.innerHTML = window.icono('mensaje','ic-izq') + 'Abrir WhatsApp';
     btn.addEventListener('click', () => {
       const digits = phoneToWhatsappDigits(c.telefono);
       const text = encodeURIComponent(promoMessage.value.trim());

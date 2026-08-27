@@ -135,7 +135,7 @@ function boton(texto, titulo, className, onClick) {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = className;
-  b.textContent = texto;
+  b.innerHTML = texto;
   b.title = titulo;
   b.addEventListener('click', onClick);
   return b;
@@ -178,22 +178,22 @@ function filaBoleto(b) {
 
   return fila({
     titulo: escapeHtml(nombres),
-    sub: `✈️ ${escapeHtml(ruta)}${aerolinea ? ' · ' + escapeHtml(aerolinea) : ''}`,
+    sub: `${window.icono('viajes')} ${escapeHtml(ruta)}${aerolinea ? ' · ' + escapeHtml(aerolinea) : ''}`,
     meta: [
-      salida ? '📅 ' + salida : '',
-      b.bookingRef ? '🔖 ' + escapeHtml(b.bookingRef) : '',
+      salida ? window.icono('calendario') + ' ' + salida : '',
+      b.bookingRef ? window.icono('reserva') + ' ' + escapeHtml(b.bookingRef) : '',
       b.creado ? 'Guardado el ' + formatCreado(b.creado) : '',
     ].filter(Boolean).join(' &nbsp;·&nbsp; '),
     acciones: [
-      boton('⬇️ PDF', 'Volver a descargar el boleto', 'btn-add', () => {
+      boton(window.icono('descargar','ic-izq') + 'PDF', 'Volver a descargar el boleto', 'btn-add', () => {
         window.generateTicketPDF(window.ticketDataFromRaw(b));
       }),
-      boton('📋 Usar como base', 'Cargar en el formulario para reusarlo', 'btn-secondary btn-compact', () => {
+      boton(window.icono('copiar','ic-izq') + 'Usar como base', 'Cargar en el formulario para reusarlo', 'btn-secondary btn-compact', () => {
         window.fillTicketForm(b);
         irAPestana('ticketsPanel');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }),
-      boton('🗑️', 'Eliminar del historial', 'trip-done-btn', async () => {
+      boton(window.icono('eliminar'), 'Eliminar del historial', 'trip-done-btn', async () => {
         if (!window.confirm(`¿Eliminar el boleto de "${nombres}" del historial? También dejará de aparecer en Próximos viajes.`)) return;
         try { await deleteDoc(doc(db, 'boletos', b.id)); } catch (e) { /* reintentar */ }
       }),
@@ -211,22 +211,22 @@ function filaFactura(f) {
   return fila({
     titulo: escapeHtml(comprador)
       + (f.numero ? ` <span class="trip-leg">${escapeHtml(f.numero)}</span>` : ''),
-    sub: `🧾 ${escapeHtml(desc)}`,
+    sub: `${window.icono('factura')} ${escapeHtml(desc)}`,
     meta: [
-      f.date ? '📅 ' + formatIsoDate(f.date) : '',
-      typeof f.total === 'number' ? '💰 ' + (f.moneda === 'COP' ? 'COP $' : '$') + f.total.toFixed(2) : '',
+      f.date ? window.icono('calendario') + ' ' + formatIsoDate(f.date) : '',
+      typeof f.total === 'number' ? window.icono('dinero') + ' ' + (f.moneda === 'COP' ? 'COP $' : '$') + f.total.toFixed(2) : '',
       f.creado ? 'Guardada el ' + formatCreado(f.creado) : '',
     ].filter(Boolean).join(' &nbsp;·&nbsp; '),
     acciones: [
-      boton('⬇️ PDF', 'Volver a descargar la factura', 'btn-add', () => {
+      boton(window.icono('descargar','ic-izq') + 'PDF', 'Volver a descargar la factura', 'btn-add', () => {
         window.generateInvoiceFromRaw(f);
       }),
-      boton('📋 Usar como base', 'Cargar en el formulario para reusarla', 'btn-secondary btn-compact', () => {
+      boton(window.icono('copiar','ic-izq') + 'Usar como base', 'Cargar en el formulario para reusarla', 'btn-secondary btn-compact', () => {
         window.fillInvoiceForm(f);
         irAPestana('invoicePanel');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }),
-      boton('🗑️', 'Eliminar del historial', 'trip-done-btn', async () => {
+      boton(window.icono('eliminar'), 'Eliminar del historial', 'trip-done-btn', async () => {
         if (!window.confirm(`¿Eliminar la factura de "${comprador}" del historial?`)) return;
         try { await deleteDoc(doc(db, 'facturas', f.id)); } catch (e) { /* reintentar */ }
       }),

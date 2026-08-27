@@ -31,6 +31,33 @@
   box-sizing: border-box;
 }
 
+/* ---------- Iconos ----------
+   Trazo del mismo grosor en todos y heredan el color del texto, para que
+   funcionen igual sobre el azul de la barra que sobre las tarjetas claras. */
+.ic {
+  width: 1.05em;
+  height: 1.05em;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.16em;
+}
+
+/* Junto a texto siempre deja su aire, sin depender de un espacio escrito */
+.ic + * { margin-left: 0; }
+.ic-izq { margin-right: 7px; }
+
+/* En listas y detalles el icono va mas discreto que el texto */
+.trip-sub .ic,
+.hint .ic {
+  opacity: 0.75;
+  width: 0.95em;
+  height: 0.95em;
+}
+
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;

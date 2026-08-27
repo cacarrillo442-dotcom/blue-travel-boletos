@@ -239,7 +239,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn-add';
-      btn.textContent = '🔎 Ver precio';
+      btn.innerHTML = window.icono('precios','ic-izq') + 'Ver precio';
       btn.addEventListener('click', () => consultarRuta(r.origen, r.destino));
       acciones.appendChild(btn);
 
@@ -380,8 +380,8 @@
         <div class="trip-name">${escapeHtml(P.nombreDe(o.origen))} → ${escapeHtml(P.nombreDe(o.destino))}
           <span class="trip-leg">${escapeHtml(o.origen)}–${escapeHtml(o.destino)}</span>
         </div>
-        <div class="trip-route">✈️ ${ruta}</div>
-        <div class="trip-sub">📅 ${ida}${vuelta}</div>
+        <div class="trip-route">${window.icono('viajes')} ${ruta}</div>
+        <div class="trip-sub">${window.icono('calendario')} ${ida}${vuelta}</div>
       `;
 
       const acciones = document.createElement('div');
@@ -392,14 +392,14 @@
       verificar.target = '_blank';
       verificar.rel = 'noopener';
       verificar.className = 'btn-secondary btn-compact';
-      verificar.textContent = '🔍 Verificar';
+      verificar.innerHTML = window.icono('verificar','ic-izq') + 'Verificar';
       verificar.title = 'Abre la búsqueda para confirmar el precio real';
       acciones.appendChild(verificar);
 
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn-add';
-      btn.textContent = '📣 Promocionar';
+      btn.innerHTML = window.icono('promocionar','ic-izq') + 'Promocionar';
       btn.addEventListener('click', () => prepararPublicidad(o));
       acciones.appendChild(btn);
 
@@ -450,22 +450,26 @@
   el('precioCopiarTextoBtn').addEventListener('click', () => {
     const btn = el('precioCopiarTextoBtn');
     const t = el('precioTexto');
-    const listo = () => { btn.textContent = '✅ Copiado'; setTimeout(() => { btn.textContent = '📋 Copiar texto'; }, 1500); };
+    const original = btn.innerHTML;
+    const listo = () => {
+      btn.innerHTML = window.icono('check', 'ic-izq') + 'Copiado';
+      setTimeout(() => { btn.innerHTML = original; }, 1500);
+    };
     if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(listo).catch(() => { t.select(); document.execCommand('copy'); listo(); });
     else { t.select(); document.execCommand('copy'); listo(); }
   });
 
   el('precioCopiarImagenBtn').addEventListener('click', async () => {
     const btn = el('precioCopiarImagenBtn');
-    const original = btn.textContent;
+    const original = btn.innerHTML;
     try {
       const blob = await new Promise((r) => lienzo.toBlob(r, 'image/png'));
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      btn.textContent = '✅ Copiada';
+      btn.innerHTML = window.icono('check','ic-izq') + 'Copiada';
     } catch (e) {
-      btn.textContent = '⚠️ Usa "Descargar"';
+      btn.innerHTML = window.icono('alerta','ic-izq') + 'Usa Descargar';
     }
-    setTimeout(() => { btn.textContent = original; }, 2000);
+    setTimeout(() => { btn.innerHTML = original; }, 2000);
   });
 
   el('precioDescargarBtn').addEventListener('click', () => {

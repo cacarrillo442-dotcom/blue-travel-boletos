@@ -211,10 +211,10 @@ function renderTrips() {
     info.className = 'trip-info';
     info.innerHTML = `
       <div class="trip-name">${escapeHtml(nombres)}
-        <span class="trip-leg ${esRegreso ? 'vuelta' : ''}">${esRegreso ? '↩️ regreso' : '🛫 ida'}</span>
+        <span class="trip-leg ${esRegreso ? 'vuelta' : ''}">${esRegreso ? 'regreso' : 'ida'}</span>
       </div>
-      <div class="trip-route">✈️ ${escapeHtml(t._origen || '?')} → ${escapeHtml(t._destino || '?')}${t._aerolinea ? ' · ' + escapeHtml(t._aerolinea) : ''}</div>
-      <div class="trip-sub">📅 ${formatIsoDate(t._fecha)}${hora} &nbsp;·&nbsp; 📞 ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; 🔖 ' + escapeHtml(t.bookingRef) : ''}</div>
+      <div class="trip-route">${window.icono('viajes')} ${escapeHtml(t._origen || '?')} → ${escapeHtml(t._destino || '?')}${t._aerolinea ? ' · ' + escapeHtml(t._aerolinea) : ''}</div>
+      <div class="trip-sub">${window.icono('calendario')} ${formatIsoDate(t._fecha)}${hora} &nbsp;·&nbsp; ${window.icono('telefono')} ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; ' + window.icono('reserva') + ' ' + escapeHtml(t.bookingRef) : ''}</div>
     `;
 
     const actions = document.createElement('div');
@@ -223,7 +223,7 @@ function renderTrips() {
     const waBtn = document.createElement('button');
     waBtn.type = 'button';
     waBtn.className = 'trip-wa-btn';
-    waBtn.innerHTML = '📲 WhatsApp';
+    waBtn.innerHTML = window.icono('mensaje', 'ic-izq') + 'WhatsApp';
     waBtn.addEventListener('click', () => {
       const digits = phoneToWhatsappDigits(t.telefono);
       const text = encodeURIComponent(buildCheckinMessage(t));
@@ -233,7 +233,7 @@ function renderTrips() {
     const doneBtn = document.createElement('button');
     doneBtn.type = 'button';
     doneBtn.className = 'trip-done-btn';
-    doneBtn.textContent = '✓';
+    doneBtn.innerHTML = window.icono('check');
     doneBtn.title = 'Marcar como avisado';
     doneBtn.title = esRegreso ? 'Marcar el regreso como avisado' : 'Marcar la ida como avisada';
     doneBtn.addEventListener('click', async () => {

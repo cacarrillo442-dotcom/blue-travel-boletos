@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=15" />
+<link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
 
@@ -47,20 +47,20 @@
 <!-- Orden por como se usa: primero lo que se genera, luego el seguimiento
      al cliente, y al final lo de consulta y administracion. -->
 <nav class="tabs">
-  <button type="button" class="tab-btn active" data-tab="ticketsPanel">🎫 Boletos</button>
-  <button type="button" class="tab-btn" data-tab="quotesPanel">💬 Cotizaciones</button>
-  <button type="button" class="tab-btn" data-tab="invoicePanel">🧾 Facturas</button>
+  <button type="button" class="tab-btn active" data-tab="ticketsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-boleto"></use></svg>Boletos</button>
+  <button type="button" class="tab-btn" data-tab="quotesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cotizacion"></use></svg>Cotizaciones</button>
+  <button type="button" class="tab-btn" data-tab="invoicePanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-factura"></use></svg>Facturas</button>
 
   <span class="tab-sep" aria-hidden="true"></span>
-  <button type="button" class="tab-btn" data-tab="clientsPanel">👥 Clientes</button>
-  <button type="button" class="tab-btn" data-tab="tripsPanel">✈️ Próximos viajes</button>
-  <button type="button" class="tab-btn" data-tab="couponsPanel">🎟️ Cupones</button>
-  <button type="button" class="tab-btn" data-tab="pricesPanel">🔎 Precios</button>
+  <button type="button" class="tab-btn" data-tab="clientsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-clientes"></use></svg>Clientes</button>
+  <button type="button" class="tab-btn" data-tab="tripsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-viajes"></use></svg>Próximos viajes</button>
+  <button type="button" class="tab-btn" data-tab="couponsPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cupon"></use></svg>Cupones</button>
+  <button type="button" class="tab-btn" data-tab="pricesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>Precios</button>
 
   <span class="tab-sep" aria-hidden="true"></span>
-  <button type="button" class="tab-btn" data-tab="historyPanel">📁 Historial</button>
-  <button type="button" class="tab-btn" data-tab="salesPanel">📊 Ventas</button>
-  <button type="button" class="tab-btn" data-tab="backupPanel">🛡️ Respaldo</button>
+  <button type="button" class="tab-btn" data-tab="historyPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-historial"></use></svg>Historial</button>
+  <button type="button" class="tab-btn" data-tab="salesPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-ventas"></use></svg>Ventas</button>
+  <button type="button" class="tab-btn" data-tab="backupPanel"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-respaldo"></use></svg>Respaldo</button>
 </nav>
 
 <main class="container">
@@ -186,13 +186,13 @@
         escribiste en la pestaña de Boletos, y desde aquí ajustas lo que necesites.
       </p>
       <div class="inline-add-row">
-        <button type="button" class="btn-add" id="invPullTicketBtn">📋 Traer datos del boleto</button>
+        <button type="button" class="btn-add" id="invPullTicketBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Traer datos del boleto</button>
       </div>
       <p class="hint" id="invPullStatus"></p>
 
       <details style="margin-top:16px">
         <summary class="hint" style="cursor:pointer">
-          🔢 Numeración · <span id="numeracionActual">cargando…</span>
+          <svg class="ic ic-izq" aria-hidden="true"><use href="#ic-numeracion"></use></svg>Numeración · <span id="numeracionActual">cargando…</span>
         </summary>
         <p class="hint">
           Cada factura recibe un número consecutivo que no se repite. Ajusta aquí el prefijo
@@ -283,7 +283,7 @@
         <div class="card-header">
           <h3>Conceptos a cobrar</h3>
           <div class="inline-add-row" style="margin-top:0">
-            <button type="button" class="btn-add" id="regenDescBtn">↻ Generar desde el boleto</button>
+            <button type="button" class="btn-add" id="regenDescBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-refrescar"></use></svg>Generar desde el boleto</button>
             <button type="button" class="btn-add" id="addInvItemBtn">+ Agregar concepto</button>
           </div>
         </div>
@@ -459,8 +459,8 @@
     </section>
 
     <div class="actions actions-split">
-      <button type="button" class="btn-secondary" id="qSaveClientBtn">💾 Guardar cliente</button>
-      <button type="button" class="btn-secondary" id="qGenerateImageBtn">🖼️ Generar imagen para WhatsApp</button>
+      <button type="button" class="btn-secondary" id="qSaveClientBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-guardar"></use></svg>Guardar cliente</button>
+      <button type="button" class="btn-secondary" id="qGenerateImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-imagen"></use></svg>Generar imagen para WhatsApp</button>
       <button type="submit" class="btn-primary">Generar texto de cotización</button>
     </div>
     <p class="hint" id="qSaveClientStatus" style="text-align:right"></p>
@@ -468,7 +468,7 @@
     <section class="card hidden" id="qOutputCard">
       <div class="card-header">
         <h3>Mensaje listo para WhatsApp</h3>
-        <button type="button" class="btn-add" id="qCopyBtn">📋 Copiar</button>
+        <button type="button" class="btn-add" id="qCopyBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar</button>
       </div>
       <textarea id="qOutputText" rows="12" readonly></textarea>
     </section>
@@ -477,8 +477,8 @@
       <div class="card-header">
         <h3>Imagen lista para WhatsApp</h3>
         <div class="inline-add-row" style="margin-top:0">
-          <button type="button" class="btn-add" id="qCopyImageBtn">📋 Copiar imagen</button>
-          <button type="button" class="btn-add" id="qDownloadImageBtn">⬇️ Descargar</button>
+          <button type="button" class="btn-add" id="qCopyImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar imagen</button>
+          <button type="button" class="btn-add" id="qDownloadImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar</button>
         </div>
       </div>
       <img id="qImagePreview" alt="Cotización" class="quote-image-preview" />
@@ -490,7 +490,7 @@
 
   <section class="card" id="weekCard">
     <div class="card-header">
-      <h2>📊 Cierre semanal</h2>
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-ventas"></use></svg>Cierre semanal</h2>
       <select id="weekPicker" style="width:auto; min-width:220px"></select>
     </div>
     <p class="hint" id="weekRange">La semana va de sábado a viernes, igual que en tu Excel.</p>
@@ -498,7 +498,7 @@
     <div class="stat-row" id="weekStats"></div>
 
     <div class="inline-add-row" id="weekActions">
-      <button type="button" class="btn-add" id="weekCopyBtn">📋 Copiar texto</button>
+      <button type="button" class="btn-add" id="weekCopyBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar texto</button>
     </div>
     <details id="weekPreviewWrap" style="margin-top:14px">
       <summary class="hint" style="cursor:pointer">Ver el mensaje del cierre</summary>
@@ -552,7 +552,7 @@
 
 <div id="pricesPanel" class="tab-panel hidden">
   <section class="card">
-    <h2>🔎 Precios de mercado</h2>
+    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>Precios de mercado</h2>
     <p class="hint">
       Compara los tres aeropuertos de Washington de una sola vez y te dice desde cuál sale
       más barato. Son <strong>precios de referencia del mercado</strong>, no tarifas tuyas:
@@ -639,9 +639,9 @@
     <div class="card-header">
       <h2>Publicidad</h2>
       <div class="inline-add-row" style="margin-top:0">
-        <button type="button" class="btn-add" id="precioCopiarTextoBtn">📋 Copiar texto</button>
-        <button type="button" class="btn-add" id="precioCopiarImagenBtn">🖼️ Copiar imagen</button>
-        <button type="button" class="btn-add" id="precioDescargarBtn">⬇️ Descargar</button>
+        <button type="button" class="btn-add" id="precioCopiarTextoBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar texto</button>
+        <button type="button" class="btn-add" id="precioCopiarImagenBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-imagen"></use></svg>Copiar imagen</button>
+        <button type="button" class="btn-add" id="precioDescargarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar</button>
       </div>
     </div>
     <p class="hint">
@@ -666,7 +666,7 @@
 
 <div id="couponsPanel" class="tab-panel hidden">
   <section class="card">
-    <h2>🎟️ Generar cupón</h2>
+    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cupon"></use></svg>Generar cupón</h2>
     <p class="hint">
       El cupón sale a nombre del cliente, con un número consecutivo y una imagen lista para
       enviar. Vence a los <strong>90 días</strong> de generado.
@@ -697,8 +697,8 @@
     <div class="card-header">
       <h2>Cupón listo</h2>
       <div class="inline-add-row" style="margin-top:0">
-        <button type="button" class="btn-add" id="cuponCopiarBtn">📋 Copiar imagen</button>
-        <button type="button" class="btn-add" id="cuponDescargarBtn">⬇️ Descargar</button>
+        <button type="button" class="btn-add" id="cuponCopiarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar imagen</button>
+        <button type="button" class="btn-add" id="cuponDescargarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar</button>
       </div>
     </div>
     <img id="cuponImagen" alt="Cupón Blue Travel" class="quote-image-preview" />
@@ -721,7 +721,7 @@
 
 <div id="backupPanel" class="tab-panel hidden">
   <section class="card">
-    <h2>🛡️ Descargar respaldo</h2>
+    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-respaldo"></use></svg>Descargar respaldo</h2>
     <p class="hint">
       Baja a tu computador una copia de todo: clientes, boletos, facturas, ventas, viajes y
       catálogos. Guárdala en un lugar seguro — si algo le pasa a la base de datos, con este
@@ -729,7 +729,7 @@
     </p>
     <p class="hint" id="respaldoRecordatorio"></p>
     <div class="inline-add-row">
-      <button type="button" class="btn-primary" id="respaldoBajarBtn">⬇️ Descargar respaldo</button>
+      <button type="button" class="btn-primary" id="respaldoBajarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar respaldo</button>
     </div>
   </section>
 
@@ -769,10 +769,10 @@
 <div id="historyPanel" class="tab-panel hidden">
   <section class="card">
     <div class="card-header">
-      <h2>📁 Historial</h2>
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-historial"></use></svg>Historial</h2>
       <div class="inline-add-row" style="margin-top:0">
-        <button type="button" class="btn-add hist-filter active" data-hist="boletos">🎫 Boletos</button>
-        <button type="button" class="btn-add hist-filter" data-hist="facturas">🧾 Facturas</button>
+        <button type="button" class="btn-add hist-filter active" data-hist="boletos"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-boleto"></use></svg>Boletos</button>
+        <button type="button" class="btn-add hist-filter" data-hist="facturas"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-factura"></use></svg>Facturas</button>
       </div>
     </div>
     <p class="hint">
@@ -808,15 +808,15 @@
     <div class="card-header">
       <h2>Clientes guardados</h2>
       <div class="inline-add-row" style="margin-top:0">
-        <button type="button" class="btn-add" id="clientsDownloadCsvBtn">⬇️ Descargar CSV</button>
-        <button type="button" class="btn-add" id="clientsCampaignCsvBtn">📧 Exportar para campañas</button>
-        <button type="button" class="btn-add" id="clientsDedupeBtn">🧹 Eliminar duplicados</button>
+        <button type="button" class="btn-add" id="clientsDownloadCsvBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar CSV</button>
+        <button type="button" class="btn-add" id="clientsCampaignCsvBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-correo"></use></svg>Exportar para campañas</button>
+        <button type="button" class="btn-add" id="clientsDedupeBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-limpiar"></use></svg>Eliminar duplicados</button>
       </div>
     </div>
     <p class="hint" id="clientsSessionLabel"></p>
     <p class="hint" id="campanasResumen"></p>
     <details>
-      <summary class="hint" style="cursor:pointer">📧 Cómo usar el archivo de campañas</summary>
+      <summary class="hint" style="cursor:pointer"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-correo"></use></svg>Cómo usar el archivo de campañas</summary>
       <p class="hint">
         Exporta solo a quienes <strong>autorizaron promociones</strong> y tienen un correo válido.
         Importa ese archivo en <strong>Brevo</strong>, <strong>MailerLite</strong> o Mailchimp: al
@@ -840,7 +840,7 @@
   </section>
 
   <section class="card hidden" id="promoCard">
-    <h2>📣 Enviar publicidad</h2>
+    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-promocionar"></use></svg>Enviar publicidad</h2>
     <p class="hint">
       Solo se muestran los clientes que autorizaron recibir promociones. Cada botón abre WhatsApp con
       el mensaje ya escrito — tú revisas y das enviar, uno por uno (así lo permite WhatsApp y respeta
@@ -874,7 +874,7 @@
   </section>
 
   <section class="card hidden" id="tripsCard">
-    <h2>✈️ Próximos viajes</h2>
+    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-viajes"></use></svg>Próximos viajes</h2>
     <p class="hint">
       Todos los viajes pendientes de avisar, del más cercano al más lejano — recuérdales hacer el
       check-in y alistar su equipaje. Cada botón abre WhatsApp con el mensaje listo; al enviarlo,
@@ -965,6 +965,7 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="assets/iconos.js?v=1"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
@@ -974,15 +975,15 @@
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=11"></script>
-<script type="module" src="assets/firebase-clients.js?v=9"></script>
+<script type="module" src="assets/firebase-clients.js?v=10"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
-<script type="module" src="assets/firebase-cupones.js?v=1"></script>
-<script src="assets/precios-ui.js?v=7"></script>
-<script type="module" src="assets/firebase-history.js?v=4"></script>
-<script type="module" src="assets/firebase-sales.js?v=7"></script>
+<script type="module" src="assets/firebase-cupones.js?v=2"></script>
+<script src="assets/precios-ui.js?v=8"></script>
+<script type="module" src="assets/firebase-history.js?v=5"></script>
+<script type="module" src="assets/firebase-sales.js?v=8"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
-<script type="module" src="assets/firebase-trips.js?v=10"></script>
+<script type="module" src="assets/firebase-trips.js?v=11"></script>
 <script type="module" src="assets/firebase-gate.js?v=2"></script>
 </body>
 </html>

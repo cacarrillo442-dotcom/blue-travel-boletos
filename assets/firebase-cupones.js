@@ -173,15 +173,15 @@ el('cuponDescargarBtn').addEventListener('click', () => {
 
 el('cuponCopiarBtn').addEventListener('click', async () => {
   const btn = el('cuponCopiarBtn');
-  const original = btn.textContent;
+  const original = btn.innerHTML;
   try {
     const blob = await new Promise((r) => ultimoCanvas.toBlob(r, 'image/png'));
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    btn.textContent = '✅ Copiada';
+    btn.innerHTML = window.icono('check','ic-izq') + 'Copiada';
   } catch (e) {
-    btn.textContent = '⚠️ Usa "Descargar"';
+    btn.innerHTML = window.icono('alerta','ic-izq') + 'Usa Descargar';
   }
-  setTimeout(() => { btn.textContent = original; }, 2000);
+  setTimeout(() => { btn.innerHTML = original; }, 2000);
 });
 
 // ---------- Lista ----------
@@ -238,16 +238,16 @@ function pintarLista() {
     const info = document.createElement('div');
     info.className = 'trip-info';
     let detalle;
-    if (estado === 'redimido') detalle = `✅ Redimido el ${formatoFecha(c.fechaRedencion)}`;
-    else if (estado === 'vencido') detalle = `⛔ Venció el ${formatoFecha(c.fechaVence)}`;
-    else detalle = `⏳ Vence el ${formatoFecha(c.fechaVence)} · ${dias === 0 ? 'hoy' : `en ${dias} día${dias === 1 ? '' : 's'}`}`;
+    if (estado === 'redimido') detalle = `${window.icono('check')} Redimido el ${formatoFecha(c.fechaRedencion)}`;
+    else if (estado === 'vencido') detalle = `${window.icono('alerta')} Venció el ${formatoFecha(c.fechaVence)}`;
+    else detalle = `${window.icono('reloj')} Vence el ${formatoFecha(c.fechaVence)} · ${dias === 0 ? 'hoy' : `en ${dias} día${dias === 1 ? '' : 's'}`}`;
 
     info.innerHTML = `
       <div class="trip-name">${escapeHtml(c.clienteNombre || '(sin cliente)')}
         <span class="trip-leg ${estado === 'vigente' ? '' : 'vuelta'}">${escapeHtml(c.numero || '')}</span>
       </div>
       <div class="trip-route">${detalle}</div>
-      <div class="trip-sub">Generado el ${formatoFecha(c.fechaGeneracion)}${c.clienteTelefono ? ' &nbsp;·&nbsp; 📞 ' + escapeHtml(c.clienteTelefono) : ''}</div>
+      <div class="trip-sub">Generado el ${formatoFecha(c.fechaGeneracion)}${c.clienteTelefono ? ' &nbsp;·&nbsp; ' + window.icono('telefono') + ' ' + escapeHtml(c.clienteTelefono) : ''}</div>
     `;
 
     const acciones = document.createElement('div');
@@ -256,7 +256,7 @@ function pintarLista() {
     const verBtn = document.createElement('button');
     verBtn.type = 'button';
     verBtn.className = 'btn-secondary btn-compact';
-    verBtn.textContent = '🖼️ Ver imagen';
+    verBtn.innerHTML = window.icono('imagen','ic-izq') + 'Ver imagen';
     verBtn.addEventListener('click', () => mostrarImagen(c));
     acciones.appendChild(verBtn);
 
@@ -264,7 +264,7 @@ function pintarLista() {
       const redimirBtn = document.createElement('button');
       redimirBtn.type = 'button';
       redimirBtn.className = 'btn-add';
-      redimirBtn.textContent = '✓ Redimir';
+      redimirBtn.innerHTML = window.icono('check','ic-izq') + 'Redimir';
       redimirBtn.title = 'Marcar que el cliente ya lo usó';
       redimirBtn.addEventListener('click', async () => {
         if (!window.confirm(`¿Marcar el cupón ${c.numero} de ${c.clienteNombre} como usado?`)) return;
@@ -278,7 +278,7 @@ function pintarLista() {
     const borrarBtn = document.createElement('button');
     borrarBtn.type = 'button';
     borrarBtn.className = 'trip-done-btn';
-    borrarBtn.textContent = '🗑️';
+    borrarBtn.innerHTML = window.icono('eliminar');
     borrarBtn.title = 'Eliminar del registro';
     borrarBtn.addEventListener('click', async () => {
       if (!window.confirm(`¿Eliminar el cupón ${c.numero}? El número no se reutiliza.`)) return;
