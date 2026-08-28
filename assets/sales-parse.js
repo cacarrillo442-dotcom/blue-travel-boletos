@@ -486,9 +486,10 @@
 
   // ---------- Meta ----------
   //
-  // La meta se fija por dia habil: en los reportes el dinero nunca entra en
-  // fin de semana -26 dias con ingreso, ninguno sabado o domingo-, asi que
-  // cobrarle al sabado una meta que no puede cumplir seria absurdo.
+  // La meta se fija por semana. Para saber si se va al dia a mitad de semana
+  // se reparte entre los DIAS HABILES: en los reportes el dinero nunca entra
+  // en fin de semana -26 dias con ingreso, ninguno sabado o domingo-, asi que
+  // esperar algo el sabado seria pedirle a la semana lo que no puede dar.
   //
   // No se proyecta el cierre. Medido sobre las semanas reales, lo que lleva
   // entrado a mitad de semana varia demasiado -para el miercoles va entre el
@@ -509,8 +510,8 @@
     return n;
   }
 
-  function avanceDeMeta(semana, metaDiaria, hoyISO) {
-    if (!semana || !(metaDiaria > 0)) return null;
+  function avanceDeMeta(semana, metaSemanal, hoyISO) {
+    if (!semana || !(metaSemanal > 0)) return null;
 
     const hoy = hoyISO || (() => {
       const d = new Date();
@@ -522,11 +523,13 @@
       ? habiles
       : diasHabilesEntre(semana.inicio, hoy);
 
-    const objetivo = metaDiaria * habiles;
-    const objetivoHoy = metaDiaria * corridos;
+    const objetivo = metaSemanal;
+    // Prorrateada a los dias habiles ya corridos
+    const objetivoHoy = habiles ? metaSemanal * (corridos / habiles) : 0;
 
     return {
-      metaDiaria,
+      metaSemanal,
+      porDiaHabil: habiles ? metaSemanal / habiles : 0,
       habiles,
       corridos,
       cerrada: hoy > semana.corte,

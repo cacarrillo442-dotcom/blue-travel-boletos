@@ -34,7 +34,7 @@ const importStats = el('importStats');
 
 let ventas = [];
 let semanas = [];
-let metaDiaria = 0;
+let metaSemanal = 0;
 let unsubMeta = null;
 let pendientes = null;   // solo las que no estaban guardadas
 let leidasTodas = null;  // todas las del archivo, para cuando se pide actualizar
@@ -58,7 +58,7 @@ onAuthStateChanged(auth, (user) => {
 
     // La meta se guarda en la nube: asi Milena y Cesar ven la misma.
     unsubMeta = onSnapshot(doc(db, 'config', 'metas'), (snap) => {
-      metaDiaria = (snap.exists() && Number(snap.data().diaria)) || 0;
+      metaSemanal = (snap.exists() && Number(snap.data().semanal)) || 0;
       pintarCampoMeta();
       pintarSemana();
     }, () => { /* sin meta la app funciona igual */ });
@@ -162,29 +162,29 @@ const conPuntos = (t) => {
 };
 
 function pintarCampoMeta() {
-  const campo = el('metaDiaria');
-  const semanal = el('metaSemanal');
+  const campo = el('metaSemanal');
+  const porDia = el('metaPorDia');
   if (!campo) return;
   // No pisar lo que se esta escribiendo
   if (document.activeElement !== campo) {
-    campo.value = metaDiaria ? Number(metaDiaria).toLocaleString('es-CO') : '';
+    campo.value = metaSemanal ? Number(metaSemanal).toLocaleString('es-CO') : '';
   }
-  if (semanal) {
-    semanal.value = metaDiaria
-      ? `${V.pesos(metaDiaria * 5)}  ·  5 días hábiles`
+  if (porDia) {
+    porDia.value = metaSemanal
+      ? `${V.pesos(metaSemanal / 5)}  ·  5 días hábiles`
       : 'Sin meta fijada';
   }
 }
 
 let guardando = null;
 function guardarMeta() {
-  const valor = Number(soloDigitos(el('metaDiaria').value)) || 0;
+  const valor = Number(soloDigitos(el('metaSemanal').value)) || 0;
   const estado = el('metaEstado');
   clearTimeout(guardando);
   // Se espera a que termine de escribir, para no escribir en la nube por tecla
   guardando = setTimeout(async () => {
     try {
-      await setDoc(doc(db, 'config', 'metas'), { diaria: valor }, { merge: true });
+      await setDoc(doc(db, 'config', 'metas'), { semanal: valor }, { merge: true });
       if (estado) estado.textContent = valor ? 'Meta guardada.' : 'Meta quitada.';
     } catch (e) {
       if (estado) estado.textContent = `No se pudo guardar: ${e.message}`;
@@ -192,9 +192,9 @@ function guardarMeta() {
   }, 700);
 }
 
-if (el('metaDiaria')) {
-  el('metaDiaria').addEventListener('input', () => {
-    const campo = el('metaDiaria');
+if (el('metaSemanal')) {
+  el('metaSemanal').addEventListener('input', () => {
+    const campo = el('metaSemanal');
     const antes = campo.value.slice(0, campo.selectionStart).replace(/\D/g, '').length;
     campo.value = conPuntos(campo.value);
     let pos = 0;
@@ -204,7 +204,7 @@ if (el('metaDiaria')) {
       pos += 1;
     }
     campo.setSelectionRange(pos, pos);
-    metaDiaria = Number(soloDigitos(campo.value)) || 0;
+    metaSemanal = Number(soloDigitos(campo.value)) || 0;
     pintarCampoMeta();
     pintarSemana();
     guardarMeta();
@@ -214,7 +214,7 @@ if (el('metaDiaria')) {
 function pintarMeta(s) {
   const destino = el('metaPanel');
   if (!destino) return;
-  const m = V.avanceDeMeta(s, metaDiaria);
+  const m = V.avanceDeMeta(s, metaSemanal);
   if (!m) { destino.innerHTML = ''; return; }
 
   const pct = Math.round(m.avance * 100);

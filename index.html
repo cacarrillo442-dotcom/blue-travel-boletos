@@ -687,19 +687,20 @@
     <div class="catalog-subsection">
       <h3>Tu meta</h3>
       <p class="hint">
-        Se fija por día hábil. El dinero de Wompi solo entra de lunes a viernes,
-        así que ponerle meta al sábado sería pedirle algo que no puede cumplir.
+        Para saber si vas al día a mitad de semana, la meta se reparte entre los
+        días hábiles: el dinero de Wompi solo entra de lunes a viernes, así que
+        esperar algo el sábado sería pedirle a la semana lo que no puede dar.
       </p>
       <div class="grid-2">
-        <label>Meta por día hábil
+        <label>Meta semanal
           <span class="campo-moneda">
             <span class="campo-simbolo">$</span>
-            <input type="text" id="metaDiaria" inputmode="numeric"
-              placeholder="500.000" autocomplete="off" />
+            <input type="text" id="metaSemanal" inputmode="numeric"
+              placeholder="3.000.000" autocomplete="off" />
           </span>
         </label>
-        <label>Equivale por semana
-          <input type="text" id="metaSemanal" readonly tabindex="-1" />
+        <label>Equivale por día hábil
+          <input type="text" id="metaPorDia" readonly tabindex="-1" />
         </label>
       </div>
       <p class="hint" id="metaEstado"></p>
@@ -1206,7 +1207,7 @@
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=12"></script>
+<script src="assets/sales-parse.js?v=13"></script>
 <script src="assets/cupon-imagen.js?v=2"></script>
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
@@ -1218,7 +1219,7 @@
 <script type="module" src="assets/firebase-cupones.js?v=3"></script>
 <script src="assets/precios-ui.js?v=8"></script>
 <script type="module" src="assets/firebase-history.js?v=5"></script>
-<script type="module" src="assets/firebase-sales.js?v=15"></script>
+<script type="module" src="assets/firebase-sales.js?v=16"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
 <script type="module" src="assets/firebase-trips.js?v=12"></script>
 <script type="module" src="assets/firebase-gate.js?v=2"></script>
