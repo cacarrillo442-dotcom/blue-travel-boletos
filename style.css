@@ -1399,6 +1399,112 @@ textarea {
   color: var(--ink-strong);
 }
 
+/* ---------- El dólar ---------- */
+
+.trm-cifra {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.trm-cifra strong {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--ink-strong);
+  line-height: 1.1;
+}
+
+.trm-cifra span {
+  font-size: .9rem;
+  color: var(--ink-soft);
+}
+
+.trm-vigencia {
+  margin: 3px 0 0;
+  font-size: .82rem;
+  color: var(--ink-soft);
+}
+
+.trm-vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.trm-var {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+}
+
+/* Sube y baja no son "bueno" y "malo" aqui: depende de si la comision esta
+   anclada al dolar o al peso. Por eso van en tonos neutros, no en verde y
+   rojo, que dirian algo que no sabemos. */
+.trm-var.arriba { background: #eaf2f8; color: #1a5d80; }
+.trm-var.abajo { background: #f3eef7; color: #614a75; }
+
+.trm-viejo { margin: 12px 0 0; color: #8a5a08; }
+
+.calc-salida {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.calc-rotulo {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #a9c1d3;
+}
+
+.calc-monto {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  margin: 4px 0 2px;
+}
+
+.calc-detalle {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+  font-size: .84rem;
+  color: #cfe0ec;
+}
+
+.calc-detalle div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 3px 0;
+}
+
+.calc-detalle .fin {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .trm-var.arriba { background: #16313f; color: #9ecde6; }
+  .trm-var.abajo { background: #2a2137; color: #c7aede; }
+}
+
 /* ---------- Dashboard de ventas ---------- */
 
 .stat-row {

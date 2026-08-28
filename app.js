@@ -939,8 +939,17 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
   const ruta = `${data.ida.origin || '?'} → ${data.ida.dest || '?'}`;
 
   // Un solo registro: sirve de historial y alimenta Proximos viajes.
+  // Se guarda tambien la TRM del dia: sin ella, mirando hacia atras no hay
+  // como saber si un mes flojo fue por vender menos o porque el dolar cayo.
   if (window.saveBoletoToCloud) {
-    window.saveBoletoToCloud({ ...raw, telefono, resumen: ruta });
+    const trm = window.TRM ? window.TRM.estado() : null;
+    window.saveBoletoToCloud({
+      ...raw,
+      telefono,
+      resumen: ruta,
+      trm: trm && trm.valor ? trm.valor : null,
+      trmFecha: trm && trm.fecha ? trm.fecha : '',
+    });
   }
 
   // El comprador tambien entra a la base de clientes.

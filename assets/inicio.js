@@ -260,6 +260,121 @@
       </div>`;
   }
 
+  // ---------- El dólar ----------
+
+  // Tarifa de Wompi para tarjeta de crédito: 2.65% + $700, y el IVA del 19%
+  // recae sobre la comisión, no sobre la venta. Siendo no responsables de IVA
+  // ese 19% no se puede descontar contra nada: es costo puro.
+  const WOMPI = { porcentaje: 0.0265, fijo: 700, iva: 0.19 };
+
+  const pesos = (n) => (window.Ventas ? window.Ventas.pesos(n)
+    : '$' + Math.round(n).toLocaleString('es-CO'));
+
+  // La TRM se cotiza con dos decimales y esos centavos mueven la conversión:
+  // redondearla a pesos enteros, como el resto de las cifras, la falsea.
+  const pesosExactos = (n) => '$' + n.toLocaleString('es-CO',
+    { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function comisionWompi(monto) {
+    return (monto * WOMPI.porcentaje + WOMPI.fijo) * (1 + WOMPI.iva);
+  }
+
+  // Para recibir X hay que cobrar más que X + comisión: la comisión se cobra
+  // sobre el total ya recargado. Se despeja, no se suma.
+  function enlaceParaRecibir(neto) {
+    const fijo = WOMPI.fijo * (1 + WOMPI.iva);
+    const tasa = WOMPI.porcentaje * (1 + WOMPI.iva);
+    return (neto + fijo) / (1 - tasa);
+  }
+
+  function fechaLegible(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CO',
+      { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function variacion(actual, previo, etiqueta) {
+    if (!previo || !actual) return '';
+    const pct = (actual / previo - 1) * 100;
+    if (Math.abs(pct) < 0.005) return `<span class="trm-var igual">Sin cambio ${etiqueta}</span>`;
+    const flecha = pct > 0 ? '▲' : '▼';
+    return `<span class="trm-var ${pct > 0 ? 'arriba' : 'abajo'}">`
+      + `${flecha} ${Math.abs(pct).toFixed(2)}% ${etiqueta}</span>`;
+  }
+
+  function pintarTRM(t) {
+    const destino = el('trmPanel');
+    if (!destino) return;
+
+    if (!t.valor) {
+      destino.innerHTML = `<p class="promo-empty">${
+        t.cargando ? 'Consultando la tasa oficial…'
+          : 'No se pudo consultar la tasa oficial. Revisa tu conexión.'
+      }</p>`;
+      return;
+    }
+
+    destino.innerHTML = `
+      <div class="trm-cifra">
+        <strong class="cifras">${pesosExactos(t.valor)}</strong>
+        <span>por dólar</span>
+      </div>
+      <p class="trm-vigencia">Vigente para el ${fechaLegible(t.fecha)}</p>
+      <div class="trm-vars">
+        ${variacion(t.valor, t.ayer, 'desde la tasa anterior')}
+        ${variacion(t.valor, t.hace30, 'en 30 días')}
+      </div>
+      ${t.error ? '<p class="hint trm-viejo">' + window.icono('alerta')
+        + ' No se pudo actualizar; esta es la última tasa que alcanzó a guardarse.</p>' : ''}`;
+
+    calcular();
+  }
+
+  function calcular() {
+    const destino = el('calcResultado');
+    if (!destino) return;
+
+    const bruto = parseFloat(el('calcGanancia').value);
+    if (!Number.isFinite(bruto) || bruto <= 0) {
+      destino.innerHTML = '';
+      return;
+    }
+
+    const t = window.TRM ? window.TRM.estado() : {};
+    const enDolares = el('calcMoneda').value === 'USD';
+    if (enDolares && !t.valor) {
+      destino.innerHTML = '<p class="promo-empty">Necesito la tasa del día para convertir desde dólares.</p>';
+      return;
+    }
+
+    const neto = enDolares ? bruto * t.valor : bruto;
+    const conComision = el('calcMedio').value === 'credito';
+    const enlace = conComision ? enlaceParaRecibir(neto) : neto;
+    const comision = enlace - neto;
+
+    destino.innerHTML = `
+      <div class="calc-salida">
+        <div class="calc-rotulo">Cobra este monto en Wompi</div>
+        <div class="calc-monto cifras">${pesos(enlace)}</div>
+        <div class="calc-detalle">
+          ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(neto)}</span></div>` : ''}
+          ${conComision ? `<div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2)}%</span></div>` : ''}
+          <div class="fin"><span>Te queda</span><span class="cifras">${pesos(neto)}${
+            !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
+          }</span></div>
+        </div>
+      </div>`;
+  }
+
+  ['calcGanancia', 'calcMoneda', 'calcMedio'].forEach((id) => {
+    const campo = el(id);
+    if (campo) campo.addEventListener('input', calcular);
+    if (campo) campo.addEventListener('change', calcular);
+  });
+
+  if (window.TRM) window.TRM.alCambiar(pintarTRM);
+
   // ---------- Cielo del saludo ----------
   // Las curvas se calculan del tamano real de la franja, no de un dibujo fijo.
   // La franja pasa de 6.6:1 en el computador a 2:1 en el celular; con medidas
