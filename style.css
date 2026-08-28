@@ -2322,3 +2322,84 @@ select:focus {
   stroke-width: 0.7;
   opacity: 1;
 }
+
+/* ---------- Meta de la semana ----------
+   La marca vertical es donde deberia ir la barra a estas alturas de la
+   semana. Sin ella el porcentaje solo no dice si se va al dia o atrasado. */
+.meta-caja {
+  margin: 4px 0 18px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.meta-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.meta-rotulo {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.meta-cifra {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+.meta-cifra em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.meta-barra {
+  position: relative;
+  height: 10px;
+  margin: 11px 0 9px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.meta-barra-relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary-2);
+  transition: width .3s ease;
+}
+
+/* Donde deberia ir hoy */
+.meta-marca {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ink-strong);
+  border-radius: 2px;
+}
+
+.meta-nota {
+  margin: 0;
+  font-size: .82rem;
+  color: var(--ink);
+}
+
+.meta-caja.lograda { border-color: #bcdcc8; background: #f1f8f3; }
+.meta-caja.lograda .meta-barra-relleno { background: #2f6b4a; }
+.meta-caja.atras { border-color: #f0d9ac; background: #fffaf0; }
+.meta-caja.fallada { border-color: #eecfc7; background: #fdf5f2; }
+.meta-caja.fallada .meta-barra-relleno { background: #a8402b; }
+
+@media (prefers-reduced-motion: reduce) {
+  .meta-barra-relleno { transition: none; }
+}

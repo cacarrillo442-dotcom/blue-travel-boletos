@@ -484,6 +484,62 @@
     return meses;
   }
 
+  // ---------- Meta ----------
+  //
+  // La meta se fija por dia habil: en los reportes el dinero nunca entra en
+  // fin de semana -26 dias con ingreso, ninguno sabado o domingo-, asi que
+  // cobrarle al sabado una meta que no puede cumplir seria absurdo.
+  //
+  // No se proyecta el cierre. Medido sobre las semanas reales, lo que lleva
+  // entrado a mitad de semana varia demasiado -para el miercoles va entre el
+  // 0% y el 96% del total- y proyectar con eso seria adivinar. En su lugar se
+  // compara contra la parte de la meta que corresponde a los dias ya corridos.
+  function diasHabilesEntre(desdeISO, hastaISO) {
+    if (!desdeISO || !hastaISO || hastaISO < desdeISO) return 0;
+    let n = 0;
+    const [y, m, d] = desdeISO.split('-').map(Number);
+    const cursor = new Date(y, m - 1, d);
+    for (let guarda = 0; guarda < 400; guarda++) {
+      const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+      if (iso > hastaISO) break;
+      const dia = cursor.getDay();
+      if (dia !== 0 && dia !== 6) n += 1;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return n;
+  }
+
+  function avanceDeMeta(semana, metaDiaria, hoyISO) {
+    if (!semana || !(metaDiaria > 0)) return null;
+
+    const hoy = hoyISO || (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+
+    const habiles = diasHabilesEntre(semana.inicio, semana.corte);
+    const corridos = hoy >= semana.corte
+      ? habiles
+      : diasHabilesEntre(semana.inicio, hoy);
+
+    const objetivo = metaDiaria * habiles;
+    const objetivoHoy = metaDiaria * corridos;
+
+    return {
+      metaDiaria,
+      habiles,
+      corridos,
+      cerrada: hoy > semana.corte,
+      objetivo,
+      objetivoHoy,
+      logrado: semana.neto,
+      avance: objetivo ? semana.neto / objetivo : 0,
+      // Contra lo que deberia llevar a estas alturas, no contra el total
+      alDia: semana.neto >= objetivoHoy,
+      falta: Math.max(0, objetivo - semana.neto),
+    };
+  }
+
   function totales(ventas) {
     const t = { ventas: ventas.length, bruto: 0, neto: 0 };
     ventas.forEach((v) => { t.bruto += v.bruto; t.neto += v.neto; });
@@ -580,6 +636,8 @@
     fechaIngreso,
     agruparPorSemana,
     agruparPorMes,
+    avanceDeMeta,
+    diasHabilesEntre,
     tarifaReal,
     retenciones,
     clientesEnRiesgo,
