@@ -17,7 +17,7 @@
 
   // Se guarda en el navegador para no volver a pedirla el mismo dia: la TRM
   // solo cambia una vez cada 24 horas.
-  let estado = { cargando: true, valor: null, fecha: null, ayer: null, hace30: null, error: null };
+  let estado = { cargando: true, valor: null, fecha: null, anterior: null, hace30: null, error: null };
   const oyentes = [];
 
   function hoyISO() {
@@ -34,9 +34,8 @@
 
   // Cada registro cubre un rango (vigenciadesde a vigenciahasta) porque en fin
   // de semana y festivos la misma tasa rige varios dias.
-  function valorEn(registros, iso) {
-    const r = registros.find((x) => x.desde <= iso && iso <= x.hasta);
-    return r ? r.valor : null;
+  function registroEn(registros, iso) {
+    return registros.find((x) => x.desde <= iso && iso <= x.hasta) || null;
   }
 
   function normalizar(crudos) {
@@ -55,10 +54,11 @@
       cargando: false,
       valor: vigente.valor,
       fecha: vigente.desde,
-      // "Ayer" es el dia habil anterior al inicio de la vigencia actual, no el
-      // dia calendario: en lunes festivo comparar contra ayer daria cero.
-      ayer: (registros.find((x) => x.hasta < vigente.desde) || {}).valor || null,
-      hace30: valorEn(registros, restarDias(hoy, 30)),
+      // La tasa anterior es la del dia habil previo al inicio de esta
+      // vigencia, no la del dia calendario: en lunes festivo comparar contra
+      // ayer daria cero, porque es la misma tasa.
+      anterior: registros.find((x) => x.hasta < vigente.desde) || null,
+      hace30: registroEn(registros, restarDias(hoy, 30)),
       error: null,
     };
   }
@@ -107,7 +107,7 @@
       // Si hay cache, se sigue usando: una tasa de ayer sirve mas que nada.
       estado = cache
         ? { ...calcular(cache.registros), cargando: false, error: e.message }
-        : { cargando: false, valor: null, fecha: null, ayer: null, hace30: null, error: e.message };
+        : { cargando: false, valor: null, fecha: null, anterior: null, hace30: null, error: e.message };
     }
     avisar();
   }

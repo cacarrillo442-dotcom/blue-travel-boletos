@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=32" />
+<link rel="stylesheet" href="style.css?v=34" />
 </head>
 <body>
 
@@ -174,7 +174,11 @@
       </p>
       <div class="grid-3">
         <label>Quiero ganar
-          <input type="number" id="calcGanancia" placeholder="Ej. 100" min="0" step="0.01" />
+          <span class="campo-moneda">
+            <span class="campo-simbolo" id="calcSimbolo">US$</span>
+            <input type="text" id="calcGanancia" inputmode="decimal"
+              placeholder="100" autocomplete="off" />
+          </span>
         </label>
         <label>En
           <select id="calcMoneda">
@@ -1142,7 +1146,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="assets/iconos.js?v=3"></script>
-<script src="assets/trm.js?v=1"></script>
+<script src="assets/trm.js?v=2"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
 <script src="assets/country-codes-data.js?v=2"></script>
@@ -1152,7 +1156,7 @@
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=13"></script>
-<script src="assets/inicio.js?v=7"></script>
+<script src="assets/inicio.js?v=11"></script>
 <script type="module" src="assets/firebase-clients.js?v=11"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>

@@ -1429,9 +1429,47 @@ textarea {
 
 .trm-vars {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+/* Tres columnas: contra qué se compara, cuánto valía, y el movimiento. */
+.trm-compara {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.trm-compara-que {
+  font-size: .84rem;
+  color: var(--ink-soft);
+}
+
+.trm-compara-que em {
+  font-style: normal;
+  opacity: .7;
+  margin-left: 5px;
+}
+
+.trm-compara-valor {
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+@media (max-width: 480px) {
+  .trm-compara {
+    grid-template-columns: 1fr auto;
+  }
+  /* En pantalla angosta el movimiento pasa debajo, alineado a la derecha */
+  .trm-compara .trm-var {
+    grid-column: 2;
+    justify-self: end;
+  }
 }
 
 .trm-var {
@@ -1452,6 +1490,33 @@ textarea {
 .trm-var.abajo { background: #f3eef7; color: #614a75; }
 
 .trm-viejo { margin: 12px 0 0; color: #8a5a08; }
+
+/* El simbolo va dentro del campo, en un ancho fijo y alineado a la derecha:
+   asi "US$" y "$" terminan en el mismo punto y el numero no se corre. */
+.campo-moneda {
+  position: relative;
+  display: block;
+}
+
+.campo-simbolo {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  text-align: right;
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+.campo-moneda input {
+  width: 100%;
+  padding-left: 52px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
 
 .calc-salida {
   margin-top: 16px;

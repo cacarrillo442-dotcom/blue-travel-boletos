@@ -294,13 +294,34 @@
       { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
-  function variacion(actual, previo, etiqueta) {
-    if (!previo || !actual) return '';
-    const pct = (actual / previo - 1) * 100;
-    if (Math.abs(pct) < 0.005) return `<span class="trm-var igual">Sin cambio ${etiqueta}</span>`;
-    const flecha = pct > 0 ? '▲' : '▼';
-    return `<span class="trm-var ${pct > 0 ? 'arriba' : 'abajo'}">`
-      + `${flecha} ${Math.abs(pct).toFixed(2)}% ${etiqueta}</span>`;
+  // Fecha corta para decir de cuándo es la tasa con la que se compara: en
+  // puente la "anterior" puede ser de hace cuatro días, no de ayer.
+  function fechaCorta(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  }
+
+  // El porcentaje solo no dice de dónde viene: se muestra tambien la tasa
+  // contra la que se compara y cuantos pesos se movio.
+  function comparacion(actual, registro, etiqueta) {
+    if (!registro || !registro.valor || !actual) return '';
+    const previo = registro.valor;
+    const dif = actual - previo;
+    const pct = (previo ? (actual / previo - 1) * 100 : 0);
+    const tono = Math.abs(pct) < 0.005 ? 'igual' : (dif > 0 ? 'arriba' : 'abajo');
+    const flecha = tono === 'igual' ? '=' : (dif > 0 ? '▲' : '▼');
+    // La flecha ya dice la direccion; un "+" o "−" al lado seria repetirlo.
+    // El porcentaje va con coma decimal, como el resto de las cifras.
+    const movimiento = tono === 'igual' ? 'sin cambio'
+      : `${pesosExactos(Math.abs(dif))} · ${Math.abs(pct).toFixed(2).replace('.', ',')}%`;
+    return `
+      <div class="trm-compara">
+        <span class="trm-compara-que">${etiqueta}
+          <em>${fechaCorta(registro.desde)}</em></span>
+        <span class="trm-compara-valor cifras">${pesosExactos(previo)}</span>
+        <span class="trm-var ${tono}">${flecha} ${movimiento}</span>
+      </div>`;
   }
 
   function pintarTRM(t) {
@@ -322,8 +343,8 @@
       </div>
       <p class="trm-vigencia">Vigente para el ${fechaLegible(t.fecha)}</p>
       <div class="trm-vars">
-        ${variacion(t.valor, t.ayer, 'desde la tasa anterior')}
-        ${variacion(t.valor, t.hace30, 'en 30 días')}
+        ${comparacion(t.valor, t.anterior, 'Tasa anterior')}
+        ${comparacion(t.valor, t.hace30, 'Hace 30 días')}
       </div>
       ${t.error ? '<p class="hint trm-viejo">' + window.icono('alerta')
         + ' No se pudo actualizar; esta es la última tasa que alcanzó a guardarse.</p>' : ''}`;
@@ -331,11 +352,63 @@
     calcular();
   }
 
+  // ---------- Campo con formato de moneda ----------
+  // Un campo `number` no admite ni separador de miles ni simbolo, asi que es
+  // de texto y se le da formato mientras se escribe. Los dolares llevan
+  // centavos; los pesos no, porque no se cobran fracciones de peso.
+
+  function soloNumero(txt) {
+    // Deja digitos y una sola coma decimal
+    return String(txt).replace(/[^\d,]/g, '').replace(/,(?=[^,]*,)/g, '');
+  }
+
+  function leerMonto(txt) {
+    const n = parseFloat(soloNumero(txt).replace(',', '.'));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  // Se aceptan decimales en las dos monedas a proposito. Descartarlos en
+  // pesos parecia razonable, pero al escribir "150000,99" la coma se perdia y
+  // los centavos se pegaban al entero: $15.000.099, cien veces mas. Mejor
+  // aceptarlos y redondear al final.
+  function conSeparadores(txt) {
+    const partes = soloNumero(txt).split(',');
+    const entero = (partes[0] || '').replace(/^0+(?=\d)/, '');
+    const miles = entero ? Number(entero).toLocaleString('es-CO') : '';
+    if (partes.length < 2) return miles;
+    return `${miles || '0'},${partes[1].slice(0, 2)}`;
+  }
+
+  function formatearCampo() {
+    const campo = el('calcGanancia');
+    if (!campo) return;
+
+    // Cuantos digitos habia antes del cursor, para devolverlo a su sitio
+    // despues de reescribir el texto con los puntos de miles.
+    const digitosAntes = campo.value.slice(0, campo.selectionStart).replace(/\D/g, '').length;
+    const nuevo = conSeparadores(campo.value);
+    if (nuevo === campo.value) return;
+    campo.value = nuevo;
+
+    let pos = 0;
+    let vistos = 0;
+    while (pos < nuevo.length && vistos < digitosAntes) {
+      if (/\d/.test(nuevo[pos])) vistos += 1;
+      pos += 1;
+    }
+    campo.setSelectionRange(pos, pos);
+  }
+
+  function actualizarSimbolo() {
+    const simbolo = el('calcSimbolo');
+    if (simbolo) simbolo.textContent = el('calcMoneda').value === 'USD' ? 'US$' : '$';
+  }
+
   function calcular() {
     const destino = el('calcResultado');
     if (!destino) return;
 
-    const bruto = parseFloat(el('calcGanancia').value);
+    const bruto = leerMonto(el('calcGanancia').value);
     if (!Number.isFinite(bruto) || bruto <= 0) {
       destino.innerHTML = '';
       return;
@@ -348,17 +421,21 @@
       return;
     }
 
-    const neto = enDolares ? bruto * t.valor : bruto;
+    const objetivo = enDolares ? bruto * t.valor : bruto;
     const conComision = el('calcMedio').value === 'credito';
-    const enlace = conComision ? enlaceParaRecibir(neto) : neto;
-    const comision = enlace - neto;
+
+    // Wompi cobra en pesos enteros. Se redondea hacia arriba para que el
+    // redondeo nunca deje por debajo de lo que se queria ganar.
+    const enlace = Math.ceil(conComision ? enlaceParaRecibir(objetivo) : objetivo);
+    const comision = conComision ? comisionWompi(enlace) : 0;
+    const neto = enlace - comision;
 
     destino.innerHTML = `
       <div class="calc-salida">
         <div class="calc-rotulo">Cobra este monto en Wompi</div>
         <div class="calc-monto cifras">${pesos(enlace)}</div>
         <div class="calc-detalle">
-          ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(neto)}</span></div>` : ''}
+          ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(objetivo)}</span></div>` : ''}
           ${conComision ? `<div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2)}%</span></div>` : ''}
           <div class="fin"><span>Te queda</span><span class="cifras">${pesos(neto)}${
             !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
@@ -367,11 +444,22 @@
       </div>`;
   }
 
-  ['calcGanancia', 'calcMoneda', 'calcMedio'].forEach((id) => {
+  if (el('calcGanancia')) {
+    el('calcGanancia').addEventListener('input', () => { formatearCampo(); calcular(); });
+  }
+
+  ['calcMoneda', 'calcMedio'].forEach((id) => {
     const campo = el(id);
-    if (campo) campo.addEventListener('input', calcular);
-    if (campo) campo.addEventListener('change', calcular);
+    if (!campo) return;
+    campo.addEventListener('change', () => {
+      // Al pasar de dolares a pesos los centavos sobran: se reformatea.
+      actualizarSimbolo();
+      formatearCampo();
+      calcular();
+    });
   });
+
+  actualizarSimbolo();
 
   if (window.TRM) window.TRM.alCambiar(pintarTRM);
 
