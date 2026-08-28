@@ -336,9 +336,10 @@ function pintarDashboard() {
   ].join('');
 
   el('weeklyHint').textContent = esMes
-    ? 'Pasa el cursor sobre una barra para ver el detalle. Las semanas que cruzan de mes muestran solo los días dentro del mes elegido.'
+    ? 'Las semanas que tocan el mes elegido, completas de sábado a viernes aunque crucen de mes.'
     : 'Pasa el cursor sobre una barra para ver el detalle.';
 
+  pintarGraficaMensual();
   pintarGraficaSemanal(lote);
   pintarFranquicias(lote);
 }
@@ -347,9 +348,72 @@ dashPeriod.addEventListener('change', pintarDashboard);
 
 // Barras de ganancia por semana. Una sola serie, asi que un solo color:
 // la identidad la da el eje, no el matiz.
+// Los meses uno al lado del otro. Va sobre TODAS las ventas y no sobre el
+// periodo elegido: la gracia es comparar, y un mes solo no se compara con
+// nada. El mes que este seleccionado arriba se resalta.
+function pintarGraficaMensual() {
+  const cont = el('monthlyChart');
+  if (!cont) return;
+  const datos = V.agruparPorMes(ventas).slice(-12);
+  if (!datos.length) { cont.innerHTML = '<p class="promo-empty">Sin datos todavía.</p>'; return; }
+
+  const elegido = (dashPeriod.value || '').startsWith('mes:') ? dashPeriod.value.slice(4) : '';
+  const W = 100, H = 42;
+  const padL = 11, padR = 1, padT = 4, padB = 7;
+  const ancho = W - padL - padR, alto = H - padT - padB;
+  const max = Math.max(...datos.map((d) => d.neto), 1);
+  const paso = ancho / datos.length;
+  const bar = Math.max(1, Math.min(7, paso * 0.6));
+
+  let grid = '';
+  for (let i = 0; i <= 2; i++) {
+    const val = (max / 2) * i;
+    const y = padT + alto - (val / max) * alto;
+    grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" class="grid-line" />`;
+    grid += `<text x="${padL - 1.5}" y="${y + 1}" class="axis-text" text-anchor="end">${corto(val)}</text>`;
+  }
+
+  const barras = datos.map((d, i) => {
+    const h = Math.max(0.6, (d.neto / max) * alto);
+    const x = padL + i * paso + (paso - bar) / 2;
+    const y = padT + alto - h;
+    const r = Math.min(0.6, bar / 2, h / 2);
+    const variacion = d.variacion == null ? ''
+      : `\n${d.variacion >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(d.variacion) * 100)}% vs el mes anterior`;
+    return `<g class="bar-g">
+      <rect x="${padL + i * paso}" y="${padT}" width="${paso}" height="${alto}" class="bar-hit" />
+      <rect x="${x}" y="${y}" width="${bar}" height="${h}" rx="${r}"
+        class="bar${elegido && d.ym !== elegido ? ' bar-atenuada' : ''}" />
+      <title>${escapeHtml(V.nombreMes(d.ym))}\n${V.pesos(d.neto)} · ${d.ventas} ventas${variacion}</title>
+    </g>`;
+  }).join('');
+
+  // Con doce meses caben todas las iniciales; con mas, una de cada dos.
+  const saltar = datos.length > 12 ? 2 : 1;
+  const etiquetas = datos.map((d, i) => {
+    if (i % saltar !== 0) return '';
+    const x = padL + i * paso + paso / 2;
+    const mes = V.nombreMes(d.ym).split(' ')[0].slice(0, 3).toLowerCase();
+    return `<text x="${x}" y="${H - 1.5}" class="axis-text${d.ym === elegido ? ' axis-elegido' : ''}"
+      text-anchor="middle">${mes}</text>`;
+  }).join('');
+
+  cont.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img"
+    aria-label="Ganancia neta de los últimos ${datos.length} meses">
+    ${grid}${barras}${etiquetas}</svg>`;
+}
+
 function pintarGraficaSemanal(lote) {
   const cont = el('weeklyChart');
-  const datos = V.agruparPorSemana(lote).slice(0, 14).reverse();
+  // Las semanas se calculan SIEMPRE sobre todas las ventas. Agrupando solo el
+  // mes elegido, la primera y la ultima salian cortadas por el borde del mes y
+  // parecian semanas malas sin serlo.
+  const mes = (dashPeriod.value || '').startsWith('mes:') ? dashPeriod.value.slice(4) : '';
+  const todas = V.agruparPorSemana(ventas);
+  const datos = (mes
+    ? todas.filter((s) => s.inicio.slice(0, 7) === mes || s.corte.slice(0, 7) === mes)
+    : V.agruparPorSemana(lote).slice(0, 14)
+  ).slice(0, 14).reverse();
   if (!datos.length) { cont.innerHTML = '<p class="promo-empty">Sin datos para este periodo.</p>'; return; }
 
   const W = 100, H = 42;                 // viewBox; escala con el ancho

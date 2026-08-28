@@ -437,6 +437,53 @@
     };
   }
 
+  // Agrupa por mes calendario, para poder compararlos entre si. Un mes suelto
+  // con un "+12% vs el anterior" no deja ver la tendencia; doce meses uno al
+  // lado del otro, si.
+  function agruparPorMes(ventas) {
+    const mapa = new Map();
+    (ventas || []).forEach((v) => {
+      const f = fechaIngreso(v);
+      if (!f) return;
+      const ym = f.slice(0, 7);
+      if (!mapa.has(ym)) mapa.set(ym, { ym, ventas: 0, bruto: 0, neto: 0 });
+      const m = mapa.get(ym);
+      m.ventas += 1;
+      m.bruto += v.bruto;
+      m.neto += v.neto;
+    });
+
+    const conDatos = [...mapa.values()].sort((a, b) => (a.ym < b.ym ? -1 : 1));
+
+    // Rellena los meses sin ventas. Sin esto, un mes vacio simplemente no
+    // aparece y los dos vecinos quedan pegados como si fueran seguidos: la
+    // grafica mentiria sobre el paso del tiempo, y un mes en cero es
+    // justamente lo que hay que ver.
+    const meses = [];
+    if (conDatos.length) {
+      const [ay, am] = conDatos[0].ym.split('-').map(Number);
+      const ultimo = conDatos[conDatos.length - 1].ym;
+      const porYm = new Map(conDatos.map((m) => [m.ym, m]));
+      let y = ay;
+      let mm = am;
+      for (let guarda = 0; guarda < 600; guarda++) {
+        const ym = `${y}-${String(mm).padStart(2, '0')}`;
+        meses.push(porYm.get(ym) || { ym, ventas: 0, bruto: 0, neto: 0 });
+        if (ym === ultimo) break;
+        mm += 1;
+        if (mm > 12) { mm = 1; y += 1; }
+      }
+    }
+
+    meses.forEach((m, i) => {
+      m.milena = m.neto * REPARTO.milena;
+      m.cesar = m.neto * REPARTO.cesar;
+      const anterior = meses[i - 1];
+      m.variacion = anterior && anterior.neto ? (m.neto - anterior.neto) / anterior.neto : null;
+    });
+    return meses;
+  }
+
   function totales(ventas) {
     const t = { ventas: ventas.length, bruto: 0, neto: 0 };
     ventas.forEach((v) => { t.bruto += v.bruto; t.neto += v.neto; });
@@ -532,6 +579,7 @@
     inicioDeCorte,
     fechaIngreso,
     agruparPorSemana,
+    agruparPorMes,
     tarifaReal,
     retenciones,
     clientesEnRiesgo,

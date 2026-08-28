@@ -2291,3 +2291,19 @@ select:focus {
     border-top: 1px solid rgba(255, 255, 255, .18);
   }
 }
+
+/* El mes seleccionado arriba se distingue en la grafica sin gastar color:
+   los demas se atenuan. El amarillo esta reservado para lo que exige una
+   accion (ver "El amarillo"), y aqui no hay nada que atender. */
+.bar-atenuada {
+  opacity: 0.4;
+}
+
+.bar-g:hover .bar-atenuada {
+  opacity: 1;
+}
+
+.axis-elegido {
+  fill: var(--ink-strong);
+  font-weight: 700;
+}
