@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=38" />
+<link rel="stylesheet" href="style.css?v=41" />
 </head>
 <body>
 
@@ -153,56 +153,67 @@
       <path class="avion avion-h2" d="M-11 -7 L14 0 L-11 7 L-4.5 0 Z" />
     </svg>
 
-    <p class="hero-fecha" id="inicioFecha"></p>
-    <h2 class="hero-saludo" id="inicioSaludo">Hola</h2>
-    <p class="hero-estado" id="inicioEstado"></p>
+    <div class="hero-texto">
+      <p class="hero-fecha" id="inicioFecha"></p>
+      <h2 class="hero-saludo" id="inicioSaludo">Hola</h2>
+      <p class="hero-estado" id="inicioEstado"></p>
+    </div>
+    <div class="hero-cifras" id="inicioResumen"></div>
   </section>
 
-  <section class="card">
-    <div class="card-header">
-      <h2>El dólar hoy</h2>
-      <span class="hint" id="trmFuente">Tasa oficial · Superintendencia Financiera</span>
-    </div>
-    <div id="trmPanel"></div>
-
-    <div class="catalog-subsection">
-      <h3>Cuánto cobrar por tu comisión</h3>
-      <p class="hint">
-        Escribe lo que quieres ganar y te digo el monto exacto del enlace de Wompi.
-        Sumarle el porcentaje de la comisión deja corto, porque Wompi la cobra sobre
-        el total ya recargado.
-      </p>
-      <div class="grid-2">
-        <label>Quiero ganar
-          <span class="campo-moneda">
-            <span class="campo-simbolo" id="calcSimbolo">US$</span>
-            <input type="text" id="calcGanancia" inputmode="decimal"
-              placeholder="100" autocomplete="off" />
-          </span>
-        </label>
-        <label>En
-          <select id="calcMoneda">
-            <option value="USD">Dólares</option>
-            <option value="COP">Pesos</option>
-          </select>
-        </label>
+  <!-- Dos columnas en pantalla ancha. Lo que manda va arriba a la izquierda,
+       que es donde primero cae la vista; el dolar al lado, mas compacto. -->
+  <div class="inicio-cols">
+    <section class="card">
+      <div class="card-header">
+        <h2 id="inicioSemanaTitulo">La semana</h2>
+        <button type="button" class="btn-secondary btn-compact inicio-accion" data-ir="salesPanel">Ver ventas</button>
       </div>
-      <label class="calc-opcion">
-        <input type="checkbox" id="calcCubrirRetenciones" checked />
-        <span>Cubrir también las retenciones, para que lo que entre a la cuenta hoy
-          sea justo lo que quieres ganar</span>
-      </label>
-      <div id="calcResultado"></div>
-    </div>
-  </section>
+      <div id="inicioSemana"></div>
+    </section>
 
-  <section class="card">
-    <div class="card-header">
-      <h2 id="inicioSemanaTitulo">La semana</h2>
-      <button type="button" class="btn-secondary btn-compact inicio-accion" data-ir="salesPanel">Ver ventas</button>
-    </div>
-    <div id="inicioSemana"></div>
-  </section>
+    <section class="card">
+      <div class="card-header">
+        <h2>El dólar hoy</h2>
+      </div>
+      <div id="trmPanel"></div>
+
+      <!-- La calculadora es herramienta, no estado: se abre cuando hace falta
+           y recuerda si la dejaste abierta. -->
+      <details class="plegable" id="calcPlegable">
+        <summary>
+          <svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>
+          Calcular cuánto cobrar
+        </summary>
+        <div class="plegable-cuerpo">
+          <p class="hint">
+            Escribe lo que quieres ganar y te digo el monto exacto del enlace.
+            Sumarle el porcentaje deja corto, porque Wompi lo cobra sobre el total
+            ya recargado.
+          </p>
+          <label>Quiero ganar
+            <span class="campo-moneda">
+              <span class="campo-simbolo" id="calcSimbolo">US$</span>
+              <input type="text" id="calcGanancia" inputmode="decimal"
+                placeholder="100" autocomplete="off" />
+            </span>
+          </label>
+          <label>En
+            <select id="calcMoneda">
+              <option value="USD">Dólares</option>
+              <option value="COP">Pesos</option>
+            </select>
+          </label>
+          <label class="calc-opcion">
+            <input type="checkbox" id="calcCubrirRetenciones" checked />
+            <span>Cubrir también las retenciones, para que lo que entre hoy
+              sea justo lo que quieres ganar</span>
+          </label>
+          <div id="calcResultado"></div>
+        </div>
+      </details>
+    </section>
+  </div>
 
   <section class="card">
     <div class="card-header">
@@ -235,7 +246,6 @@
         <span>Cómo está el mercado hoy</span>
       </button>
     </div>
-    <div id="inicioResumen" class="inicio-resumen"></div>
   </section>
 
 </div>
@@ -1167,7 +1177,7 @@
 <script src="assets/publicidad-imagen.js?v=2"></script>
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=13"></script>
-<script src="assets/inicio.js?v=16"></script>
+<script src="assets/inicio.js?v=18"></script>
 <script type="module" src="assets/firebase-clients.js?v=11"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>

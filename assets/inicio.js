@@ -245,19 +245,14 @@
     const boletosDelMes = boletos.filter((b) => b.ida && String(b.ida.fechaSalida || '').startsWith(mes)).length;
     const vigentes = estado ? cupones.filter((c) => estado(c) === 'vigente').length : 0;
 
-    destino.innerHTML = `
-      <div class="resumen-dato">
-        <span class="cifras">${boletosDelMes}</span>
-        <span>vuelos salen este mes</span>
-      </div>
-      <div class="resumen-dato">
-        <span class="cifras">${clientes.length}</span>
-        <span>${clientes.length === 1 ? 'cliente en tu base' : 'clientes en tu base'}</span>
-      </div>
-      <div class="resumen-dato">
-        <span class="cifras">${vigentes}</span>
-        <span>${vigentes === 1 ? 'cupón sin usar' : 'cupones sin usar'}</span>
+    const dato = (valor, etiqueta) => `<div class="hero-dato">
+        <span class="cifras">${valor}</span>
+        <span>${etiqueta}</span>
       </div>`;
+
+    destino.innerHTML = dato(boletosDelMes, boletosDelMes === 1 ? 'vuelo este mes' : 'vuelos este mes')
+      + dato(clientes.length, clientes.length === 1 ? 'cliente' : 'clientes')
+      + dato(vigentes, vigentes === 1 ? 'cupón activo' : 'cupones activos');
   }
 
   // ---------- El dólar ----------
@@ -500,6 +495,19 @@
 
   if (el('calcCubrirRetenciones')) {
     el('calcCubrirRetenciones').addEventListener('change', calcular);
+  }
+
+  // Si la dejaste abierta, sigue abierta la próxima vez: quien la usa en cada
+  // venta no tiene por qué volver a abrirla cada vez.
+  const plegable = el('calcPlegable');
+  if (plegable) {
+    try {
+      if (localStorage.getItem('bt_calc_abierta') === '1') plegable.open = true;
+    } catch (e) { /* modo privado: solo se pierde la preferencia */ }
+    plegable.addEventListener('toggle', () => {
+      try { localStorage.setItem('bt_calc_abierta', plegable.open ? '1' : '0'); }
+      catch (e) { /* idem */ }
+    });
   }
 
   actualizarSimbolo();

@@ -1434,14 +1434,21 @@ textarea {
   margin-top: 14px;
 }
 
-/* Tres columnas: contra qué se compara, cuánto valía, y el movimiento. */
+/* La tarjeta del dolar vive en la columna angosta, asi que la comparacion
+   va en dos lineas: arriba contra que y cuanto valia, abajo el movimiento.
+   En una sola linea el texto se partia a la mitad. */
 .trm-compara {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 0;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 3px 12px;
+  padding: 8px 0;
   border-top: 1px solid var(--line-soft);
+}
+
+.trm-compara .trm-var {
+  grid-column: 1 / -1;
+  justify-self: end;
 }
 
 .trm-compara-que {
@@ -1461,16 +1468,7 @@ textarea {
   color: var(--ink-strong);
 }
 
-@media (max-width: 480px) {
-  .trm-compara {
-    grid-template-columns: 1fr auto;
-  }
-  /* En pantalla angosta el movimiento pasa debajo, alineado a la derecha */
-  .trm-compara .trm-var {
-    grid-column: 2;
-    justify-self: end;
-  }
-}
+
 
 .trm-var {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -2154,4 +2152,142 @@ select:focus {
   flex: 0 0 auto;
   accent-color: var(--color-primary-2);
   cursor: pointer;
+}
+
+/* ---------- Inicio en dos columnas ----------
+   En pantalla ancha todo iba en una sola columna estirada, con el dolar
+   ocupando 797px arriba y el estado del negocio bajo el pliegue. Lo que
+   manda va ahora arriba a la izquierda, que es donde primero cae la vista. */
+.inicio-cols {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.inicio-cols .card {
+  margin-bottom: 0;
+}
+
+/* Debajo de esto las dos columnas quedan demasiado angostas para las
+   cifras, asi que se apilan. */
+@media (max-width: 1080px) {
+  .inicio-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Bloque plegable ----------
+   Para herramientas que se usan cuando hacen falta y no tienen por que
+   ocupar la pantalla el resto del tiempo. */
+.plegable {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.plegable summary {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 5px 0;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--color-primary-2);
+  list-style: none;
+}
+
+.plegable summary::-webkit-details-marker { display: none; }
+
+.plegable summary:hover { color: var(--color-primary); }
+
+.plegable summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* Flecha que gira al abrir */
+.plegable summary::after {
+  content: '';
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.18s ease;
+}
+
+.plegable[open] summary::after {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.plegable-cuerpo {
+  padding-top: 8px;
+}
+
+.plegable-cuerpo label {
+  margin-top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plegable summary::after { transition: none; }
+}
+
+/* ---------- Cifras dentro del saludo ----------
+   Estaban al pie de los atajos, que es donde menos se miran, y el saludo
+   tenia la mitad derecha vacia. Son resumen del negocio, asi que van arriba. */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.hero-texto {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.hero-cifras {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 26px;
+  flex: 0 0 auto;
+}
+
+.hero-dato {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.hero-dato .cifras {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.hero-dato span:last-child {
+  font-size: .74rem;
+  /* Medido contra el extremo mas claro del degradado: #c3d7e6 daba 3,77 y el
+     minimo legible es 4,5. */
+  color: #e2edf5;
+}
+
+/* En pantalla angosta van debajo del saludo, separadas por una linea */
+@media (max-width: 720px) {
+  .hero-cifras {
+    width: 100%;
+    gap: 22px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, .18);
+  }
 }
