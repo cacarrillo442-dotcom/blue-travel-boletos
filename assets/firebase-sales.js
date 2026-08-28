@@ -216,6 +216,72 @@ window.obtenerSemanas = () => semanas;
 // en vez de supuesta.
 window.obtenerVentas = () => ventas;
 
+// Quien dejo de comprar. Se mira SIEMPRE contra todo el historico, no
+// contra el periodo elegido arriba: un cliente que se enfrio en marzo sigue
+// frio hoy, y mirando solo agosto no aparece.
+function pintarRiesgo() {
+  const destino = el('riesgoPanel');
+  const explica = el('riesgoExplica');
+  const cuenta = el('riesgoCuenta');
+  if (!destino) return;
+
+  const r = V.clientesEnRiesgo(ventas);
+
+  if (cuenta) {
+    cuenta.textContent = r.clientes.length ? String(r.clientes.length) : '';
+    cuenta.classList.toggle('hidden', !r.clientes.length);
+  }
+
+  if (explica) {
+    explica.innerHTML = r.calculado
+      ? `Quien te compró dos veces o más y lleva <strong>${r.umbral} días</strong> sin volver. `
+        + `Ese plazo sale de tu propio ritmo: es lo que tarda en recomprar el 75% de tus `
+        + `clientes, medido en ${r.observaciones} recompras.`
+      : `Quien te compró dos veces o más y lleva <strong>${r.umbral} días</strong> sin volver. `
+        + `Ese plazo es provisional: con ${r.observaciones} recompras registradas todavía no hay `
+        + `suficiente historia para calcularlo de tus datos. Se ajustará solo.`;
+  }
+
+  if (!r.totalClientes) {
+    destino.innerHTML = '<p class="promo-empty">Las ventas guardadas no traen el número de tarjeta, '
+      + 'que es lo que permite reconocer a un cliente entre una compra y otra. Aparece al importar '
+      + 'el <em>Reporte Conciliar</em> de Wompi.</p>';
+    return;
+  }
+
+  if (!r.clientes.length) {
+    destino.innerHTML = `<p class="inicio-libre">${window.icono('check')} `
+      + 'Ninguno de tus clientes recurrentes se ha enfriado. Todos los que repiten '
+      + 'están dentro de su ritmo normal.</p>';
+    return;
+  }
+
+  const filas = r.clientes.map((c) => `
+    <div class="trip-card">
+      <div class="trip-badge ${c.sinComprar > r.umbral * 2 ? 'urgent' : 'soon'}">${c.sinComprar} días</div>
+      <div class="trip-info">
+        <div class="trip-name">Tarjeta ${escapeHtml(c.tarjeta.slice(-4))}
+          <span class="trip-leg">${c.compras} compras</span>
+        </div>
+        <div class="trip-route">${window.icono('dinero')} ${V.pesos(c.monto)} en total
+          &nbsp;·&nbsp; última el ${V.fechaCorta(c.ultima)}</div>
+      </div>
+    </div>`).join('');
+
+  destino.innerHTML = `
+    <div class="stat-row">
+      ${tile('Clientes enfriados', String(r.clientes.length),
+        { nota: `de ${r.totalClientes} que te han comprado` })}
+      ${tile('Lo que facturaban', V.pesos(r.enRiesgo),
+        { destacado: true, nota: `${Math.round(r.enRiesgo / (r.totalFacturado || 1) * 100)}% de lo facturado` })}
+    </div>
+    <div class="promo-list">${filas}</div>
+    <p class="hint">${window.icono('alerta')} La tarjeta llega enmascarada, así que esto
+      agrupa por los últimos cuatro dígitos: dos clientes podrían mezclarse, y alguien con dos
+      tarjetas cuenta como dos. Sirve para ver quién se enfrió, no para afirmar de quién se trata.
+      ${r.sinTarjeta ? `Además, ${r.sinTarjeta} ventas guardadas no traen tarjeta y quedan fuera.` : ''}</p>`;
+}
+
 function pintarRetenciones(lote) {
   const destino = el('retencionesPanel');
   if (!destino) return;
@@ -243,6 +309,7 @@ function pintarDashboard() {
   if (window.pintarInicio) window.pintarInicio();
   const lote = ventasDelPeriodo();
   pintarRetenciones(lote);
+  pintarRiesgo();
   const t = V.totales(lote);
   const esMes = (dashPeriod.value || '').startsWith('mes:');
 

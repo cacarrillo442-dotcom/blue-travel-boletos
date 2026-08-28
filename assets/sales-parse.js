@@ -63,6 +63,18 @@
     return f;
   }
 
+  // Igual que buscarCol pero exigiendo que el encabezado sea EXACTAMENTE ese.
+  // Hace falta cuando un nombre esta contenido en otro: buscando 'TARJETA' por
+  // coincidencia parcial se encuentra antes 'TIPO TARJETA', que es otra cosa.
+  function buscarColExacta(encabezados, ...opciones) {
+    for (const opcion of opciones) {
+      const o = normalizarTexto(opcion);
+      const i = encabezados.findIndex((h) => h && normalizarTexto(h) === o);
+      if (i !== -1) return i;
+    }
+    return -1;
+  }
+
   // Busca el indice de la primera columna cuyo encabezado contenga alguno de los textos.
   function buscarCol(encabezados, ...opciones) {
     for (const opcion of opciones) {
@@ -99,7 +111,7 @@
         franquicia: buscarCol(enc, 'FRANQUICIA'),
         autorizacion: buscarCol(enc, 'CODIGO AUTORIZACION'),
         tipo: buscarCol(enc, 'TIPO TRANSACCION'),
-        tarjeta: buscarCol(enc, 'TARJETA'),
+        tarjeta: buscarColExacta(enc, 'TARJETA'),
         numero: -1, cliente: -1, plataforma: -1,
       };
     }
@@ -111,7 +123,7 @@
         bruto: buscarCol(enc, 'VALOR TOTAL', 'VALOR COMPRA'),
         neto: buscarCol(enc, 'VALOR NETO'),
         franquicia: buscarCol(enc, 'FRANQUICIA'),
-        tarjeta: buscarCol(enc, 'TARJETA'),
+        tarjeta: buscarColExacta(enc, 'TARJETA'),
         autorizacion: -1, tipo: -1, cliente: -1, plataforma: -1,
         comision: -1, retefuente: -1, reteica: -1, reteiva: -1,
       };
@@ -335,6 +347,96 @@
     };
   }
 
+  // ---------- Clientes que dejaron de comprar ----------
+  //
+  // El reporte trae la tarjeta enmascarada (solo los ultimos 4 digitos). No
+  // identifica a una persona con certeza -dos clientes pueden compartir esos
+  // cuatro digitos, y alguien con dos tarjetas cuenta como dos- pero alcanza
+  // para ver quien dejo de comprar.
+  //
+  // Dos cobros del mismo cliente el mismo dia son UNA compra, no dos: casi
+  // siempre son varios tiquetes de un mismo viaje. Sin agrupar, la mitad de
+  // las "recompras" son falsas.
+  function comprasPorCliente(ventas) {
+    const mapa = new Map();
+    (ventas || []).forEach((v) => {
+      if (!v.tarjeta || (v.tipo || 'COMPRA') !== 'COMPRA') return;
+      const dia = fechaIngreso(v);
+      if (!dia || !(v.bruto > 0)) return;
+      if (!mapa.has(v.tarjeta)) mapa.set(v.tarjeta, new Map());
+      const dias = mapa.get(v.tarjeta);
+      dias.set(dia, (dias.get(dia) || 0) + v.bruto);
+    });
+    return mapa;
+  }
+
+  // Cada cuanto vuelve a comprar quien vuelve. De ahi sale el umbral: no
+  // tiene sentido inventarse "30 dias" si el negocio se mueve a otro ritmo.
+  function ritmoDeRecompra(mapa) {
+    const intervalos = [];
+    mapa.forEach((dias) => {
+      const fechas = [...dias.keys()].sort();
+      for (let i = 1; i < fechas.length; i++) {
+        intervalos.push(Math.round(
+          (new Date(`${fechas[i]}T00:00:00`) - new Date(`${fechas[i - 1]}T00:00:00`)) / 86400000
+        ));
+      }
+    });
+    intervalos.sort((a, b) => a - b);
+    return intervalos;
+  }
+
+  const DIAS_POR_DEFECTO = 45;   // hasta tener historia propia suficiente
+  const MINIMO_OBSERVACIONES = 12;
+
+  function clientesEnRiesgo(ventas, hoyISO) {
+    const mapa = comprasPorCliente(ventas);
+    const intervalos = ritmoDeRecompra(mapa);
+
+    // Con pocas observaciones el percentil es ruido: mejor un valor fijo y
+    // decir que es provisional.
+    const suficiente = intervalos.length >= MINIMO_OBSERVACIONES;
+    const p75 = suficiente
+      ? intervalos[Math.min(Math.floor(intervalos.length * 0.75), intervalos.length - 1)]
+      : null;
+    const umbral = suficiente ? Math.max(p75, 14) : DIAS_POR_DEFECTO;
+
+    const hoy = hoyISO || (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+
+    const clientes = [];
+    let totalTodos = 0;
+    mapa.forEach((dias, tarjeta) => {
+      const fechas = [...dias.keys()].sort();
+      const monto = [...dias.values()].reduce((a, b) => a + b, 0);
+      totalTodos += monto;
+      if (fechas.length < 2) return;               // sin recompra no hay habito que romper
+      const ultima = fechas[fechas.length - 1];
+      const sinComprar = Math.round(
+        (new Date(`${hoy}T00:00:00`) - new Date(`${ultima}T00:00:00`)) / 86400000
+      );
+      if (sinComprar > umbral) {
+        clientes.push({ tarjeta, compras: fechas.length, monto, ultima, sinComprar });
+      }
+    });
+
+    clientes.sort((a, b) => b.monto - a.monto);
+
+    return {
+      umbral,
+      calculado: suficiente,
+      observaciones: intervalos.length,
+      clientes,
+      enRiesgo: clientes.reduce((a, c) => a + c.monto, 0),
+      totalClientes: mapa.size,
+      // Las ventas sin tarjeta no se pueden atribuir a nadie.
+      sinTarjeta: (ventas || []).filter((v) => !v.tarjeta).length,
+      totalFacturado: totalTodos,
+    };
+  }
+
   function totales(ventas) {
     const t = { ventas: ventas.length, bruto: 0, neto: 0 };
     ventas.forEach((v) => { t.bruto += v.bruto; t.neto += v.neto; });
@@ -432,6 +534,7 @@
     agruparPorSemana,
     tarifaReal,
     retenciones,
+    clientesEnRiesgo,
     totales,
     porFranquicia,
     pesos,
