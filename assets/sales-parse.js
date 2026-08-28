@@ -184,12 +184,13 @@
         plataforma: col.plataforma === -1 ? 'WOMPI' : (normalizarTexto(f[col.plataforma]) || 'WOMPI'),
         cliente: col.cliente === -1 ? '' : String(f[col.cliente] || '').trim(),
         tarjeta: col.tarjeta === -1 ? '' : String(f[col.tarjeta] || '').trim(),
-        // En valor absoluto: en el reporte vienen en negativo.
+        // En valor absoluto: en el reporte vienen en negativo. Van separadas
+        // porque se cruzan contra declaraciones distintas: la retefuente
+        // contra la de renta y el ICA contra la del municipio.
         comision: col.comision === -1 ? null : Math.abs(aNumero(f[col.comision])),
-        retenciones: (col.retefuente === -1 && col.reteica === -1 && col.reteiva === -1)
-          ? null
-          : Math.abs(aNumero(f[col.retefuente])) + Math.abs(aNumero(f[col.reteica]))
-            + Math.abs(aNumero(f[col.reteiva])),
+        retefuente: col.retefuente === -1 ? null : Math.abs(aNumero(f[col.retefuente])),
+        reteica: col.reteica === -1 ? null : Math.abs(aNumero(f[col.reteica])),
+        reteiva: col.reteiva === -1 ? null : Math.abs(aNumero(f[col.reteiva])),
       };
       venta.id = idDe(venta);
       ventas.push(venta);
@@ -287,7 +288,8 @@
 
     const cobrado = usables.reduce((a, v) => a + v.bruto, 0);
     const comision = usables.reduce((a, v) => a + v.comision, 0);
-    const retenido = usables.reduce((a, v) => a + (v.retenciones || 0), 0);
+    const retenido = usables.reduce((a, v) => a
+      + (v.retefuente || 0) + (v.reteica || 0) + (v.reteiva || 0), 0);
     if (!cobrado) return { suficiente: false, n: usables.length };
 
     const porcentaje = comision / cobrado;
@@ -309,6 +311,27 @@
       cobrado,
       comision,
       retenido,
+    };
+  }
+
+  // Lo retenido en un lote de ventas, separado por concepto. Es plata que se
+  // recupera al declarar, asi que conviene tenerla contada y no perderla de
+  // vista entre los descuentos.
+  function retenciones(ventas) {
+    const con = (ventas || []).filter((v) => v.retefuente != null || v.reteica != null);
+    const suma = (campo) => con.reduce((a, v) => a + (v[campo] || 0), 0);
+    const fechas = con.map((v) => v.fechaCanje || v.fecha).filter(Boolean).sort();
+    return {
+      n: con.length,
+      // Cuantas ventas del lote todavia no traen el detalle: los registros
+      // importados antes de guardar estas columnas no lo tienen.
+      sinDetalle: (ventas || []).length - con.length,
+      retefuente: suma('retefuente'),
+      reteica: suma('reteica'),
+      reteiva: suma('reteiva'),
+      total: suma('retefuente') + suma('reteica') + suma('reteiva'),
+      desde: fechas[0] || '',
+      hasta: fechas[fechas.length - 1] || '',
     };
   }
 
@@ -408,6 +431,7 @@
     fechaIngreso,
     agruparPorSemana,
     tarifaReal,
+    retenciones,
     totales,
     porFranquicia,
     pesos,

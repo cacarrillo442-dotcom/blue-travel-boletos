@@ -2131,3 +2131,27 @@ select:focus {
   margin: 10px 0 0;
   font-size: .8rem;
 }
+
+/* Opcion de una linea dentro de un formulario: casilla y texto alineados
+   arriba, para que un texto de dos renglones no descuadre la casilla. */
+.calc-opcion {
+  display: flex;
+  /* La regla general de `label` apila en columna; aqui la casilla va al lado
+     del texto, asi que hay que decirlo explicitamente. */
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  font-size: .85rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.calc-opcion input {
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
+  accent-color: var(--color-primary-2);
+  cursor: pointer;
+}

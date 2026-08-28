@@ -299,10 +299,14 @@
     return monto * t.porcentaje + t.fijo;
   }
 
-  // Para recibir X hay que cobrar más que X + comisión: la comisión se cobra
-  // sobre el total ya recargado. Se despeja, no se suma.
-  function enlaceParaRecibir(neto, t) {
-    return (neto + t.fijo) / (1 - t.porcentaje);
+  // Para recibir X hay que cobrar más que X + comisión: los descuentos se
+  // calculan sobre el total ya recargado. Se despeja, no se suma.
+  //
+  // `tasa` es lo que se quiere cubrir: solo la comisión, o la comisión más
+  // las retenciones si se quiere que el dinero que aterriza hoy sea el
+  // objetivo completo.
+  function enlaceParaRecibir(neto, t, tasa) {
+    return (neto + t.fijo) / (1 - tasa);
   }
 
   function fechaLegible(iso) {
@@ -444,12 +448,16 @@
     // Wompi cobra en pesos enteros. Se redondea hacia arriba para que el
     // redondeo nunca deje por debajo de lo que se queria ganar.
     const tarifa = tarifaVigente();
-    const enlace = Math.ceil(enlaceParaRecibir(objetivo, tarifa));
+    const cubrirRet = el('calcCubrirRetenciones') && el('calcCubrirRetenciones').checked;
+    const tasaRet = tarifa.retenciones || 0;
+    const tasa = tarifa.porcentaje + (cubrirRet ? tasaRet : 0);
+
+    const enlace = Math.ceil(enlaceParaRecibir(objetivo, tarifa, tasa));
     const comision = comisionWompi(enlace, tarifa);
     const neto = enlace - comision;
     // Lo que realmente aterriza en la cuenta: además de la comisión, la
     // pasarela retiene impuestos que después se cruzan al declarar.
-    const retenido = enlace * (tarifa.retenciones || 0);
+    const retenido = enlace * tasaRet;
     const aterriza = neto - retenido;
 
     destino.innerHTML = `
@@ -467,6 +475,7 @@
             !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
           }</span></div>
           ${retenido ? `<div><span>Entra a la cuenta hoy</span><span class="cifras">${pesos(aterriza)}</span></div>` : ''}
+          ${retenido ? `<div><span>Y vuelve al declarar</span><span class="cifras">${pesos(retenido)}</span></div>` : ''}
         </div>
       </div>
       <p class="hint calc-fuente">${tarifa.medida
@@ -487,6 +496,10 @@
       actualizarSimbolo();
       calcular();
     });
+  }
+
+  if (el('calcCubrirRetenciones')) {
+    el('calcCubrirRetenciones').addEventListener('change', calcular);
   }
 
   actualizarSimbolo();

@@ -216,9 +216,33 @@ window.obtenerSemanas = () => semanas;
 // en vez de supuesta.
 window.obtenerVentas = () => ventas;
 
+function pintarRetenciones(lote) {
+  const destino = el('retencionesPanel');
+  if (!destino) return;
+  const r = V.retenciones(lote);
+
+  if (!r.n) {
+    destino.innerHTML = '<p class="promo-empty">Las ventas de este periodo no traen el detalle '
+      + 'de retenciones. Aparece al importar el <em>Reporte Conciliar</em> de Wompi; los registros '
+      + 'guardados antes no lo tienen.</p>';
+    return;
+  }
+
+  destino.innerHTML = `
+    <div class="stat-row">
+      ${tile('Retefuente', V.pesos(r.retefuente), { nota: 'contra tu declaración de renta' })}
+      ${tile('ReteICA', V.pesos(r.reteica), { nota: 'contra la de industria y comercio' })}
+      ${tile('Total a cruzar', V.pesos(r.total), { destacado: true, nota: `${r.n} transacciones` })}
+    </div>
+    ${r.sinDetalle ? `<p class="hint">${window.icono('alerta')} Otras ${r.sinDetalle} ventas de este `
+      + 'periodo no traen el detalle, así que el total real es mayor. Vuelve a importar sus '
+      + 'reportes de Wompi para completarlo.</p>' : ''}`;
+}
+
 function pintarDashboard() {
   if (window.pintarInicio) window.pintarInicio();
   const lote = ventasDelPeriodo();
+  pintarRetenciones(lote);
   const t = V.totales(lote);
   const esMes = (dashPeriod.value || '').startsWith('mes:');
 
