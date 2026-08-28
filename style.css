@@ -2307,3 +2307,18 @@ select:focus {
   fill: var(--ink-strong);
   font-weight: 700;
 }
+
+/* Las barras del mes a mes seleccionan el mes: tienen que parecerlo. */
+.bar-elegible {
+  cursor: pointer;
+}
+
+.bar-elegible:focus-visible {
+  outline: none;
+}
+
+.bar-elegible:focus-visible .bar {
+  stroke: var(--color-primary);
+  stroke-width: 0.7;
+  opacity: 1;
+}

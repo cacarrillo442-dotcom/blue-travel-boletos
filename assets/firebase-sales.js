@@ -380,7 +380,16 @@ function pintarGraficaMensual() {
     const r = Math.min(0.6, bar / 2, h / 2);
     const variacion = d.variacion == null ? ''
       : `\n${d.variacion >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(d.variacion) * 100)}% vs el mes anterior`;
-    return `<g class="bar-g">
+
+    // Los meses vacios no se pueden elegir: el desplegable de arriba solo
+    // ofrece meses con ventas, asi que seleccionarlos no haria nada.
+    const elegible = d.ventas > 0;
+    const atributos = elegible
+      ? ` data-mes="${d.ym}" tabindex="0" role="button"`
+        + ` aria-label="Ver ${escapeHtml(V.nombreMes(d.ym))}: ${V.pesos(d.neto)}"`
+      : ' aria-hidden="true"';
+
+    return `<g class="bar-g${elegible ? ' bar-elegible' : ''}"${atributos}>
       <rect x="${padL + i * paso}" y="${padT}" width="${paso}" height="${alto}" class="bar-hit" />
       <rect x="${x}" y="${y}" width="${bar}" height="${h}" rx="${r}"
         class="bar${elegido && d.ym !== elegido ? ' bar-atenuada' : ''}" />
@@ -402,6 +411,34 @@ function pintarGraficaMensual() {
     aria-label="Ganancia neta de los últimos ${datos.length} meses">
     ${grid}${barras}${etiquetas}</svg>`;
 }
+
+// Elegir el mes desde la propia grafica, que es mas directo que volver al
+// desplegable de arriba.
+function elegirMes(ym) {
+  const valor = `mes:${ym}`;
+  if (![...dashPeriod.options].some((o) => o.value === valor)) return;
+  dashPeriod.value = valor;
+  periodoElegidoPorUsuario = true;
+  pintarDashboard();
+}
+
+(function conectarGraficaMensual() {
+  const cont = el('monthlyChart');
+  if (!cont) return;
+  // Delegado en el contenedor: las barras se vuelven a dibujar en cada
+  // repintado y perderian sus escuchas.
+  cont.addEventListener('click', (e) => {
+    const g = e.target.closest('[data-mes]');
+    if (g) elegirMes(g.dataset.mes);
+  });
+  cont.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const g = e.target.closest('[data-mes]');
+    if (!g) return;
+    e.preventDefault();      // que el espacio no desplace la pagina
+    elegirMes(g.dataset.mes);
+  });
+})();
 
 function pintarGraficaSemanal(lote) {
   const cont = el('weeklyChart');
