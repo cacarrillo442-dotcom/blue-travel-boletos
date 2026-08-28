@@ -7,11 +7,43 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=29" />
+<link rel="stylesheet" href="style.css?v=31" />
 </head>
 <body>
 
 <div id="appGate" class="app-gate">
+  <!-- Siluetas de nube. Tres formas que se reutilizan a distintos tamanos:
+       el dibujo va una sola vez y cada nube es una referencia. -->
+  <svg class="svg-cero" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="nube-a" viewBox="0 0 200 80">
+        <ellipse cx="62" cy="52" rx="40" ry="24" /><ellipse cx="104" cy="40" rx="36" ry="32" />
+        <ellipse cx="146" cy="54" rx="34" ry="22" /><ellipse cx="100" cy="62" rx="62" ry="16" />
+      </symbol>
+      <symbol id="nube-b" viewBox="0 0 200 80">
+        <ellipse cx="50" cy="55" rx="34" ry="19" /><ellipse cx="88" cy="46" rx="30" ry="26" />
+        <ellipse cx="128" cy="42" rx="34" ry="28" /><ellipse cx="164" cy="56" rx="30" ry="18" />
+        <ellipse cx="105" cy="64" rx="70" ry="14" />
+      </symbol>
+      <symbol id="nube-c" viewBox="0 0 200 80">
+        <ellipse cx="70" cy="50" rx="32" ry="26" /><ellipse cx="110" cy="56" rx="36" ry="20" />
+        <ellipse cx="92" cy="62" rx="52" ry="14" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Tres profundidades: las de atras van pequenas, tenues y lentas; las de
+       adelante grandes y algo mas rapidas. Esa diferencia es la que da la
+       sensacion de cielo con fondo. -->
+  <div class="nubes" aria-hidden="true">
+    <svg class="nube nube-lejos nube-1" viewBox="0 0 200 80"><use href="#nube-a" /></svg>
+    <svg class="nube nube-lejos nube-2" viewBox="0 0 200 80"><use href="#nube-c" /></svg>
+    <svg class="nube nube-medio nube-3" viewBox="0 0 200 80"><use href="#nube-b" /></svg>
+    <svg class="nube nube-medio nube-4" viewBox="0 0 200 80"><use href="#nube-a" /></svg>
+    <svg class="nube nube-cerca nube-5" viewBox="0 0 200 80"><use href="#nube-b" /></svg>
+    <svg class="nube nube-cerca nube-6" viewBox="0 0 200 80"><use href="#nube-c" /></svg>
+  </div>
+
   <!-- Aviones cruzando el fondo, con su estela. Es el mismo gesto del logo.
        Decorativo: no lleva texto y queda oculto a los lectores de pantalla. -->
   <svg class="gate-cielo" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">

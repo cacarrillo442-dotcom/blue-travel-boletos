@@ -95,17 +95,76 @@ body {
   align-items: center;
   justify-content: center;
   background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
-  /* El degradado respira muy despacio: se nota que esta vivo sin distraer
-     de escribir la contrasena. */
-  background-size: 160% 160%;
-  animation: respirar 22s ease-in-out infinite;
   padding: 24px;
 }
 
-@keyframes respirar {
-  0%, 100% { background-position: 0% 0%; }
-  50%      { background-position: 100% 100%; }
+/* La luz del cielo cambia muy despacio. Antes esto se hacia moviendo el
+   degradado de sitio, pero eso obliga al navegador a repintar la pantalla
+   entera en cada cuadro. Ahora hay un segundo degradado encima que solo
+   aparece y desaparece: cambiar la opacidad es de lo poco que la pantalla
+   resuelve sola, sin volver a dibujar nada. */
+.app-gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(205deg, var(--color-primary-2) 0%, var(--color-primary) 100%);
+  opacity: 0;
+  animation: alumbrar 26s ease-in-out infinite;
+  pointer-events: none;
 }
+
+@keyframes alumbrar {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.55; }
+}
+
+/* ---------- Nubes del fondo ----------
+   Van en tres profundidades. Solo se anima `transform`, que la pantalla
+   resuelve en la tarjeta grafica: mover `left` en cambio obliga a recalcular
+   la pagina en cada cuadro y se sentiria al escribir la contrasena.
+
+   Cada nube arranca con un retardo NEGATIVO, o sea, ya empezada: si todas
+   salieran del borde izquierdo, el cielo estaria vacio al abrir. */
+.svg-cero {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.nubes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nube {
+  position: absolute;
+  left: -300px;
+  fill: #fff;
+  animation-name: derivar;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes derivar {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(100vw + 300px)); }
+}
+
+/* Lejos: pequenas, casi transparentes y muy lentas */
+.nube-lejos { width: 130px; opacity: 0.05; animation-duration: 190s; }
+/* Medio */
+.nube-medio { width: 210px; opacity: 0.075; animation-duration: 140s; }
+/* Cerca: mas grandes y algo mas rapidas */
+.nube-cerca { width: 310px; opacity: 0.1; animation-duration: 95s; }
+
+.nube-1 { top: 12%; animation-delay: -40s; }
+.nube-2 { top: 63%; animation-delay: -130s; }
+.nube-3 { top: 30%; animation-delay: -15s; }
+.nube-4 { top: 78%; animation-delay: -95s; }
+.nube-5 { top: 5%;  animation-delay: -60s; }
+.nube-6 { top: 48%; animation-delay: -10s; }
 
 /* ---------- Aviones del fondo ----------
    El avion y su estela son el gesto del logo de Blue Travel. Cruzan la
@@ -187,11 +246,21 @@ body {
    degradado y la tarjeta se ven igual, solo que sin animarse. */
 @media (prefers-reduced-motion: reduce) {
   .app-gate,
+  .app-gate::before,
   .app-gate-card,
   .estela,
-  .avion {
+  .avion,
+  .nube {
     animation: none;
   }
+
+  /* Las nubes se quedan, solo que quietas y repartidas por el cielo */
+  .nube-1 { transform: translateX(22vw); }
+  .nube-2 { transform: translateX(70vw); }
+  .nube-3 { transform: translateX(46vw); }
+  .nube-4 { transform: translateX(12vw); }
+  .nube-5 { transform: translateX(78vw); }
+  .nube-6 { transform: translateX(38vw); }
 
   .estela {
     stroke-dashoffset: 0;
