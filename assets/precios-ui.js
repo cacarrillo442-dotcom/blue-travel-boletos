@@ -209,10 +209,9 @@
       : '';
 
     if (!rutas.length) {
-      cont.innerHTML = `<p class="promo-empty">
-        Todavía no hay boletos guardados con ruta. A medida que generes boletos,
-        aquí van a aparecer tus rutas para consultarlas de un clic.
-      </p>`;
+      cont.innerHTML = window.vacio('ruta', 'Aún no conozco tus rutas',
+        'Salen de los boletos que vas guardando. Con el primero, aparecen aquí '
+        + 'para consultarlas de un clic.');
       return;
     }
 
@@ -306,11 +305,10 @@
         estado.textContent = '';
         tarjetaResultado.classList.remove('hidden');
         resumen.innerHTML = '';
-        lista.innerHTML = `<p class="promo-empty">
-          No hay precios guardados para ${escapeHtml(P.nombreDe(destino))}${mes ? ' en ninguna fecha' : ''}.
-          Los datos vienen de una caché que no cubre todas las rutas: las de Honduras, por
-          ejemplo, nunca aparecen. Prueba otro destino o vuelve más tarde.
-        </p>`;
+        lista.innerHTML = window.vacio('precios',
+          `Sin precios para ${escapeHtml(P.nombreDe(destino))}`,
+          'Los datos vienen de una caché que no cubre todas las rutas — las de Honduras, '
+          + 'por ejemplo, nunca aparecen. Prueba otro destino o vuelve más tarde.');
         tarjetaPublicidad.classList.add('hidden');
         return;
       }

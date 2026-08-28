@@ -206,7 +206,8 @@ function renderPromoList() {
   const consenting = currentClients.filter((c) => c.autorizaPromos && c.telefono);
   promoClientsList.innerHTML = '';
   if (!consenting.length) {
-    promoClientsList.innerHTML = '<p class="promo-empty">Todavía no hay clientes que hayan autorizado recibir promociones.</p>';
+    promoClientsList.innerHTML = window.vacio('promocionar', 'Nadie ha autorizado promociones',
+      'Al guardar un cliente, marca la casilla de autorización y aparecerá en esta lista.');
     return;
   }
   consenting.forEach((c) => {

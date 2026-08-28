@@ -69,8 +69,8 @@
     const semanas = window.obtenerSemanas ? window.obtenerSemanas() : [];
 
     if (!V || !semanas.length) {
-      destino.innerHTML = '<p class="promo-empty">Todavía no hay ventas cargadas. '
-        + 'Sube el reporte de Wompi en <strong>Ventas</strong> y aquí verás el cierre de cada semana.</p>';
+      destino.innerHTML = window.vacio('ventas', 'Aún no hay ventas cargadas',
+        'Sube el reporte de Wompi en <strong>Ventas</strong> y aquí verás el cierre de cada semana.');
       return;
     }
 
@@ -196,8 +196,8 @@
 
     destino.innerHTML = '';
     if (!total) {
-      destino.innerHTML = `<p class="inicio-libre">${window.icono('check')} `
-        + 'Nada pendiente por ahora. Ningún check-in por avisar ni cupones a punto de vencerse.</p>';
+      destino.innerHTML = window.vacio('check', 'Nada pendiente',
+        'Ningún check-in por avisar ni cupones a punto de vencerse.', true);
       return;
     }
 
@@ -346,10 +346,10 @@
     if (!destino) return;
 
     if (!t.valor) {
-      destino.innerHTML = `<p class="promo-empty">${
-        t.cargando ? 'Consultando la tasa oficial…'
-          : 'No se pudo consultar la tasa oficial. Revisa tu conexión.'
-      }</p>`;
+      destino.innerHTML = t.cargando
+        ? window.vacio('refrescar', 'Consultando la tasa oficial…')
+        : window.vacio('alerta', 'No llegó la tasa oficial',
+          'Revisa tu conexión. Mientras tanto puedes calcular en pesos.');
       return;
     }
 
@@ -434,7 +434,8 @@
     const t = window.TRM ? window.TRM.estado() : {};
     const enDolares = el('calcMoneda').value === 'USD';
     if (enDolares && !t.valor) {
-      destino.innerHTML = '<p class="promo-empty">Necesito la tasa del día para convertir desde dólares.</p>';
+      destino.innerHTML = window.vacio('alerta', 'Falta la tasa del día',
+        'Sin ella no puedo convertir desde dólares. Cambia a pesos o vuelve a intentar.');
       return;
     }
 

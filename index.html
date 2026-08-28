@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=45" />
+<link rel="stylesheet" href="style.css?v=47" />
 </head>
 <body>
 
@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <section class="card">
+  <section class="card card-principal">
     <div class="card-header">
       <h2>Necesita tu atención <span id="inicioPendientesCuenta" class="conteo-pill hidden"></span></h2>
     </div>
@@ -277,7 +277,7 @@
       </p>
     </section>
 
-    <section class="card">
+    <section class="card card-utilidad">
       <h2>Catálogo de aerolíneas y destinos</h2>
       <p class="hint">Agrega opciones nuevas y aparecerán al instante en los desplegables de abajo.</p>
 
@@ -350,7 +350,7 @@
       <div id="regresoContainer" class="hidden"></div>
     </section>
 
-    <section class="card">
+    <section class="card card-utilidad">
       <h2>Términos y condiciones</h2>
       <textarea id="terms" rows="5"></textarea>
     </section>
@@ -674,7 +674,7 @@
 
 <div id="salesPanel" class="tab-panel hidden">
 
-  <section class="card" id="weekCard">
+  <section class="card card-principal" id="weekCard">
     <div class="card-header">
       <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-ventas"></use></svg>Cierre semanal</h2>
       <select id="weekPicker" style="width:auto; min-width:220px"></select>
@@ -734,7 +734,7 @@
     <div id="retencionesPanel"></div>
   </section>
 
-  <section class="card">
+  <section class="card card-utilidad">
     <h2>Importar ventas</h2>
     <p class="hint">
       Sube el reporte de Wompi (<em>Reporte Conciliar</em>) o tu Excel de ventas. Entiende ambos
@@ -762,7 +762,7 @@
 </div>
 
 <div id="pricesPanel" class="tab-panel hidden">
-  <section class="card">
+  <section class="card card-principal">
     <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>Precios de mercado</h2>
     <p class="hint">
       Compara los tres aeropuertos de Washington de una sola vez y te dice desde cuál sale
@@ -876,7 +876,7 @@
 </div>
 
 <div id="couponsPanel" class="tab-panel hidden">
-  <section class="card">
+  <section class="card card-principal">
     <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cupon"></use></svg>Generar cupón</h2>
     <p class="hint">
       El cupón sale a nombre del cliente, con un número consecutivo y una imagen lista para
@@ -944,7 +944,7 @@
     </div>
   </section>
 
-  <section class="card">
+  <section class="card card-utilidad">
     <h2>Restaurar desde un respaldo</h2>
     <p class="hint">
       Solo lo vas a necesitar si se perdió o se dañó información. Vuelve a escribir lo que
@@ -963,7 +963,7 @@
     <p class="hint" id="respaldoEstado"></p>
   </section>
 
-  <section class="card">
+  <section class="card card-utilidad">
     <h2>Qué hacer si algo pasa</h2>
     <p class="hint">Los tres casos que te pueden ocurrir y cómo salir de cada uno.</p>
     <ul class="hint" style="line-height:1.7; padding-left:18px">
@@ -1179,7 +1179,7 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=3"></script>
+<script src="assets/iconos.js?v=4"></script>
 <script src="assets/trm.js?v=2"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/catalog-data.js?v=2"></script>
@@ -1191,15 +1191,15 @@
 <script src="assets/precios-datos.js?v=5"></script>
 <script src="app.js?v=13"></script>
 <script src="assets/inicio.js?v=18"></script>
-<script type="module" src="assets/firebase-clients.js?v=11"></script>
+<script type="module" src="assets/firebase-clients.js?v=12"></script>
 <script type="module" src="assets/firebase-catalog.js?v=3"></script>
 <script type="module" src="assets/firebase-numeracion.js?v=2"></script>
-<script type="module" src="assets/firebase-cupones.js?v=3"></script>
-<script src="assets/precios-ui.js?v=8"></script>
-<script type="module" src="assets/firebase-history.js?v=5"></script>
-<script type="module" src="assets/firebase-sales.js?v=17"></script>
+<script type="module" src="assets/firebase-cupones.js?v=4"></script>
+<script src="assets/precios-ui.js?v=9"></script>
+<script type="module" src="assets/firebase-history.js?v=6"></script>
+<script type="module" src="assets/firebase-sales.js?v=18"></script>
 <script type="module" src="assets/firebase-respaldo.js?v=1"></script>
-<script type="module" src="assets/firebase-trips.js?v=12"></script>
+<script type="module" src="assets/firebase-trips.js?v=13"></script>
 <script type="module" src="assets/firebase-gate.js?v=2"></script>
 </body>
 </html>

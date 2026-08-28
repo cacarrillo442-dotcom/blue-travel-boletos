@@ -68,5 +68,16 @@
     return `<svg class="ic${clase ? ' ' + clase : ''}" aria-hidden="true"><use href="#ic-${nombre}"></use></svg>`;
   };
 
+  // Estado vacio con forma: que falta y como llenarlo. Un texto suelto que
+  // solo dice "sin datos" deja al usuario sin saber que hacer.
+  //   bien: true cuando el vacio es buena noticia y no un pendiente.
+  window.vacio = function vacio(nombre, titulo, pista, bien) {
+    return `<div class="vacio${bien ? ' bien' : ''}">`
+      + window.icono(nombre)
+      + `<p class="vacio-titulo">${titulo}</p>`
+      + (pista ? `<p class="vacio-pista">${pista}</p>` : '')
+      + '</div>';
+  };
+
   window.ICONOS_DISPONIBLES = Object.keys(TRAZOS);
 })();

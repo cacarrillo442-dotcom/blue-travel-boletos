@@ -199,7 +199,8 @@ function renderTrips() {
 
   tripsList.innerHTML = '';
   if (!upcoming.length) {
-    tripsList.innerHTML = '<p class="promo-empty">No hay viajes pendientes de avisar.</p>';
+    tripsList.innerHTML = window.vacio('check', 'Nadie espera aviso',
+      'Cuando emitas un boleto, el recordatorio de check-in aparece aquí solo.', true);
     return;
   }
 

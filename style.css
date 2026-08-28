@@ -9,7 +9,11 @@
   /* Escala de grises con mejor contraste para leer */
   --ink-strong: #16283a;
   --ink: #46586a;
-  --ink-soft: #7b8b99;
+  /* Medido: el #7b8b99 anterior daba 3,50 sobre blanco y el minimo legible
+     es 4,5. Lo usan 55 textos de ayuda en la app, asi que era mucho texto
+     dificil de leer. Este da 4,88 sobre blanco y 4,62 sobre el fondo
+     hundido, que son los dos fondos donde aparece. */
+  --ink-soft: #647380;
   --line: #dfe6ec;
   --line-soft: #edf1f5;
   --surface: #ffffff;
@@ -2402,3 +2406,93 @@ select:focus {
 @media (prefers-reduced-motion: reduce) {
   .meta-barra-relleno { transition: none; }
 }
+
+/* ---------- Tres pesos de tarjeta ----------
+   Todas las tarjetas se veian igual: en Ventas, "Cierre semanal" pesaba lo
+   mismo que "Importar ventas", que es maquinaria. Ahora hay tres niveles y
+   cada pantalla tiene como maximo UNA principal: si todo destaca, nada
+   destaca.
+
+   La diferencia se hace con elevacion y aire, no con color: el color ya
+   tiene trabajo asignado en esta app. */
+
+/* Principal: la respuesta del modulo. Se levanta del fondo. */
+.card-principal {
+  padding: 30px 32px;
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+
+.card-principal > h2:first-child,
+.card-principal > .card-header:first-child h2 {
+  font-size: 1.3rem;
+  margin-bottom: 22px;
+}
+
+/* Utilidad: herramientas y referencia. Se hunde, no compite. */
+.card-utilidad {
+  background: var(--surface-sunken);
+  box-shadow: none;
+  padding: 22px 24px;
+}
+
+.card-utilidad > h2:first-child,
+.card-utilidad > .card-header:first-child h2 {
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .card-principal { padding: 24px 20px; }
+  .card-utilidad { padding: 20px; }
+}
+
+/* ---------- Estados vacios ----------
+   Antes eran una linea gris en cursiva que solo constataba la ausencia.
+   Ahora dicen que falta y como llenarlo: cuando no hay datos es justo cuando
+   mas falta una indicacion. */
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  padding: 30px 22px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  border: 1px dashed var(--line);
+}
+
+.vacio .ic {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 7px;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+
+.vacio-titulo {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.vacio-pista {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  max-width: 46ch;
+  line-height: 1.5;
+}
+
+/* Cuando el vacio es una buena noticia, no un pendiente */
+.vacio.bien {
+  background: #f1f8f3;
+  border-color: #cfe6d8;
+}
+
+.vacio.bien .ic { color: #2f6b4a; opacity: 1; }
+.vacio.bien .vacio-titulo { color: #2f6b4a; }

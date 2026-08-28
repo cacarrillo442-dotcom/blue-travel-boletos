@@ -222,9 +222,11 @@ function pintarLista() {
 
   cuponLista.innerHTML = '';
   if (!visibles.length) {
-    cuponLista.innerHTML = `<p class="promo-empty">${
-      cupones.length ? 'Ningún cupón en este estado.' : 'Todavía no has generado cupones.'
-    }</p>`;
+    cuponLista.innerHTML = cupones.length
+      ? window.vacio('cupon', 'Ningún cupón en este estado',
+        'Cambia el filtro de arriba para ver los demás.')
+      : window.vacio('cupon', 'Aún no has generado cupones',
+        'Elige un cliente arriba y genera el primero. Cada uno vale 90 días.');
     return;
   }
 

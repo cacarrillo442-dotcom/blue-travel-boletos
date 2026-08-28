@@ -112,7 +112,9 @@ function pintarSemana() {
   const wrap = el('weekPreviewWrap');
 
   if (!s) {
-    weekStats.innerHTML = '<p class="promo-empty">Todavía no hay ventas cargadas. Sube el reporte de Wompi más abajo.</p>';
+    weekStats.innerHTML = window.vacio('ventas', 'Aún no hay ventas cargadas',
+      'Sube el <em>Reporte Conciliar</em> de Wompi en «Importar ventas», acá abajo. '
+      + 'Desde ahí sale todo lo demás de esta pantalla.');
     weekRange.textContent = 'La semana va de sábado a viernes, igual que en tu Excel.';
     acciones.classList.add('hidden');
     wrap.classList.add('hidden');
@@ -276,16 +278,15 @@ function pintarRiesgo() {
   }
 
   if (!r.totalClientes) {
-    destino.innerHTML = '<p class="promo-empty">Las ventas guardadas no traen el número de tarjeta, '
-      + 'que es lo que permite reconocer a un cliente entre una compra y otra. Aparece al importar '
-      + 'el <em>Reporte Conciliar</em> de Wompi.</p>';
+    destino.innerHTML = window.vacio('clientes', 'Todavía no puedo seguir clientes',
+      'Hace falta el número de tarjeta, que es lo que permite reconocer a alguien entre una '
+      + 'compra y otra. Viene en el <em>Reporte Conciliar</em> de Wompi.');
     return;
   }
 
   if (!r.clientes.length) {
-    destino.innerHTML = `<p class="inicio-libre">${window.icono('check')} `
-      + 'Ninguno de tus clientes recurrentes se ha enfriado. Todos los que repiten '
-      + 'están dentro de su ritmo normal.</p>';
+    destino.innerHTML = window.vacio('check', 'Ningún cliente se ha enfriado',
+      'Todos los que repiten están dentro de su ritmo normal.', true);
     return;
   }
 
@@ -321,9 +322,9 @@ function pintarRetenciones(lote) {
   const r = V.retenciones(lote);
 
   if (!r.n) {
-    destino.innerHTML = '<p class="promo-empty">Las ventas de este periodo no traen el detalle '
-      + 'de retenciones. Aparece al importar el <em>Reporte Conciliar</em> de Wompi; los registros '
-      + 'guardados antes no lo tienen.</p>';
+    destino.innerHTML = window.vacio('dinero', 'Sin detalle de retenciones',
+      'Aparece al importar el <em>Reporte Conciliar</em> de Wompi. Las ventas guardadas '
+      + 'antes de agosto no lo traen, así que para verlas tendrías que volver a importarlas.');
     return;
   }
 
@@ -388,7 +389,11 @@ function pintarGraficaMensual() {
   const cont = el('monthlyChart');
   if (!cont) return;
   const datos = V.agruparPorMes(ventas).slice(-12);
-  if (!datos.length) { cont.innerHTML = '<p class="promo-empty">Sin datos todavía.</p>'; return; }
+  if (!datos.length) {
+    cont.innerHTML = window.vacio('ventas', 'Nada que comparar todavía',
+      'Con al menos un mes cargado empiezas a ver la tendencia.');
+    return;
+  }
 
   const elegido = (dashPeriod.value || '').startsWith('mes:') ? dashPeriod.value.slice(4) : '';
   const W = 100, H = 42;
@@ -484,7 +489,11 @@ function pintarGraficaSemanal(lote) {
     ? todas.filter((s) => s.inicio.slice(0, 7) === mes || s.corte.slice(0, 7) === mes)
     : V.agruparPorSemana(lote).slice(0, 14)
   ).slice(0, 14).reverse();
-  if (!datos.length) { cont.innerHTML = '<p class="promo-empty">Sin datos para este periodo.</p>'; return; }
+  if (!datos.length) {
+    cont.innerHTML = window.vacio('calendario', 'Sin ventas en este periodo',
+      'Prueba con otro mes en el selector de arriba.');
+    return;
+  }
 
   const W = 100, H = 42;                 // viewBox; escala con el ancho
   const padL = 11, padR = 1, padT = 4, padB = 7;
@@ -534,7 +543,11 @@ function pintarGraficaSemanal(lote) {
 function pintarFranquicias(lote) {
   const cont = el('franqChart');
   const datos = V.porFranquicia(lote);
-  if (!datos.length) { cont.innerHTML = '<p class="promo-empty">Sin datos para este periodo.</p>'; return; }
+  if (!datos.length) {
+    cont.innerHTML = window.vacio('calendario', 'Sin ventas en este periodo',
+      'Prueba con otro mes en el selector de arriba.');
+    return;
+  }
   const max = Math.max(...datos.map((d) => d.neto), 1);
 
   cont.innerHTML = `<div class="hbar-list">${datos.map((d) => `

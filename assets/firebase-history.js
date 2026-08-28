@@ -159,9 +159,13 @@ function render() {
 
   if (!items.length) {
     const vacio = vista === 'boletos' ? 'boletos' : 'facturas';
-    histList.innerHTML = `<p class="promo-empty">${
-      filtro ? 'Ningún resultado para esa búsqueda.' : `Todavía no hay ${vacio} guardados.`
-    }</p>`;
+    histList.innerHTML = filtro
+      ? window.vacio('historial', 'Sin resultados',
+        `Ningún ${vacio === 'boletos' ? 'boleto' : 'factura'} coincide con «${escapeHtml(filtro)}».`)
+      : window.vacio('historial', `Aún no hay ${vacio} guardados`,
+        vacio === 'boletos'
+          ? 'Cada boleto que generes queda aquí, listo para volver a descargarlo o reusarlo.'
+          : 'Las facturas que emitas quedan aquí, listas para volver a descargarlas.');
     return;
   }
 
