@@ -2378,27 +2378,26 @@ select:focus {
   transition: width .3s ease;
 }
 
-/* Donde deberia ir hoy */
-.meta-marca {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  background: var(--ink-strong);
-  border-radius: 2px;
-}
-
 .meta-nota {
   margin: 0;
   font-size: .82rem;
   color: var(--ink);
 }
 
+/* Mientras corre no se juzga: se queda neutra */
+.meta-caja.corriendo { border-color: var(--line); background: var(--surface-sunken); }
 .meta-caja.lograda { border-color: #bcdcc8; background: #f1f8f3; }
 .meta-caja.lograda .meta-barra-relleno { background: #2f6b4a; }
-.meta-caja.atras { border-color: #f0d9ac; background: #fffaf0; }
 .meta-caja.fallada { border-color: #eecfc7; background: #fdf5f2; }
 .meta-caja.fallada .meta-barra-relleno { background: #a8402b; }
+
+/* De donde sale el objetivo, en letra chica y sin estorbar */
+.meta-base {
+  display: block;
+  margin-top: 3px;
+  font-size: .76rem;
+  color: var(--ink-soft);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .meta-barra-relleno { transition: none; }

@@ -486,15 +486,12 @@
 
   // ---------- Meta ----------
   //
-  // La meta se fija por semana. Para saber si se va al dia a mitad de semana
-  // se reparte entre los DIAS HABILES: en los reportes el dinero nunca entra
-  // en fin de semana -26 dias con ingreso, ninguno sabado o domingo-, asi que
-  // esperar algo el sabado seria pedirle a la semana lo que no puede dar.
-  //
-  // No se proyecta el cierre. Medido sobre las semanas reales, lo que lleva
-  // entrado a mitad de semana varia demasiado -para el miercoles va entre el
-  // 0% y el 96% del total- y proyectar con eso seria adivinar. En su lugar se
-  // compara contra la parte de la meta que corresponde a los dias ya corridos.
+  // Fija en el codigo a proposito: no es un ajuste del dia a dia. Se mide por
+  // dia habil porque el dinero de Wompi nunca entra en fin de semana -26 dias
+  // con ingreso en los reportes, ninguno sabado o domingo-, asi que una
+  // semana vale cinco dias, no siete.
+  const META_DIARIA = 600000;
+
   function diasHabilesEntre(desdeISO, hastaISO) {
     if (!desdeISO || !hastaISO || hastaISO < desdeISO) return 0;
     let n = 0;
@@ -510,8 +507,12 @@
     return n;
   }
 
-  function avanceDeMeta(semana, metaSemanal, hoyISO) {
-    if (!semana || !(metaSemanal > 0)) return null;
+  // Solo se juzga la semana cuando ya cerro. A mitad de semana no se puede
+  // decir nada honesto: medido sobre las semanas reales, para el miercoles lo
+  // que lleva entrado va entre el 0% y el 96% del total. Mientras corre se
+  // muestra el avance, sin veredicto.
+  function avanceDeMeta(semana, hoyISO) {
+    if (!semana) return null;
 
     const hoy = hoyISO || (() => {
       const d = new Date();
@@ -519,27 +520,18 @@
     })();
 
     const habiles = diasHabilesEntre(semana.inicio, semana.corte);
-    const corridos = hoy >= semana.corte
-      ? habiles
-      : diasHabilesEntre(semana.inicio, hoy);
-
-    const objetivo = metaSemanal;
-    // Prorrateada a los dias habiles ya corridos
-    const objetivoHoy = habiles ? metaSemanal * (corridos / habiles) : 0;
+    const objetivo = META_DIARIA * habiles;
+    const cerrada = hoy > semana.corte;
 
     return {
-      metaSemanal,
-      porDiaHabil: habiles ? metaSemanal / habiles : 0,
+      metaDiaria: META_DIARIA,
       habiles,
-      corridos,
-      cerrada: hoy > semana.corte,
       objetivo,
-      objetivoHoy,
+      cerrada,
       logrado: semana.neto,
       avance: objetivo ? semana.neto / objetivo : 0,
-      // Contra lo que deberia llevar a estas alturas, no contra el total
-      alDia: semana.neto >= objetivoHoy,
-      falta: Math.max(0, objetivo - semana.neto),
+      cumplida: cerrada ? semana.neto >= objetivo : null,
+      diferencia: semana.neto - objetivo,
     };
   }
 

@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, onSnapshot, writeBatch, setDoc,
+  getFirestore, collection, doc, onSnapshot, writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -34,8 +34,6 @@ const importStats = el('importStats');
 
 let ventas = [];
 let semanas = [];
-let metaSemanal = 0;
-let unsubMeta = null;
 let pendientes = null;   // solo las que no estaban guardadas
 let leidasTodas = null;  // todas las del archivo, para cuando se pide actualizar
 let unsub = null;
@@ -55,16 +53,8 @@ onAuthStateChanged(auth, (user) => {
     }, (err) => {
       if (window.reportarFalloConexion) window.reportarFalloConexion('ventas', err);
     });
-
-    // La meta se guarda en la nube: asi Milena y Cesar ven la misma.
-    unsubMeta = onSnapshot(doc(db, 'config', 'metas'), (snap) => {
-      metaSemanal = (snap.exists() && Number(snap.data().semanal)) || 0;
-      pintarCampoMeta();
-      pintarSemana();
-    }, () => { /* sin meta la app funciona igual */ });
   } else {
     if (unsub) { unsub(); unsub = null; }
-    if (unsubMeta) { unsubMeta(); unsubMeta = null; }
     ventas = [];
     semanas = [];
     pintarSelectorSemanas();
@@ -155,93 +145,33 @@ function pintarSemana() {
 
 // ---------- Meta ----------
 
-const soloDigitos = (t) => String(t).replace(/\D/g, '');
-const conPuntos = (t) => {
-  const n = soloDigitos(t).replace(/^0+(?=\d)/, '');
-  return n ? Number(n).toLocaleString('es-CO') : '';
-};
-
-function pintarCampoMeta() {
-  const campo = el('metaSemanal');
-  const porDia = el('metaPorDia');
-  if (!campo) return;
-  // No pisar lo que se esta escribiendo
-  if (document.activeElement !== campo) {
-    campo.value = metaSemanal ? Number(metaSemanal).toLocaleString('es-CO') : '';
-  }
-  if (porDia) {
-    porDia.value = metaSemanal
-      ? `${V.pesos(metaSemanal / 5)}  ·  5 días hábiles`
-      : 'Sin meta fijada';
-  }
-}
-
-let guardando = null;
-function guardarMeta() {
-  const valor = Number(soloDigitos(el('metaSemanal').value)) || 0;
-  const estado = el('metaEstado');
-  clearTimeout(guardando);
-  // Se espera a que termine de escribir, para no escribir en la nube por tecla
-  guardando = setTimeout(async () => {
-    try {
-      await setDoc(doc(db, 'config', 'metas'), { semanal: valor }, { merge: true });
-      if (estado) estado.textContent = valor ? 'Meta guardada.' : 'Meta quitada.';
-    } catch (e) {
-      if (estado) estado.textContent = `No se pudo guardar: ${e.message}`;
-    }
-  }, 700);
-}
-
-if (el('metaSemanal')) {
-  el('metaSemanal').addEventListener('input', () => {
-    const campo = el('metaSemanal');
-    const antes = campo.value.slice(0, campo.selectionStart).replace(/\D/g, '').length;
-    campo.value = conPuntos(campo.value);
-    let pos = 0;
-    let vistos = 0;
-    while (pos < campo.value.length && vistos < antes) {
-      if (/\d/.test(campo.value[pos])) vistos += 1;
-      pos += 1;
-    }
-    campo.setSelectionRange(pos, pos);
-    metaSemanal = Number(soloDigitos(campo.value)) || 0;
-    pintarCampoMeta();
-    pintarSemana();
-    guardarMeta();
-  });
-}
-
 function pintarMeta(s) {
   const destino = el('metaPanel');
   if (!destino) return;
-  const m = V.avanceDeMeta(s, metaSemanal);
+  const m = V.avanceDeMeta(s);
   if (!m) { destino.innerHTML = ''; return; }
 
   const pct = Math.round(m.avance * 100);
-  const alDia = m.alDia;
-  const cerrada = m.cerrada;
 
-  const mensaje = cerrada
-    ? (m.logrado >= m.objetivo
-      ? `Cerró por encima de la meta, ${V.pesos(m.logrado - m.objetivo)} de más.`
-      : `Cerró ${V.pesos(m.objetivo - m.logrado)} por debajo de la meta.`)
-    : (alDia
-      ? `Vas al día. Para ${m.corridos} de ${m.habiles} días hábiles corridos, `
-        + `la meta iba en ${V.pesos(m.objetivoHoy)}.`
-      : `Vas ${V.pesos(m.objetivoHoy - m.logrado)} por debajo del ritmo. `
-        + `Para ${m.corridos} de ${m.habiles} días hábiles, deberías llevar ${V.pesos(m.objetivoHoy)}.`);
+  // Mientras la semana corre no se opina: solo se muestra el avance.
+  const clase = !m.cerrada ? 'corriendo' : (m.cumplida ? 'lograda' : 'fallada');
+  const mensaje = !m.cerrada
+    ? 'La semana va corriendo. Se mide al cerrar el viernes.'
+    : (m.cumplida
+      ? `Cumplida, ${V.pesos(m.diferencia)} por encima.`
+      : `No se cumplió, faltaron ${V.pesos(-m.diferencia)}.`);
 
   destino.innerHTML = `
-    <div class="meta-caja ${cerrada ? (m.logrado >= m.objetivo ? 'lograda' : 'fallada') : (alDia ? 'lograda' : 'atras')}">
+    <div class="meta-caja ${clase}">
       <div class="meta-fila">
         <span class="meta-rotulo">Meta de la semana</span>
         <span class="meta-cifra cifras">${V.pesos(m.logrado)} <em>de ${V.pesos(m.objetivo)}</em></span>
       </div>
       <div class="meta-barra" role="img" aria-label="${pct}% de la meta">
         <div class="meta-barra-relleno" style="width:${Math.min(100, pct)}%"></div>
-        ${!cerrada && m.objetivo ? `<div class="meta-marca" style="left:${Math.min(100, m.objetivoHoy / m.objetivo * 100)}%"></div>` : ''}
       </div>
-      <p class="meta-nota">${pct}% · ${mensaje}</p>
+      <p class="meta-nota">${pct}% · ${mensaje}
+        <span class="meta-base">${V.pesos(m.metaDiaria)} por día hábil × ${m.habiles} días</span></p>
     </div>`;
 }
 
