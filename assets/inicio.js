@@ -422,12 +422,11 @@
     }
 
     const objetivo = enDolares ? bruto * t.valor : bruto;
-    const conComision = el('calcMedio').value === 'credito';
 
     // Wompi cobra en pesos enteros. Se redondea hacia arriba para que el
     // redondeo nunca deje por debajo de lo que se queria ganar.
-    const enlace = Math.ceil(conComision ? enlaceParaRecibir(objetivo) : objetivo);
-    const comision = conComision ? comisionWompi(enlace) : 0;
+    const enlace = Math.ceil(enlaceParaRecibir(objetivo));
+    const comision = comisionWompi(enlace);
     const neto = enlace - comision;
 
     destino.innerHTML = `
@@ -436,7 +435,10 @@
         <div class="calc-monto cifras">${pesos(enlace)}</div>
         <div class="calc-detalle">
           ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(objetivo)}</span></div>` : ''}
-          ${conComision ? `<div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2)}%</span></div>` : ''}
+          <div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2).replace('.', ',')}%</span></div>
+          ${comision / enlace > 0.06 ? `<div class="calc-aviso">${window.icono('alerta')}
+            Los $833 fijos de Wompi pesan demasiado en un monto tan pequeño. Si puedes,
+            cobra varias comisiones en un solo enlace.</div>` : ''}
           <div class="fin"><span>Te queda</span><span class="cifras">${pesos(neto)}${
             !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
           }</span></div>
@@ -448,16 +450,12 @@
     el('calcGanancia').addEventListener('input', () => { formatearCampo(); calcular(); });
   }
 
-  ['calcMoneda', 'calcMedio'].forEach((id) => {
-    const campo = el(id);
-    if (!campo) return;
-    campo.addEventListener('change', () => {
-      // Al pasar de dolares a pesos los centavos sobran: se reformatea.
+  if (el('calcMoneda')) {
+    el('calcMoneda').addEventListener('change', () => {
       actualizarSimbolo();
-      formatearCampo();
       calcular();
     });
-  });
+  }
 
   actualizarSimbolo();
 

@@ -1557,6 +1557,19 @@ textarea {
   padding: 3px 0;
 }
 
+/* El cargo fijo se come los montos chicos: mejor decirlo que dejar al
+   usuario descubrirlo sumando. */
+.calc-detalle .calc-aviso {
+  display: block;
+  margin: 10px 0 2px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 195, 0, .16);
+  color: #ffe08a;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
 .calc-detalle .fin {
   margin-top: 6px;
   padding-top: 8px;
