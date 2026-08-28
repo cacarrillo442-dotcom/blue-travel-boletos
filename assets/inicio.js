@@ -260,6 +260,49 @@
       </div>`;
   }
 
+  // ---------- Cielo del saludo ----------
+  // Las curvas se calculan del tamano real de la franja, no de un dibujo fijo.
+  // La franja pasa de 6.6:1 en el computador a 2:1 en el celular; con medidas
+  // fijas los aviones pasaban el 77% del vuelo fuera de la vista.
+  function dibujarCielo() {
+    const hero = document.querySelector('.hero');
+    const cielo = document.querySelector('.hero-cielo');
+    if (!hero || !cielo) return;
+
+    const ancho = Math.round(hero.clientWidth);
+    const alto = Math.round(hero.clientHeight);
+    if (!ancho || !alto) return;                       // Inicio esta cerrado
+    if (cielo.dataset.medida === `${ancho}x${alto}`) return;   // no cambio nada
+    cielo.dataset.medida = `${ancho}x${alto}`;
+
+    // Sin escalado: una unidad del dibujo es un pixel de la franja.
+    cielo.setAttribute('viewBox', `0 0 ${ancho} ${alto}`);
+
+    // Entran y salen por fuera del borde, para que no aparezcan de la nada.
+    const rutas = [
+      `M-40 ${alto * 0.86} C ${ancho * 0.30} ${alto * 0.72}, ${ancho * 0.66} ${alto * 0.36}, ${ancho + 40} ${alto * 0.14}`,
+      `M-40 ${alto * 0.20} C ${ancho * 0.32} ${alto * 0.42}, ${ancho * 0.70} ${alto * 0.70}, ${ancho + 40} ${alto * 0.90}`,
+    ];
+
+    rutas.forEach((d, i) => {
+      const estela = el(`rutaH${i + 1}`);
+      const avion = document.querySelector(`.avion-h${i + 1}`);
+      if (estela) estela.setAttribute('d', d);
+      if (avion) avion.style.offsetPath = `path('${d}')`;
+    });
+  }
+
+  let esperaResize;
+  window.addEventListener('resize', () => {
+    clearTimeout(esperaResize);
+    esperaResize = setTimeout(dibujarCielo, 150);
+  });
+
+  // Estando cerrada, la franja mide cero: si la ventana cambio de tamano
+  // mientras tanto, hay que rehacer las curvas al volver.
+  const botonInicio = document.querySelector('.tab-btn[data-tab="homePanel"]');
+  if (botonInicio) botonInicio.addEventListener('click', dibujarCielo);
+
   // ---------- Pintado ----------
 
   // Cada modulo llama a esto cuando le cambian los datos, para que Inicio no
@@ -272,6 +315,7 @@
     pintarSemana();
     pintarPendientes();
     pintarResumen();
+    dibujarCielo();
   };
 
   document.querySelectorAll('.inicio-accion').forEach((btn) => {

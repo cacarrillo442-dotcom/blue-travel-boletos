@@ -1171,6 +1171,41 @@ textarea {
 
 /* Los dos tonos claros estan medidos contra el extremo MAS claro del
    degradado, que es donde peor se leen: asi pasan en cualquier punto. */
+/* Reutiliza las clases .estela y .avion de la pantalla de entrada, con sus
+   mismos fotogramas: un solo sitio donde esta definido como vuelan. */
+.hero-cielo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Mas discretos que en el login: aqui se trabaja, no se espera */
+.hero .estela {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 2;
+}
+
+.hero .avion {
+  fill: rgba(255, 255, 255, 0.5);
+}
+
+/* Y mas lentos, para que nunca compitan con el saludo */
+.estela-h1, .avion-h1 { animation: volar 26s ease-in-out infinite; }
+.estela-h2, .avion-h2 { animation: volar 34s ease-in-out 11s infinite; }
+
+.avion-h1 { offset-path: path('M-120 155 C 300 128, 700 86, 1320 44'); }
+.avion-h2 { offset-path: path('M-120 58 C 360 88, 780 126, 1320 162'); }
+
+/* El texto va por encima del cielo y del brillo */
+.hero-fecha,
+.hero-saludo,
+.hero-estado {
+  position: relative;
+  z-index: 1;
+}
+
 .hero-fecha {
   margin: 0;
   font-size: 0.76rem;
