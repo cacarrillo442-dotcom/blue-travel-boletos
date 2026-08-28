@@ -254,6 +254,68 @@
     return semanas;
   }
 
+  // ---------- Tarifa real de la pasarela ----------
+  //
+  // La tarifa publicada de Wompi (2,65% + $700 + IVA) es la del Plan Avanzado,
+  // pero hay otros planes y la tarifa tambien cambia segun cada cuanto
+  // desembolsen. En vez de creerle a una pagina, se mide de las propias
+  // ventas: el reporte de conciliacion trae lo cobrado y lo recibido, y la
+  // diferencia es exactamente lo que se quedo la pasarela.
+  //
+  // Se ajusta comision = porcentaje x cobrado + fijo por minimos cuadrados.
+  // Solo entran las ventas con fecha de canje, porque son las que vienen del
+  // reporte de Wompi; la hoja vieja de 2025 usa esas columnas con otro
+  // significado y mezclarlas falsearia el resultado.
+  function tarifaReal(ventas) {
+    const usables = (ventas || []).filter((v) => v.fechaCanje
+      && (v.tipo || 'COMPRA') === 'COMPRA'
+      && v.bruto > 0 && v.neto > 0 && v.neto < v.bruto);
+
+    if (usables.length < 20) {
+      return { suficiente: false, n: usables.length };
+    }
+
+    const n = usables.length;
+    let sx = 0; let sy = 0; let sxx = 0; let sxy = 0;
+    usables.forEach((v) => {
+      const x = v.bruto;
+      const y = v.bruto - v.neto;
+      sx += x; sy += y; sxx += x * x; sxy += x * y;
+    });
+
+    const denominador = n * sxx - sx * sx;
+    if (!denominador) return { suficiente: false, n };
+
+    const porcentaje = (n * sxy - sx * sy) / denominador;
+    const fijo = (sy - porcentaje * sx) / n;
+
+    // Que tan bien describe la recta a los datos. Si la pasarela cobrara
+    // siempre igual esto daria casi 1; bastante menos significa que hay
+    // tarifas distintas mezcladas y el promedio no representa a ninguna.
+    const promedioY = sy / n;
+    let varianza = 0; let residuos = 0; let peorPeso = 0;
+    usables.forEach((v) => {
+      const y = v.bruto - v.neto;
+      const estimado = porcentaje * v.bruto + fijo;
+      varianza += (y - promedioY) ** 2;
+      residuos += (y - estimado) ** 2;
+      peorPeso = Math.max(peorPeso, Math.abs(y - estimado));
+    });
+    const ajuste = varianza ? 1 - residuos / varianza : 0;
+
+    return {
+      suficiente: true,
+      n,
+      porcentaje,
+      fijo,
+      ajuste,
+      desvioTipico: Math.sqrt(residuos / n),
+      peorPeso,
+      // Cuanto se llevo la pasarela sobre el total, en el periodo completo
+      efectiva: sy / sx,
+    };
+  }
+
   function totales(ventas) {
     const t = { ventas: ventas.length, bruto: 0, neto: 0 };
     ventas.forEach((v) => { t.bruto += v.bruto; t.neto += v.neto; });
@@ -349,6 +411,7 @@
     inicioDeCorte,
     fechaIngreso,
     agruparPorSemana,
+    tarifaReal,
     totales,
     porFranquicia,
     pesos,

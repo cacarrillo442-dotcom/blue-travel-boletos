@@ -262,10 +262,26 @@
 
   // ---------- El dólar ----------
 
-  // Tarifa de Wompi para tarjeta de crédito: 2.65% + $700, y el IVA del 19%
-  // recae sobre la comisión, no sobre la venta. Siendo no responsables de IVA
-  // ese 19% no se puede descontar contra nada: es costo puro.
-  const WOMPI = { porcentaje: 0.0265, fijo: 700, iva: 0.19 };
+  // Tarifa publicada de Wompi: 2,65% + $700, y el IVA del 19% recae sobre la
+  // comisión, no sobre la venta. Siendo no responsables de IVA ese 19% no se
+  // descuenta contra nada: es costo puro.
+  //
+  // Se usa SOLO como respaldo. La tarifa publicada es la del Plan Avanzado y
+  // hay otros planes, asi que lo que manda es la medida de las ventas reales.
+  const PUBLICADA = { porcentaje: 0.0265 * 1.19, fijo: 700 * 1.19 };
+
+  // Un ajuste por debajo de esto significa que los datos no describen una
+  // tarifa unica; mejor volver a la publicada que inventar un promedio.
+  const AJUSTE_MINIMO = 0.9;
+
+  function tarifaVigente() {
+    const ventas = window.obtenerVentas ? window.obtenerVentas() : [];
+    const m = window.Ventas ? window.Ventas.tarifaReal(ventas) : null;
+    if (m && m.suficiente && m.ajuste >= AJUSTE_MINIMO) {
+      return { porcentaje: m.porcentaje, fijo: m.fijo, medida: true, n: m.n, ajuste: m.ajuste };
+    }
+    return { ...PUBLICADA, medida: false, n: m ? m.n : 0, ajuste: m ? m.ajuste : null };
+  }
 
   const pesos = (n) => (window.Ventas ? window.Ventas.pesos(n)
     : '$' + Math.round(n).toLocaleString('es-CO'));
@@ -275,16 +291,14 @@
   const pesosExactos = (n) => '$' + n.toLocaleString('es-CO',
     { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  function comisionWompi(monto) {
-    return (monto * WOMPI.porcentaje + WOMPI.fijo) * (1 + WOMPI.iva);
+  function comisionWompi(monto, t) {
+    return monto * t.porcentaje + t.fijo;
   }
 
   // Para recibir X hay que cobrar más que X + comisión: la comisión se cobra
   // sobre el total ya recargado. Se despeja, no se suma.
-  function enlaceParaRecibir(neto) {
-    const fijo = WOMPI.fijo * (1 + WOMPI.iva);
-    const tasa = WOMPI.porcentaje * (1 + WOMPI.iva);
-    return (neto + fijo) / (1 - tasa);
+  function enlaceParaRecibir(neto, t) {
+    return (neto + t.fijo) / (1 - t.porcentaje);
   }
 
   function fechaLegible(iso) {
@@ -425,8 +439,9 @@
 
     // Wompi cobra en pesos enteros. Se redondea hacia arriba para que el
     // redondeo nunca deje por debajo de lo que se queria ganar.
-    const enlace = Math.ceil(enlaceParaRecibir(objetivo));
-    const comision = comisionWompi(enlace);
+    const tarifa = tarifaVigente();
+    const enlace = Math.ceil(enlaceParaRecibir(objetivo, tarifa));
+    const comision = comisionWompi(enlace, tarifa);
     const neto = enlace - comision;
 
     destino.innerHTML = `
@@ -437,13 +452,21 @@
           ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(objetivo)}</span></div>` : ''}
           <div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2).replace('.', ',')}%</span></div>
           ${comision / enlace > 0.06 ? `<div class="calc-aviso">${window.icono('alerta')}
-            Los $833 fijos de Wompi pesan demasiado en un monto tan pequeño. Si puedes,
-            cobra varias comisiones en un solo enlace.</div>` : ''}
+            El cargo fijo de ${pesos(tarifa.fijo)} pesa demasiado en un monto tan pequeño.
+            Si puedes, cobra varias comisiones en un solo enlace.</div>` : ''}
           <div class="fin"><span>Te queda</span><span class="cifras">${pesos(neto)}${
             !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
           }</span></div>
         </div>
-      </div>`;
+      </div>
+      <p class="hint calc-fuente">${tarifa.medida
+        ? `${window.icono('check')} Tarifa medida de tus ${tarifa.n} ventas reales: `
+          + `${(tarifa.porcentaje * 100).toFixed(2).replace('.', ',')}% + ${pesos(tarifa.fijo)}`
+        : `${window.icono('alerta')} Usando la tarifa publicada de Wompi `
+          + `(2,65% + $700 + IVA). ${tarifa.n >= 20
+            ? 'Tus ventas no describen una tarifa única, así que no me fío de medirla.'
+            : 'Carga tus ventas en el módulo Ventas y la mido de tus datos reales.'}`
+      }</p>`;
   }
 
   if (el('calcGanancia')) {

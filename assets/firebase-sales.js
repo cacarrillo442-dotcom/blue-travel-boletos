@@ -212,6 +212,10 @@ function ventasDelPeriodo() {
 // Inicio muestra el cierre de la semana mas reciente, calculado aqui mismo.
 window.obtenerSemanas = () => semanas;
 
+// Y de las ventas crudas sale la tarifa real que cobra la pasarela, medida
+// en vez de supuesta.
+window.obtenerVentas = () => ventas;
+
 function pintarDashboard() {
   if (window.pintarInicio) window.pintarInicio();
   const lote = ventasDelPeriodo();

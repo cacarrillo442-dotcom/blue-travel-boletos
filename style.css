@@ -2125,3 +2125,9 @@ select:focus {
     width: 100%;
   }
 }
+
+/* De donde salio la tarifa que uso la calculadora: medida o supuesta. */
+.calc-fuente {
+  margin: 10px 0 0;
+  font-size: .8rem;
+}
