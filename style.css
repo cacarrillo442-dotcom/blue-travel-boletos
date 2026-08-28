@@ -356,7 +356,28 @@ body {
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background 0.14s, color 0.14s;
+  position: relative;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+/* La barrita de "aqui estas" crece desde el centro en vez de aparecer de
+   golpe: es lo que hace que el cambio de modulo se sienta como un
+   movimiento y no como un sombreado que se prende. */
+.sidebar-nav .tab-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: rgba(255, 255, 255, 0.55);
+  transform: scaleY(0);
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.sidebar-nav .tab-btn.active::before {
+  transform: scaleY(1);
 }
 
 .sidebar-nav .tab-btn .ic {
@@ -365,9 +386,17 @@ body {
   opacity: 0.85;
 }
 
+/* Al pasar por encima el modulo se acerca un pelo, como diciendo "por aqui" */
 .sidebar-nav .tab-btn:hover {
   background: rgba(255, 255, 255, 0.07);
   color: #fff;
+  transform: translateX(2px);
+}
+
+/* Y al pulsarlo cede, para que el clic se sienta */
+.sidebar-nav .tab-btn:active {
+  transform: translateX(2px) scale(0.985);
+  transition-duration: 0.06s;
 }
 
 /* Donde estas parado ya se ve por el fondo y el texto en blanco: la barrita
@@ -375,7 +404,6 @@ body {
 .sidebar-nav .tab-btn.active {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.55);
 }
 
 .sidebar-nav .tab-btn.active .ic {
@@ -1575,6 +1603,35 @@ select:focus {
 
 .hidden {
   display: none !important;
+}
+
+/* El modulo que se abre entra subiendo un poco. Son 220 milisegundos: lo
+   justo para que el ojo siga el cambio, no tanto como para esperarlo. Los
+   elementos pegados (barra, encabezado, aviso de conexion) estan fuera de
+   los paneles, asi que este `transform` no los afecta. */
+.tab-panel:not(.hidden) {
+  animation: panel-entra 0.22s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes panel-entra {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel:not(.hidden) {
+    animation: none;
+  }
+
+  .sidebar-nav .tab-btn,
+  .sidebar-nav .tab-btn::before {
+    transition: none;
+  }
+
+  .sidebar-nav .tab-btn:hover,
+  .sidebar-nav .tab-btn:active {
+    transform: none;
+  }
 }
 
 .checkbox-row {
