@@ -262,25 +262,29 @@
 
   // ---------- El dólar ----------
 
-  // Tarifa publicada de Wompi: 2,65% + $700, y el IVA del 19% recae sobre la
-  // comisión, no sobre la venta. Siendo no responsables de IVA ese 19% no se
-  // descuenta contra nada: es costo puro.
+  // Tarifa observada en los reportes de conciliación de esta cuenta: 1,99%
+  // sobre lo cobrado, sin cargo fijo y sin IVA aparte. NO es la publicada por
+  // Wompi (2,65% + $700 + IVA), que corresponde a otro plan.
   //
-  // Se usa SOLO como respaldo. La tarifa publicada es la del Plan Avanzado y
-  // hay otros planes, asi que lo que manda es la medida de las ventas reales.
-  const PUBLICADA = { porcentaje: 0.0265 * 1.19, fijo: 700 * 1.19 };
-
-  // Un ajuste por debajo de esto significa que los datos no describen una
-  // tarifa unica; mejor volver a la publicada que inventar un promedio.
-  const AJUSTE_MINIMO = 0.9;
+  // Y las retenciones (retefuente 1,5% + ICA 0,414%) NO son costo: son
+  // anticipos de impuestos propios que se cruzan al declarar. Se muestran
+  // aparte para no inflar el precio con plata que vuelve.
+  const OBSERVADA = { porcentaje: 0.0199, fijo: 0, retenciones: 0.01914 };
 
   function tarifaVigente() {
     const ventas = window.obtenerVentas ? window.obtenerVentas() : [];
     const m = window.Ventas ? window.Ventas.tarifaReal(ventas) : null;
-    if (m && m.suficiente && m.ajuste >= AJUSTE_MINIMO) {
-      return { porcentaje: m.porcentaje, fijo: m.fijo, medida: true, n: m.n, ajuste: m.ajuste };
+    if (m && m.suficiente) {
+      return {
+        porcentaje: m.porcentaje,
+        fijo: m.fijo,
+        retenciones: m.retenciones,
+        medida: true,
+        uniforme: m.uniforme,
+        n: m.n,
+      };
     }
-    return { ...PUBLICADA, medida: false, n: m ? m.n : 0, ajuste: m ? m.ajuste : null };
+    return { ...OBSERVADA, medida: false, uniforme: true, n: m ? m.n : 0 };
   }
 
   const pesos = (n) => (window.Ventas ? window.Ventas.pesos(n)
@@ -443,6 +447,10 @@
     const enlace = Math.ceil(enlaceParaRecibir(objetivo, tarifa));
     const comision = comisionWompi(enlace, tarifa);
     const neto = enlace - comision;
+    // Lo que realmente aterriza en la cuenta: además de la comisión, la
+    // pasarela retiene impuestos que después se cruzan al declarar.
+    const retenido = enlace * (tarifa.retenciones || 0);
+    const aterriza = neto - retenido;
 
     destino.innerHTML = `
       <div class="calc-salida">
@@ -450,22 +458,23 @@
         <div class="calc-monto cifras">${pesos(enlace)}</div>
         <div class="calc-detalle">
           ${enDolares ? `<div><span>Tu comisión</span><span class="cifras">US$${bruto.toFixed(2)} × ${pesosExactos(t.valor)} = ${pesos(objetivo)}</span></div>` : ''}
-          <div><span>Wompi se queda con</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2).replace('.', ',')}%</span></div>
+          <div><span>Comisión de Wompi</span><span class="cifras">${pesos(comision)} · ${(comision / enlace * 100).toFixed(2).replace('.', ',')}%</span></div>
+          ${retenido ? `<div><span>Retenciones (vuelven al declarar)</span><span class="cifras">${pesos(retenido)} · ${((tarifa.retenciones) * 100).toFixed(2).replace('.', ',')}%</span></div>` : ''}
           ${comision / enlace > 0.06 ? `<div class="calc-aviso">${window.icono('alerta')}
             El cargo fijo de ${pesos(tarifa.fijo)} pesa demasiado en un monto tan pequeño.
             Si puedes, cobra varias comisiones en un solo enlace.</div>` : ''}
-          <div class="fin"><span>Te queda</span><span class="cifras">${pesos(neto)}${
+          <div class="fin"><span>Ganas</span><span class="cifras">${pesos(neto)}${
             !enDolares && t.valor ? ' · US$' + (neto / t.valor).toFixed(2) : ''
           }</span></div>
+          ${retenido ? `<div><span>Entra a la cuenta hoy</span><span class="cifras">${pesos(aterriza)}</span></div>` : ''}
         </div>
       </div>
       <p class="hint calc-fuente">${tarifa.medida
-        ? `${window.icono('check')} Tarifa medida de tus ${tarifa.n} ventas reales: `
-          + `${(tarifa.porcentaje * 100).toFixed(2).replace('.', ',')}% + ${pesos(tarifa.fijo)}`
-        : `${window.icono('alerta')} Usando la tarifa publicada de Wompi `
-          + `(2,65% + $700 + IVA). ${tarifa.n >= 20
-            ? 'Tus ventas no describen una tarifa única, así que no me fío de medirla.'
-            : 'Carga tus ventas en el módulo Ventas y la mido de tus datos reales.'}`
+        ? `${window.icono('check')} Tarifa leída de tus ${tarifa.n} transacciones: `
+          + `${(tarifa.porcentaje * 100).toFixed(2).replace('.', ',')}%`
+          + (tarifa.uniforme ? ' en todas.' : ', pero no es igual en todas: revisa el reporte.')
+        : `${window.icono('alerta')} Usando el 1,99% visto en tus reportes de conciliación. `
+          + 'Carga tus ventas en Ventas y la leo de cada transacción.'
       }</p>`;
   }
 

@@ -90,6 +90,12 @@
         canje: buscarCol(enc, 'FECHA DE CANJE'),
         bruto: buscarCol(enc, 'VALOR TOTAL'),
         neto: buscarCol(enc, 'VALOR NETO'),
+        // El reporte separa lo que cobra la pasarela de lo que te retienen
+        // por impuestos. Son cosas distintas y hay que guardarlas aparte.
+        comision: buscarCol(enc, 'VALOR COMISION'),
+        retefuente: buscarCol(enc, 'VALOR RETEFUENTE'),
+        reteica: buscarCol(enc, 'VALOR RTE ICA'),
+        reteiva: buscarCol(enc, 'VALOR RETE IVA'),
         franquicia: buscarCol(enc, 'FRANQUICIA'),
         autorizacion: buscarCol(enc, 'CODIGO AUTORIZACION'),
         tipo: buscarCol(enc, 'TIPO TRANSACCION'),
@@ -107,6 +113,7 @@
         franquicia: buscarCol(enc, 'FRANQUICIA'),
         tarjeta: buscarCol(enc, 'TARJETA'),
         autorizacion: -1, tipo: -1, cliente: -1, plataforma: -1,
+        comision: -1, retefuente: -1, reteica: -1, reteiva: -1,
       };
     }
     return {
@@ -118,6 +125,7 @@
       cliente: buscarCol(enc, 'NOMBRE COMPLETO'),
       plataforma: buscarCol(enc, 'PLATAFORMA'),
       autorizacion: -1, tipo: -1, tarjeta: -1, canje: -1,
+      comision: -1, retefuente: -1, reteica: -1, reteiva: -1,
     };
   }
 
@@ -176,6 +184,12 @@
         plataforma: col.plataforma === -1 ? 'WOMPI' : (normalizarTexto(f[col.plataforma]) || 'WOMPI'),
         cliente: col.cliente === -1 ? '' : String(f[col.cliente] || '').trim(),
         tarjeta: col.tarjeta === -1 ? '' : String(f[col.tarjeta] || '').trim(),
+        // En valor absoluto: en el reporte vienen en negativo.
+        comision: col.comision === -1 ? null : Math.abs(aNumero(f[col.comision])),
+        retenciones: (col.retefuente === -1 && col.reteica === -1 && col.reteiva === -1)
+          ? null
+          : Math.abs(aNumero(f[col.retefuente])) + Math.abs(aNumero(f[col.reteica]))
+            + Math.abs(aNumero(f[col.reteiva])),
       };
       venta.id = idDe(venta);
       ventas.push(venta);
@@ -256,63 +270,45 @@
 
   // ---------- Tarifa real de la pasarela ----------
   //
-  // La tarifa publicada de Wompi (2,65% + $700 + IVA) es la del Plan Avanzado,
-  // pero hay otros planes y la tarifa tambien cambia segun cada cuanto
-  // desembolsen. En vez de creerle a una pagina, se mide de las propias
-  // ventas: el reporte de conciliacion trae lo cobrado y lo recibido, y la
-  // diferencia es exactamente lo que se quedo la pasarela.
+  // La tarifa publicada (2,65% + $700 + IVA) es la del Plan Avanzado y no
+  // tiene por que ser la de esta cuenta. El reporte de conciliacion la trae
+  // explicita, asi que se lee de ahi en vez de suponerla.
   //
-  // Se ajusta comision = porcentaje x cobrado + fijo por minimos cuadrados.
-  // Solo entran las ventas con fecha de canje, porque son las que vienen del
-  // reporte de Wompi; la hoja vieja de 2025 usa esas columnas con otro
-  // significado y mezclarlas falsearia el resultado.
+  // Y hay que separar dos cosas que el "valor neto" mezcla:
+  //   - la comision de la pasarela, que si es un costo;
+  //   - la retefuente y el ICA, que son anticipos de impuestos propios y se
+  //     cruzan al declarar. Contarlos como costo inflaria el precio.
   function tarifaReal(ventas) {
     const usables = (ventas || []).filter((v) => v.fechaCanje
       && (v.tipo || 'COMPRA') === 'COMPRA'
-      && v.bruto > 0 && v.neto > 0 && v.neto < v.bruto);
+      && v.bruto > 0 && v.comision != null && v.comision >= 0);
 
-    if (usables.length < 20) {
-      return { suficiente: false, n: usables.length };
-    }
+    if (usables.length < 5) return { suficiente: false, n: usables.length };
 
-    const n = usables.length;
-    let sx = 0; let sy = 0; let sxx = 0; let sxy = 0;
-    usables.forEach((v) => {
-      const x = v.bruto;
-      const y = v.bruto - v.neto;
-      sx += x; sy += y; sxx += x * x; sxy += x * y;
-    });
+    const cobrado = usables.reduce((a, v) => a + v.bruto, 0);
+    const comision = usables.reduce((a, v) => a + v.comision, 0);
+    const retenido = usables.reduce((a, v) => a + (v.retenciones || 0), 0);
+    if (!cobrado) return { suficiente: false, n: usables.length };
 
-    const denominador = n * sxx - sx * sx;
-    if (!denominador) return { suficiente: false, n };
+    const porcentaje = comision / cobrado;
 
-    const porcentaje = (n * sxy - sx * sy) / denominador;
-    const fijo = (sy - porcentaje * sx) / n;
-
-    // Que tan bien describe la recta a los datos. Si la pasarela cobrara
-    // siempre igual esto daria casi 1; bastante menos significa que hay
-    // tarifas distintas mezcladas y el promedio no representa a ninguna.
-    const promedioY = sy / n;
-    let varianza = 0; let residuos = 0; let peorPeso = 0;
-    usables.forEach((v) => {
-      const y = v.bruto - v.neto;
-      const estimado = porcentaje * v.bruto + fijo;
-      varianza += (y - promedioY) ** 2;
-      residuos += (y - estimado) ** 2;
-      peorPeso = Math.max(peorPeso, Math.abs(y - estimado));
-    });
-    const ajuste = varianza ? 1 - residuos / varianza : 0;
+    // Si todas las ventas llevan el mismo porcentaje, la tarifa es una sola y
+    // se puede usar con confianza. Si no, hay planes o tarjetas con tarifas
+    // distintas mezcladas y conviene decirlo.
+    const tasas = usables.map((v) => v.comision / v.bruto);
+    const dispersion = Math.max(...tasas) - Math.min(...tasas);
 
     return {
       suficiente: true,
-      n,
+      n: usables.length,
       porcentaje,
-      fijo,
-      ajuste,
-      desvioTipico: Math.sqrt(residuos / n),
-      peorPeso,
-      // Cuanto se llevo la pasarela sobre el total, en el periodo completo
-      efectiva: sy / sx,
+      fijo: 0,
+      uniforme: dispersion < 0.0005,
+      dispersion,
+      retenciones: retenido / cobrado,
+      cobrado,
+      comision,
+      retenido,
     };
   }
 
