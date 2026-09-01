@@ -59,10 +59,16 @@ const AIRLINES = [
   'AEROMEXICO', 'FRONTIER AIRLINES', 'AIR CANADA', 'ARAJET',
 ];
 
-const DEFAULT_TERMS = `La información detallada es la correcta. Los boletos aéreos no son reembolsables ni transferibles.
+// La primera linea decia "La informacion detallada es la correcta". Estaba
+// escrita como afirmacion de la agencia, pero el cliente la leia como una
+// instruccion y preguntaba donde confirmaba. Ahora dice que revisar, hasta
+// cuando, y que pasa si no se hace: las aerolineas solo permiten corregir un
+// nombre dentro de las primeras 24 horas, y despues cobran o no lo permiten.
+const DEFAULT_TERMS = `Revise que los nombres y apellidos coincidan EXACTAMENTE con el pasaporte o documento con el que va a viajar. Si algo no coincide, avísenos dentro de las próximas 24 horas: pasado ese plazo la aerolínea cobra la corrección o no la permite.
+Los boletos aéreos no son reembolsables ni transferibles.
 Blue Travel no se hace responsable por cambios que la aerolínea haga en itinerarios y en políticas de equipaje.
 Cualquier cambio está sujeto a penalidad de hasta $300 más posible diferencia de tarifa original de la aerolínea.
-Debe reconfirmar su vuelo 3 días antes de la salida y presentarse 3 horas antes en el aeropuerto el día del viaje.`;
+Haga su check-in con la aerolínea y preséntese 3 horas antes en el aeropuerto el día del viaje.`;
 
 function airportLabel(a) {
   return `${a.code} - ${a.city}, ${a.country}`;

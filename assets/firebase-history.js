@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc, serverTimestamp, onSnapshot, query, orderBy,
+  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp, onSnapshot, query, orderBy,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -32,6 +32,63 @@ let unsubFacturas = null;
 // ---------- Guardado ----------
 
 window.obtenerBoletos = () => boletos;
+
+// ---------- Confirmacion de datos ----------
+//
+// La ventana para corregir un nombre es corta: varias aerolineas solo lo
+// permiten dentro de las 24 horas de la reserva, y despues cobran o no dejan.
+// Como los datos del pasajero los digita la agencia, esa confirmacion es el
+// control de esa entrada, no un tramite.
+const HORAS_LIMITE = 24;
+// Pasada una semana ya no hay nada que hacer: perseguir la confirmacion solo
+// llenaria la lista de pendientes que nadie puede resolver.
+const DIAS_UTILES_PARA_PEDIRLA = 7;
+
+function horasDesde(ts) {
+  if (!ts || !ts.toDate) return null;
+  return (Date.now() - ts.toDate().getTime()) / 3600000;
+}
+
+window.boletosSinConfirmar = function boletosSinConfirmar() {
+  return boletos
+    .filter((b) => b.confirmado !== true && b.creado)
+    .map((b) => ({ ...b, _horas: horasDesde(b.creado) }))
+    .filter((b) => b._horas != null && b._horas < DIAS_UTILES_PARA_PEDIRLA * 24)
+    .sort((a, b) => b._horas - a._horas);   // el mas viejo primero: es el que corre riesgo
+};
+
+window.HORAS_LIMITE_CONFIRMACION = HORAS_LIMITE;
+
+window.marcarBoletoConfirmado = async function marcarBoletoConfirmado(id) {
+  const hoy = new Date();
+  const iso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  await updateDoc(doc(db, 'boletos', id), { confirmado: true, confirmadoEn: iso });
+};
+
+// El mensaje lista los datos exactos que hay que revisar: pedir "confirma por
+// favor" sin decir que revisar no sirve de nada.
+window.mensajeDeConfirmacion = function mensajeDeConfirmacion(b) {
+  const nombres = (b.passengers || []).join(', ') || 'viajero';
+  const ida = b.ida || {};
+  const aerolinea = airlineOf(ida);
+  const l = [];
+  l.push(`¡Hola ${nombres}! 🙋‍♀️👋 Aquí *Blue Travel* ✈️`);
+  l.push('');
+  l.push('Antes de que todo quede en firme, ¿nos confirmas que estos datos están *exactamente* como aparecen en tu pasaporte?');
+  l.push('');
+  l.push(`👤 Pasajero(s): ${nombres}`);
+  if (b.bookingRef) l.push(`🔖 Reserva: ${b.bookingRef}`);
+  if (aerolinea) l.push(`🛫 Aerolínea: ${aerolinea}`);
+  if (ida.origin && ida.dest) l.push(`📍 Ruta: ${ida.origin} → ${ida.dest}`);
+  if (ida.fechaSalida) {
+    l.push(`📅 Sale el: ${formatIsoDate(ida.fechaSalida)}${ida.horaSalida ? ' a las ' + ida.horaSalida : ''}`);
+  }
+  l.push('');
+  l.push('⚠️ Es importante revisarlo hoy: si un nombre no coincide con el documento, la aerolínea solo permite corregirlo dentro de las primeras 24 horas.');
+  l.push('');
+  l.push('Respóndenos *"Todo bien"* o cuéntanos qué hay que ajustar 🙂');
+  return l.join('\n');
+};
 
 window.saveBoletoToCloud = function saveBoletoToCloud(boleto) {
   addDoc(boletosCol, { ...boleto, alertaEnviada: false, creado: serverTimestamp() })

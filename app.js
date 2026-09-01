@@ -949,6 +949,10 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
       resumen: ruta,
       trm: trm && trm.valor ? trm.valor : null,
       trmFecha: trm && trm.fecha ? trm.fecha : '',
+      // Los datos del pasajero los digitamos nosotros a partir de lo que
+      // manda el cliente, asi que el error entra ahi. Nace sin confirmar.
+      confirmado: false,
+      confirmadoEn: '',
     });
   }
 

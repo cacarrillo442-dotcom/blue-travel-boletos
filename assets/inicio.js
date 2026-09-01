@@ -130,7 +130,9 @@
       .sort((a, b) => a._dias - b._dias);
   }
 
-  function filaPendiente({ tono, cuando, titulo, detalle, panel, accion }) {
+  // `acciones` es una lista: algunos pendientes se resuelven en dos pasos
+  // -pedir y marcar-, no en uno.
+  function filaPendiente({ tono, cuando, titulo, detalle, acciones }) {
     const div = document.createElement('div');
     div.className = 'trip-card';
     div.innerHTML = `
@@ -139,16 +141,40 @@
         <div class="trip-name">${titulo}</div>
         <div class="trip-route">${detalle}</div>
       </div>`;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn-secondary btn-compact';
-    btn.innerHTML = window.icono('promocionar', 'ic-izq') + accion;
-    btn.addEventListener('click', () => irA(panel));
     const acts = document.createElement('div');
     acts.className = 'trip-actions';
-    acts.appendChild(btn);
+    acciones.forEach(({ icono, texto, clase, alPulsar }) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = clase || 'btn-secondary btn-compact';
+      btn.innerHTML = window.icono(icono, 'ic-izq') + texto;
+      btn.addEventListener('click', () => alPulsar(btn));
+      acts.appendChild(btn);
+    });
     div.appendChild(acts);
     return div;
+  }
+
+  // ---------- Confirmación de datos del boleto ----------
+  //
+  // Los nombres los digita la agencia, y la aerolínea solo permite corregirlos
+  // dentro de las primeras 24 horas. Por eso los boletos recién emitidos piden
+  // confirmación hasta que alguien diga que están bien.
+  function confirmacionesPendientes() {
+    return window.boletosSinConfirmar ? window.boletosSinConfirmar() : [];
+  }
+
+  function antiguedad(horas) {
+    if (horas < 1) return 'recién';
+    if (horas < 24) return `${Math.floor(horas)} h`;
+    const dias = Math.floor(horas / 24);
+    return `${dias} ${dias === 1 ? 'día' : 'días'}`;
+  }
+
+  function whatsapp(telefono, mensaje) {
+    const digitos = String(telefono || '').replace(/\D/g, '');
+    if (!digitos) return null;
+    return `https://wa.me/${digitos}?text=${encodeURIComponent(mensaje)}`;
   }
 
   // El mismo conteo, marcado en la barra lateral: asi se ve que hay trabajo
@@ -173,7 +199,8 @@
 
     const viajes = viajesUrgentes();
     const cupones = cuponesPorVencer();
-    const total = viajes.length + cupones.length;
+    const confirmar = confirmacionesPendientes();
+    const total = viajes.length + cupones.length + confirmar.length;
 
     marcarEnLaBarra('navConteoViajes', viajes.length);
     marcarEnLaBarra('navConteoCupones', cupones.length);
@@ -197,9 +224,46 @@
     destino.innerHTML = '';
     if (!total) {
       destino.innerHTML = window.vacio('check', 'Nada pendiente',
-        'Ningún check-in por avisar ni cupones a punto de vencerse.', true);
+        'Ningún dato por confirmar, ningún check-in por avisar y ningún cupón '
+        + 'a punto de vencerse.', true);
       return;
     }
+
+    // Van primero: son las que tienen el plazo más corto de todas.
+    const LIMITE = window.HORAS_LIMITE_CONFIRMACION || 24;
+    confirmar.forEach((b) => {
+      const nombres = (b.passengers || []).join(', ') || '(sin pasajero)';
+      const dentroDePlazo = b._horas < LIMITE;
+      const enlace = whatsapp(b.telefono, window.mensajeDeConfirmacion(b));
+
+      const acciones = [];
+      if (enlace) {
+        acciones.push({
+          icono: 'mensaje', texto: 'Pedir confirmación',
+          alPulsar: () => window.open(enlace, '_blank', 'noopener'),
+        });
+      }
+      acciones.push({
+        icono: 'check', texto: 'Ya confirmó', clase: 'btn-add',
+        alPulsar: async (btn) => {
+          btn.disabled = true;
+          try { await window.marcarBoletoConfirmado(b.id); }
+          catch (e) { btn.disabled = false; }
+        },
+      });
+
+      destino.appendChild(filaPendiente({
+        tono: dentroDePlazo ? (b._horas > LIMITE / 2 ? 'urgent' : 'soon') : 'later',
+        cuando: antiguedad(b._horas),
+        titulo: `${escapeHtml(nombres)} <span class="trip-leg">sin confirmar</span>`,
+        detalle: `${window.icono('boleto')} Revisar que los nombres coincidan con el pasaporte`
+          + (dentroDePlazo
+            ? ` · quedan ${Math.max(0, Math.floor(LIMITE - b._horas))} h para corregir sin costo`
+            : ' · el plazo de 24 h para corregir ya pasó')
+          + (enlace ? '' : ' · sin teléfono guardado'),
+        acciones,
+      }));
+    });
 
     viajes.forEach((t) => {
       const nombres = (t.pasajeros || []).join(', ') || '(sin nombre)';
@@ -210,8 +274,7 @@
         titulo: `${escapeHtml(nombres)} <span class="trip-leg ${t._tramo === 'regreso' ? 'vuelta' : ''}">${t._tramo}</span>`,
         detalle: `${window.icono('viajes')} Recordarle el check-in · ${escapeHtml(ruta)}`
           + `${t._aerolinea ? ' · ' + escapeHtml(t._aerolinea) : ''}`,
-        panel: 'tripsPanel',
-        accion: 'Avisar',
+        acciones: [{ icono: 'promocionar', texto: 'Avisar', alPulsar: () => irA('tripsPanel') }],
       }));
     });
 
@@ -221,8 +284,7 @@
         cuando: c._dias === 0 ? 'Hoy' : `${c._dias} días`,
         titulo: `${escapeHtml(c.clienteNombre || '(sin cliente)')} <span class="trip-leg">${escapeHtml(c.numero || '')}</span>`,
         detalle: `${window.icono('cupon')} Su cupón de US$${c.valor} vence ${cuandoTexto(c._dias)}`,
-        panel: 'couponsPanel',
-        accion: 'Ver cupón',
+        acciones: [{ icono: 'promocionar', texto: 'Ver cupón', alPulsar: () => irA('couponsPanel') }],
       }));
     });
   }
