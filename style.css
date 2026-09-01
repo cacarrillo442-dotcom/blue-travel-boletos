@@ -2496,3 +2496,29 @@ select:focus {
 
 .vacio.bien .ic { color: #2f6b4a; opacity: 1; }
 .vacio.bien .vacio-titulo { color: #2f6b4a; }
+
+/* ---------- Instalada como app ----------
+   Con pantalla tactil los botones de accion se quedaban en 39px y para el
+   dedo se recomiendan 44. `pointer: coarse` apunta al dedo y no al ancho de
+   pantalla, que es lo que de verdad importa aqui: un iPad ancho tambien se
+   toca. En el computador no cambia nada. */
+@media (pointer: coarse) {
+  .trip-actions button,
+  .btn-add,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  .trip-done-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* En modo instalado no hay barra del navegador, asi que el encabezado queda
+   pegado al borde: un poco mas de aire arriba para que no se sienta apretado. */
+@media (display-mode: standalone) {
+  .topbar {
+    padding-top: 18px;
+  }
+}
