@@ -45,6 +45,8 @@
     reloj: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.3l3.2 1.9"/>',
     dinero: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2v9.6M14.4 9.4a2.4 2.4 0 0 0-4.8.4c0 2.4 4.8 1.3 4.8 3.7a2.4 2.4 0 0 1-4.8.4"/>',
     alerta: '<path d="M12 3.5 21 19H3z"/><path d="M12 9.5v4M12 16.3h.01"/>',
+    // Senal de prohibido, a proposito distinta de la caneca: anular no es borrar.
+    anular: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
     ruta: '<circle cx="12" cy="10" r="2.6"/><path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21z"/>',
 
     // Barra lateral

@@ -2682,3 +2682,69 @@ select:focus {
 
   .tarifa-subtotal { grid-column: 1 / -1; text-align: right; }
 }
+
+/* ---------- Facturas anuladas ---------- */
+/*
+   Anular no es eliminar: la factura se queda en la lista, con su numero, para
+   que el consecutivo no tenga huecos. Pero tiene que distinguirse de una
+   valida a simple vista, o el registro engana.
+
+   Se apaga -no se esconde- y se marca con un sello. El borde rojizo hace que
+   se ubique al recorrer la lista sin tener que leer cada renglon.
+*/
+/*
+   Sin `opacity`: apagar la tarjeta entera tambien apaga el motivo de la
+   anulacion, que es justo lo que hay que poder leer. Medido, el motivo caia a
+   2.17 de contraste. El fondo rosado, el sello y el numero tachado ya dicen que
+   esta anulada sin tener que atenuar el texto.
+*/
+.trip-card.anulada {
+  background: #fcf8f8;
+  border-color: #e6cfcf;
+}
+
+.trip-card.anulada:hover {
+  border-color: #d9b8b8;
+}
+
+/* El motivo no puede ir en el gris tenue del resto de la lista: es la razon por
+   la que esta factura no vale. */
+.trip-card.anulada .trip-sub {
+  color: #7a3a3a;
+}
+
+/* El numero tachado dice "este numero existe pero no vale", que es
+   exactamente lo que significa una factura anulada. */
+.trip-card.anulada .trip-leg {
+  background: #f0e2e2;
+  color: #8c2f2f;
+  text-decoration: line-through;
+}
+
+.sello-anulada {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 1.5px solid #b22222;
+  border-radius: 4px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  /* #b22222 daba 4.32 sobre blanco, por debajo del minimo de 4.5 */
+  color: #a01b1b;
+  background: #fff;
+}
+
+/* Rojo, pero no el rojo de eliminar: es una accion seria y reversible solo
+   emitiendo otra factura, asi que se anuncia sin gritar. */
+.btn-anular {
+  color: #8c2f2f;
+  border-color: #e0c4c4;
+}
+
+.btn-anular:hover {
+  background: #fbf1f1;
+  border-color: #cfa8a8;
+}

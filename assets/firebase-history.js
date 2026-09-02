@@ -166,12 +166,15 @@ function textoBuscableFactura(f) {
   return [
     f.numero, f.comprador, f.buyerName, f.city, f.country,
     (f.items || []).map((i) => i.description).join(' '),
+    // Buscar "anulada" lista todas las anuladas, que es justo lo que se
+    // necesita al cuadrar el consecutivo.
+    f.anulada ? 'anulada ' + (f.motivoAnulacion || '') : '',
   ].filter(Boolean).join(' ').toLowerCase();
 }
 
-function fila({ titulo, sub, meta, acciones }) {
+function fila({ titulo, sub, meta, acciones, clase }) {
   const row = document.createElement('div');
-  row.className = 'trip-card';
+  row.className = 'trip-card' + (clase ? ' ' + clase : '');
 
   const info = document.createElement('div');
   info.className = 'trip-info';
@@ -269,29 +272,77 @@ function filaFactura(f) {
     ? concepto.description.split('\n')[0]
     : 'Sin concepto';
 
-  return fila({
-    titulo: escapeHtml(comprador)
-      + (f.numero ? ` <span class="trip-leg">${escapeHtml(f.numero)}</span>` : ''),
-    sub: `${window.icono('factura')} ${escapeHtml(desc)}`,
-    meta: [
-      f.date ? window.icono('calendario') + ' ' + formatIsoDate(f.date) : '',
-      typeof f.total === 'number' ? window.icono('dinero') + ' ' + (f.moneda === 'COP' ? 'COP $' : '$') + f.total.toFixed(2) : '',
-      f.creado ? 'Guardada el ' + formatCreado(f.creado) : '',
-    ].filter(Boolean).join(' &nbsp;·&nbsp; '),
-    acciones: [
-      boton(window.icono('descargar','ic-izq') + 'PDF', 'Volver a descargar la factura', 'btn-add', () => {
+  const anulada = !!f.anulada;
+
+  const acciones = [
+    boton(window.icono('descargar', 'ic-izq') + 'PDF',
+      anulada ? 'Descargar la factura con el sello de anulada' : 'Volver a descargar la factura',
+      'btn-add', () => {
         window.generateInvoiceFromRaw(f);
       }),
-      boton(window.icono('copiar','ic-izq') + 'Usar como base', 'Cargar en el formulario para reusarla', 'btn-secondary btn-compact', () => {
+    boton(window.icono('copiar', 'ic-izq') + 'Usar como base',
+      anulada ? 'Cargar en el formulario para reemplazarla' : 'Cargar en el formulario para reusarla',
+      'btn-secondary btn-compact', () => {
         window.fillInvoiceForm(f);
         irAPestana('invoicePanel');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }),
+  ];
+
+  // Anular deja la factura en su sitio, con su numero: es lo que evita que el
+  // consecutivo quede con un hueco. Por eso, una vez anulada, ya no se ofrece
+  // eliminarla; borrarla despues seria deshacer justo lo que se quiso dejar
+  // registrado.
+  if (!anulada) {
+    acciones.push(
+      boton(window.icono('anular', 'ic-izq') + 'Anular', 'Dejarla sin efecto, conservando el número',
+        'btn-secondary btn-compact btn-anular', async () => {
+          const respuesta = window.prompt(
+            `Anular la factura ${f.numero || ''} de "${comprador}".\n\n`
+            + 'La factura NO se borra: conserva su número, se queda en el historial y '
+            + 'el PDF sale sellado como ANULADA.\n\nEsto no se puede deshacer.\n\n'
+            + '¿Por qué se anula?', '');
+          if (respuesta === null) return;          // cancelo
+          const motivo = respuesta.trim();
+          // El motivo es obligatorio: una factura anulada sin explicacion no
+          // sirve para cuadrar nada despues. Se avisa en vez de no hacer nada.
+          if (!motivo) {
+            window.alert('No se anuló: hay que escribir el motivo.');
+            return;
+          }
+          try {
+            await updateDoc(doc(db, 'facturas', f.id), {
+              anulada: true,
+              anuladaEn: new Date().toISOString(),
+              motivoAnulacion: motivo,
+              anuladaPor: (auth.currentUser && auth.currentUser.email) || '',
+            });
+          } catch (e) {
+            window.alert(`No se pudo anular: ${e.message}`);
+          }
+        }),
       boton(window.icono('eliminar'), 'Eliminar del historial', 'trip-done-btn', async () => {
         if (!window.confirm(`¿Eliminar la factura de "${comprador}" del historial?`)) return;
         try { await deleteDoc(doc(db, 'facturas', f.id)); } catch (e) { /* reintentar */ }
       }),
-    ],
+    );
+  }
+
+  return fila({
+    clase: anulada ? 'anulada' : '',
+    titulo: escapeHtml(comprador)
+      + (f.numero ? ` <span class="trip-leg">${escapeHtml(f.numero)}</span>` : '')
+      + (anulada ? ' <span class="sello-anulada">ANULADA</span>' : ''),
+    sub: `${window.icono('factura')} ${escapeHtml(desc)}`,
+    meta: [
+      f.date ? window.icono('calendario') + ' ' + formatIsoDate(f.date) : '',
+      typeof f.total === 'number' ? window.icono('dinero') + ' ' + (f.moneda === 'COP' ? 'COP $' : '$') + f.total.toFixed(2) : '',
+      anulada
+        ? window.icono('anular') + ' Anulada el ' + formatIsoDate(String(f.anuladaEn || '').slice(0, 10))
+          + (f.motivoAnulacion ? ': ' + escapeHtml(f.motivoAnulacion) : '')
+        : (f.creado ? 'Guardada el ' + formatCreado(f.creado) : ''),
+    ].filter(Boolean).join(' &nbsp;·&nbsp; '),
+    acciones,
   });
 }
 

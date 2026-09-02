@@ -695,7 +695,50 @@ function drawInvoiceHeader(doc, inv) {
   doc.setFillColor(...PRIMARY);
   doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
 
-  return HEADER_H + 1.8 + 0.7 + 10;
+  let inicio = HEADER_H + 1.8 + 0.7 + 10;
+
+  // Una factura anulada tiene que verse anulada. Si al volver a descargarla
+  // saliera igual a una valida, anularla no serviria de nada: el PDF circula
+  // por fuera de la app y nadie sabria que quedo sin efecto.
+  //
+  // Va en su propia franja debajo del encabezado y no dentro de el: arriba solo
+  // quedan 24mm y el aviso caia justo sobre la banda azul, cortado.
+  if (inv.anulada) {
+    const alto = 9;
+    doc.setFillColor(252, 235, 235);
+    doc.rect(MARGIN, inicio - 5, PAGE_W - MARGIN * 2, alto, 'F');
+    doc.setFillColor(178, 34, 34);
+    doc.rect(MARGIN, inicio - 5, 1.4, alto, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(140, 47, 47);
+    const cuando = inv.anuladaEn ? ` el ${inv.anuladaEn}` : '';
+    doc.text(`FACTURA ANULADA${cuando} · sin validez`, MARGIN + 4, inicio + 0.8);
+    inicio += alto + 4;
+  }
+
+  return inicio;
+}
+
+// El sello atravesado. Se dibuja al final, sobre el contenido ya escrito, y va
+// traslucido: tiene que dominar la hoja sin impedir leer lo que dice.
+function drawVoidStamp(doc, inv) {
+  if (!inv.anulada) return;
+  const conGState = typeof doc.GState === 'function' || typeof doc.setGState === 'function';
+  if (conGState && doc.GState) doc.setGState(new doc.GState({ opacity: 0.16 }));
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(80);
+  doc.setTextColor(178, 34, 34);
+  doc.text('ANULADA', PAGE_W / 2, PAGE_H / 2, { align: 'center', angle: 32 });
+  if (conGState && doc.GState) doc.setGState(new doc.GState({ opacity: 1 }));
+
+  if (inv.motivoAnulacion) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(178, 34, 34);
+    const lineas = doc.splitTextToSize(`Motivo de la anulación: ${inv.motivoAnulacion}`, PAGE_W - MARGIN * 2);
+    doc.text(lineas, MARGIN, PAGE_H - 26);
+  }
 }
 
 function generateInvoicePDF(ticketData, inv) {
@@ -828,9 +871,19 @@ function generateInvoicePDF(ticketData, inv) {
 
   drawContactFooter(doc, page);
 
+  // El sello va en todas las paginas, no solo en la ultima: si la factura es
+  // larga, cualquier hoja suelta tiene que delatar que esta anulada.
+  if (inv.anulada) {
+    for (let p = 1; p <= page; p += 1) {
+      doc.setPage(p);
+      drawVoidStamp(doc, inv);
+    }
+  }
+
   const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const numero = inv.numero ? `${String(inv.numero).replace(/[^A-Za-z0-9-]/g, '')}-` : '';
-  doc.save(`factura-${numero}${safeName || 'blue-travel'}.pdf`);
+  const marca = inv.anulada ? 'ANULADA-' : '';
+  doc.save(`factura-${marca}${numero}${safeName || 'blue-travel'}.pdf`);
 }
 
 // ---------- Form submit ----------
@@ -1112,6 +1165,11 @@ function invoiceFieldsFromRaw(raw) {
     taxLabel: raw.taxLabel || 'Impuesto',
     taxAmount: parseMoney(raw.taxAmount),
     notes: raw.notes || '',
+    // Anular no borra: la factura se sigue pudiendo descargar, pero sale
+    // sellada. Por eso el estado viaja hasta el PDF.
+    anulada: !!raw.anulada,
+    anuladaEn: raw.anuladaEn ? formatDate(String(raw.anuladaEn).slice(0, 10)) : '',
+    motivoAnulacion: raw.motivoAnulacion || '',
   };
 }
 
