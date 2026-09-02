@@ -1155,7 +1155,7 @@ window.fillInvoiceForm = function fillInvoiceForm(raw) {
 function collectQuoteFields() {
   return {
     clientName: document.getElementById('qClientName').value.trim(),
-    passengers: document.getElementById('qPassengers').value.trim() || '1',
+    tarifas: leerTarifas(),
     clientPhone: buildFullClientPhone(),
     clientEmail: document.getElementById('qClientEmail').value.trim(),
     airline: qAirlineSelect.value === 'OTRA'
@@ -1189,7 +1189,7 @@ function collectQuoteFields() {
       bodega: document.getElementById('qEqBodega').checked,
     },
     itineraryNotes: document.getElementById('qItineraryNotes').value.trim(),
-    price: parseMoney(document.getElementById('qPrice').value),
+    price: String(leerTarifas().total),
     currency: document.getElementById('qCurrency').value,
     validUntil: formatDate(document.getElementById('qValidUntil').value),
     conditions: document.getElementById('qConditions').value.trim(),
@@ -1198,6 +1198,65 @@ function collectQuoteFields() {
 
 // Descripcion de la escala de un tramo. Estaba repetida en tres sitios con la
 // misma formula; ahora vive en un solo lugar.
+// ---------- Tarifas por tipo de pasajero ----------
+//
+// Las aerolineas cobran distinto segun la edad, y antes solo habia un contador
+// y un precio unico: no habia forma de decir "dos adultos y un nino a otro
+// precio". El total se calcula aqui y no se escribe a mano, para que las
+// partes y el total no puedan contradecirse.
+const CATEGORIAS = [
+  { clave: 'adultos', cantidad: 'qAdultos', precio: 'qPrecioAdulto', sub: 'qSubAdulto',
+    uno: 'adulto', varios: 'adultos' },
+  { clave: 'ninos', cantidad: 'qNinos', precio: 'qPrecioNino', sub: 'qSubNino',
+    uno: 'niño', varios: 'niños' },
+  { clave: 'infantes', cantidad: 'qInfantes', precio: 'qPrecioInfante', sub: 'qSubInfante',
+    uno: 'infante', varios: 'infantes' },
+];
+
+function leerTarifas() {
+  const moneda = document.getElementById('qCurrency').value;
+  const filas = CATEGORIAS.map((c) => {
+    const cantidad = Math.max(0, parseInt(document.getElementById(c.cantidad).value, 10) || 0);
+    const precio = parseFloat(String(document.getElementById(c.precio).value).replace(',', '.')) || 0;
+    return { ...c, cantidad, precio, subtotal: cantidad * precio };
+  });
+  return {
+    moneda,
+    filas,
+    pasajeros: filas.reduce((a, f) => a + f.cantidad, 0),
+    total: filas.reduce((a, f) => a + f.subtotal, 0),
+  };
+}
+
+// "2 adultos y 1 nino", con singular y plural donde toca.
+function resumenPasajeros(filas) {
+  const partes = filas.filter((f) => f.cantidad > 0)
+    .map((f) => `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`);
+  if (!partes.length) return 'Sin pasajeros';
+  if (partes.length === 1) return partes[0];
+  return `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}`;
+}
+
+function pintarTarifas() {
+  const t = leerTarifas();
+  t.filas.forEach((f) => {
+    document.getElementById(f.sub).textContent =
+      f.cantidad && f.precio ? formatMoney(String(f.subtotal), t.moneda) : '—';
+  });
+  document.getElementById('qResumenPax').textContent = resumenPasajeros(t.filas);
+  document.getElementById('qTotal').textContent =
+    t.total ? formatMoney(String(t.total), t.moneda) : '—';
+}
+
+CATEGORIAS.forEach((c) => {
+  [c.cantidad, c.precio].forEach((id) => {
+    const campo = document.getElementById(id);
+    if (campo) campo.addEventListener('input', pintarTarifas);
+  });
+});
+document.getElementById('qCurrency').addEventListener('change', pintarTarifas);
+pintarTarifas();
+
 function textoTipoVuelo(tipo, lugar, tiempo) {
   if (tipo !== 'ESCALA') return 'Directo';
   const aeropuerto = lugar
@@ -1242,7 +1301,21 @@ function buildQuoteText(q) {
     }
     lines.push(`🔁 Tipo de vuelo (regreso): ${textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo)}`);
   }
-  lines.push(`👤 Pasajeros: ${q.passengers}`);
+  const conPasajeros = q.tarifas.filas.filter((f) => f.cantidad > 0);
+  if (conPasajeros.length === 1 && conPasajeros[0].clave === 'adultos') {
+    // Todos adultos: no hace falta desglosar nada.
+    const f = conPasajeros[0];
+    lines.push(`👤 Pasajeros: ${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+      + (f.precio ? ` × ${formatMoney(String(f.precio), q.currency)}` : ''));
+  } else if (conPasajeros.length) {
+    lines.push('👤 Pasajeros:');
+    conPasajeros.forEach((f) => {
+      lines.push(`   • ${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+        + (f.precio
+          ? ` × ${formatMoney(String(f.precio), q.currency)} = ${formatMoney(String(f.subtotal), q.currency)}`
+          : ''));
+    });
+  }
   lines.push(`🎒 Equipaje: ${luggageSummary(q.luggage)}`);
   if (q.itineraryNotes) lines.push(`📝 ${q.itineraryNotes}`);
   lines.push('');
@@ -1401,7 +1474,20 @@ function drawQuoteImageCard(q) {
         }
         row('Tipo de vuelo (regreso)', textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo));
       }
-      row('Pasajeros', String(q.passengers));
+      const conPax = q.tarifas.filas.filter((f) => f.cantidad > 0);
+      if (conPax.length === 1 && conPax[0].clave === 'adultos') {
+        const f = conPax[0];
+        row('Pasajeros', `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+          + (f.precio ? `  ×  ${formatMoney(String(f.precio), q.currency)}` : ''));
+      } else {
+        conPax.forEach((f, i) => {
+          row(i === 0 ? 'Pasajeros' : '',
+            `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+            + (f.precio
+              ? `  ×  ${formatMoney(String(f.precio), q.currency)}  =  ${formatMoney(String(f.subtotal), q.currency)}`
+              : ''));
+        });
+      }
       row('Equipaje', luggageSummary(q.luggage));
       y += 15;
 

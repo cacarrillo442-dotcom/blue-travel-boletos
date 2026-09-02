@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260902-162939" />
+<meta name="app-version" content="20260902-163801" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260902-162939" />
+<link rel="stylesheet" href="style.css?v=20260902-163801" />
 </head>
 <body>
 
@@ -527,9 +527,6 @@
         <label>Nombre del cliente
           <input type="text" id="qClientName" placeholder="Ej. Juan Pérez" />
         </label>
-        <label>Número de pasajeros
-          <input type="number" id="qPassengers" min="1" value="1" />
-        </label>
       </div>
       <div class="grid-3">
         <label>Indicativo
@@ -658,11 +655,44 @@
     </section>
 
     <section class="card">
-      <h3>Precio y vigencia</h3>
-      <div class="grid-3">
-        <label>Precio total
-          <input type="text" inputmode="decimal" id="qPrice" placeholder="Ej. 1200.00" />
-        </label>
+      <h3>Pasajeros y precio</h3>
+      <p class="hint">
+        Las aerolíneas cobran distinto según la edad. El total se calcula solo,
+        para que no haya que hacer la cuenta a mano.
+      </p>
+      <div class="tarifas">
+        <div class="tarifa-encabezado">
+          <span>Tipo de pasajero</span><span>Cantidad</span><span>Precio c/u</span><span>Subtotal</span>
+        </div>
+
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo">Adultos <em>12 años o más</em></span>
+          <input type="number" id="qAdultos" min="0" value="1" />
+          <input type="text" inputmode="decimal" id="qPrecioAdulto" placeholder="Ej. 490.00" />
+          <span class="tarifa-subtotal cifras" id="qSubAdulto">—</span>
+        </div>
+
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo">Niños <em>de 2 a 11 años</em></span>
+          <input type="number" id="qNinos" min="0" value="0" />
+          <input type="text" inputmode="decimal" id="qPrecioNino" placeholder="Ej. 390.00" />
+          <span class="tarifa-subtotal cifras" id="qSubNino">—</span>
+        </div>
+
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo">Infantes <em>menores de 2 años</em></span>
+          <input type="number" id="qInfantes" min="0" value="0" />
+          <input type="text" inputmode="decimal" id="qPrecioInfante" placeholder="Ej. 90.00" />
+          <span class="tarifa-subtotal cifras" id="qSubInfante">—</span>
+        </div>
+
+        <div class="tarifa-total">
+          <span id="qResumenPax">1 adulto</span>
+          <strong class="cifras" id="qTotal">—</strong>
+        </div>
+      </div>
+
+      <div class="grid-2">
         <label>Moneda
           <select id="qCurrency">
             <option value="USD">Dólares (US$)</option>
@@ -1213,28 +1243,28 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260902-162939"></script>
-<script src="assets/version.js?v=20260902-162939"></script>
-<script src="assets/trm.js?v=20260902-162939"></script>
+<script src="assets/iconos.js?v=20260902-163801"></script>
+<script src="assets/version.js?v=20260902-163801"></script>
+<script src="assets/trm.js?v=20260902-163801"></script>
 <script src="assets/logo-blue-data.js"></script>
-<script src="assets/catalog-data.js?v=20260902-162939"></script>
-<script src="assets/country-codes-data.js?v=20260902-162939"></script>
+<script src="assets/catalog-data.js?v=20260902-163801"></script>
+<script src="assets/country-codes-data.js?v=20260902-163801"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260902-162939"></script>
-<script src="assets/cupon-imagen.js?v=20260902-162939"></script>
-<script src="assets/publicidad-imagen.js?v=20260902-162939"></script>
-<script src="assets/precios-datos.js?v=20260902-162939"></script>
-<script src="app.js?v=20260902-162939"></script>
-<script src="assets/inicio.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260902-162939"></script>
-<script src="assets/precios-ui.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-history.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260902-162939"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260902-162939"></script>
+<script src="assets/sales-parse.js?v=20260902-163801"></script>
+<script src="assets/cupon-imagen.js?v=20260902-163801"></script>
+<script src="assets/publicidad-imagen.js?v=20260902-163801"></script>
+<script src="assets/precios-datos.js?v=20260902-163801"></script>
+<script src="app.js?v=20260902-163801"></script>
+<script src="assets/inicio.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260902-163801"></script>
+<script src="assets/precios-ui.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-history.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260902-163801"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260902-163801"></script>
 </body>
 </html>

@@ -2586,3 +2586,99 @@ select:focus {
   color: #7d99ad;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Tarifas por tipo de pasajero ----------
+   Cuatro columnas alineadas: tipo, cantidad, precio y subtotal. En pantalla
+   angosta cada fila se apila con su etiqueta, porque una tabla de cuatro
+   columnas en un telefono no se lee. */
+.tarifas {
+  margin: 14px 0 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tarifa-encabezado,
+.tarifa-fila {
+  display: grid;
+  grid-template-columns: 1.6fr 90px 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 16px;
+}
+
+.tarifa-encabezado {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--line);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.tarifa-encabezado span:not(:first-child) { text-align: right; }
+
+.tarifa-fila { border-bottom: 1px solid var(--line-soft); }
+
+.tarifa-tipo {
+  display: flex;
+  flex-direction: column;
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.tarifa-tipo em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: .74rem;
+  color: var(--ink-soft);
+}
+
+.tarifa-fila input {
+  width: 100%;
+  padding: 8px 10px;
+  text-align: right;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.tarifa-subtotal {
+  text-align: right;
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.tarifa-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.tarifa-total span { font-size: .86rem; color: #cfe0ec; }
+.tarifa-total strong { font-size: 1.35rem; font-weight: 700; }
+
+@media (max-width: 700px) {
+  .tarifa-encabezado { display: none; }
+
+  .tarifa-fila {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .tarifa-tipo { grid-column: 1 / -1; }
+
+  /* Sin encabezado, cada campo necesita decir qué es */
+  .tarifa-fila input#qAdultos,
+  .tarifa-fila input#qNinos,
+  .tarifa-fila input#qInfantes { text-align: left; }
+
+  .tarifa-subtotal { grid-column: 1 / -1; text-align: right; }
+}
