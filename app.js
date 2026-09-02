@@ -1380,18 +1380,145 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+const MESES_LARGOS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+// "15/10/2026" -> "miércoles 15 de octubre". El dia de la semana importa: es lo
+// primero que el viajero contrasta con su calendario.
+//
+// Se arma con `new Date(a, m, d)` -en hora local- y no con la cadena completa,
+// porque `new Date('2026-10-15')` se interpreta en UTC y en Colombia devuelve
+// el dia anterior.
+function fechaEnPalabras(texto) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto || '');
+  if (!m) return texto || '';
+  const dia = Number(m[1]);
+  const mes = Number(m[2]);
+  const anio = Number(m[3]);
+  const f = new Date(anio, mes - 1, dia);
+  return `${DIAS_LARGOS[f.getDay()]} ${dia} de ${MESES_LARGOS[mes - 1]}`;
+}
+
+// La escala, dicha corto. En el mensaje escrito cabe "BOG - Bogotá, Colombia ·
+// 01:30 hrs", pero en la imagen ese texto va apretado entre las dos horas y las
+// toca. Aqui basta la ciudad y la duracion en lenguaje normal.
+function textoEscalaCorta(lugar, tiempo) {
+  const a = findAirport(lugar);
+  const donde = a ? a.city : (lugar || '');
+  const m = /^(\d{1,2}):?(\d{2})$/.exec(tiempo || '');
+  let cuanto = '';
+  if (m) {
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    cuanto = (h ? `${h}h` : '') + (min ? `${h ? ' ' : ''}${min}m` : '');
+  }
+  if (!donde) return cuanto ? `Escala de ${cuanto}` : 'Con escala';
+  return `Escala en ${donde}${cuanto ? ` · ${cuanto}` : ''}`;
+}
+
+// Un tramo del viaje dibujado como un pasabordo: los dos codigos grandes con su
+// hora debajo, y en el medio la linea del vuelo con la escala escrita encima.
+// Asi se lee de un vistazo, que es como se mira una imagen en WhatsApp.
+function dibujarTramo(ctx, W, y, datos) {
+  const alto = 210;
+  const x = 60;
+  const ancho = W - 120;
+  const pad = 38;
+  const izq = x + pad;
+  const der = x + ancho - pad;
+  const centro = x + ancho / 2;
+
+  ctx.fillStyle = '#f1f7fb';
+  roundRectPath(ctx, x, y, ancho, alto, 20);
+  ctx.fill();
+  ctx.fillStyle = '#126f99';
+  roundRectPath(ctx, x, y, 8, alto, 4);
+  ctx.fill();
+
+  // Encabezado del tramo: IDA · AVIANCA  ...  miércoles 15 de octubre
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 25px Arial, sans-serif';
+  ctx.fillStyle = '#126f99';
+  ctx.fillText(datos.titulo + (datos.aerolinea ? ` · ${datos.aerolinea}` : ''), izq, y + 48);
+  ctx.textAlign = 'right';
+  ctx.font = '25px Arial, sans-serif';
+  ctx.fillStyle = '#5b6b78';
+  ctx.fillText(datos.fecha, der, y + 48);
+
+  // Los codigos de aeropuerto, que es el dato que el viajero busca primero.
+  ctx.font = 'bold 52px Arial, sans-serif';
+  ctx.fillStyle = '#033c69';
+  ctx.textAlign = 'left';
+  ctx.fillText(datos.origen, izq, y + 126);
+  ctx.textAlign = 'right';
+  ctx.fillText(datos.destino, der, y + 126);
+
+  // La linea del vuelo. Punteada porque sugiere trayecto sin competir con el
+  // texto; el avion va encima, tapando el tramo del medio.
+  ctx.save();
+  ctx.strokeStyle = '#9dc0d4';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 9]);
+  ctx.beginPath();
+  ctx.moveTo(centro - 150, y + 110);
+  ctx.lineTo(centro + 150, y + 110);
+  ctx.stroke();
+  ctx.restore();
+  ctx.textAlign = 'center';
+  ctx.font = '38px Arial, sans-serif';
+  ctx.fillText('✈️', centro, y + 124);
+
+  // Las horas, cada una bajo su aeropuerto.
+  ctx.font = '29px Arial, sans-serif';
+  ctx.fillStyle = '#4a4a4a';
+  const hSalida = datos.salida || '-';
+  const hLlegada = datos.llegada || '-';
+  ctx.textAlign = 'left';
+  ctx.fillText(hSalida, izq, y + 172);
+  const anchoSalida = ctx.measureText(hSalida).width;
+  ctx.textAlign = 'right';
+  ctx.fillText(hLlegada, der, y + 172);
+  const anchoLlegada = ctx.measureText(hLlegada).width;
+
+  // La escala en el medio: si es directo tambien se dice, porque la ausencia de
+  // escala es justo lo que el cliente quiere confirmar.
+  //
+  // El hueco se mide contra las horas ya dibujadas. Si el nombre de la ciudad no
+  // cabe se baja un punto la letra, y si aun asi no cabe se corta: preferible a
+  // que el texto se monte sobre la hora, que es lo que pasaba.
+  const texto = datos.escala || 'Vuelo directo';
+  const hueco = (der - anchoLlegada) - (izq + anchoSalida) - 48;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = datos.escala ? '#8a5a00' : '#5b6b78';
+  ctx.font = '24px Arial, sans-serif';
+  let visible = texto;
+  if (ctx.measureText(visible).width > hueco) {
+    ctx.font = '21px Arial, sans-serif';
+    while (visible.length > 4 && ctx.measureText(visible + '…').width > hueco) {
+      visible = visible.slice(0, -1);
+    }
+    if (visible !== texto) visible += '…';
+  }
+  ctx.fillText(visible, centro, y + 170);
+
+  return alto;
+}
+
 function drawQuoteImageCard(q) {
   return new Promise((resolve) => {
     const W = 1080;
-    const H = 1600;
+    // Se dibuja sobre un lienzo holgado y al final se recorta a lo que se uso:
+    // una cotizacion solo de ida no tiene por que dejar un vacio abajo.
+    const MAX = 2400;
     const canvas = document.createElement('canvas');
     canvas.width = W;
-    canvas.height = H;
+    canvas.height = MAX;
     const ctx = canvas.getContext('2d');
 
     const build = (logoImg) => {
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, W, MAX);
 
       const headerH = 230;
       ctx.fillStyle = '#033c69';
@@ -1442,53 +1569,77 @@ function drawQuoteImageCard(q) {
       ctx.stroke();
       y += 55;
 
-      const row = (label, value) => {
+      // El itinerario, un bloque por tramo. Antes eran seis renglones sueltos
+      // -fecha, horario y tipo de vuelo de cada trayecto, intercalados- y no se
+      // entendia cual dato era de la ida y cual del regreso.
+      y += dibujarTramo(ctx, W, y, {
+        titulo: 'IDA',
+        aerolinea: q.airline,
+        fecha: fechaEnPalabras(q.departDate),
+        origen: originCode,
+        destino: destCode,
+        salida: q.departTime,
+        llegada: q.arriveTime,
+        escala: q.tipoVuelo === 'ESCALA'
+          ? textoEscalaCorta(q.escalaLugar, q.escalaTiempo)
+          : '',
+      }) + 26;
+
+      if (q.returnDate) {
+        // En multidestino el regreso sale de otra ciudad; el bloque lo muestra
+        // solo, sin necesitar una fila aparte de "ruta de regreso".
+        const multi = q.returnMultidestino && (q.returnOrigin || q.returnDest);
+        y += dibujarTramo(ctx, W, y, {
+          titulo: 'REGRESO',
+          aerolinea: q.returnAirline || q.airline,
+          fecha: fechaEnPalabras(q.returnDate),
+          origen: (multi ? q.returnOrigin : destCode) || '---',
+          destino: (multi ? q.returnDest : originCode) || '---',
+          salida: q.returnDepartTime,
+          llegada: q.returnArriveTime,
+          escala: q.returnTipoVuelo === 'ESCALA'
+            ? textoEscalaCorta(q.returnEscalaLugar, q.returnEscalaTiempo)
+            : '',
+        }) + 26;
+      }
+      y += 24;
+
+      // La columna del valor se calcula midiendo las etiquetas que de verdad se
+      // van a escribir. Antes estaba fija en x=340 y "Tipo de vuelo (regreso)"
+      // medía 320px sobre 280 disponibles: se montaba encima del valor.
+      const filas = [];
+      const conPax = q.tarifas.filas.filter((f) => f.cantidad > 0);
+      if (conPax.length === 1 && conPax[0].clave === 'adultos') {
+        const f = conPax[0];
+        filas.push(['Pasajeros', `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+          + (f.precio ? `  ×  ${formatMoney(String(f.precio), q.currency)}` : '')]);
+      } else {
+        conPax.forEach((f, i) => {
+          filas.push([i === 0 ? 'Pasajeros' : '',
+            `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
+            + (f.precio
+              ? `  ×  ${formatMoney(String(f.precio), q.currency)}  =  ${formatMoney(String(f.subtotal), q.currency)}`
+              : '')]);
+        });
+      }
+      filas.push(['Equipaje', luggageSummary(q.luggage)]);
+
+      ctx.font = 'bold 29px Arial, sans-serif';
+      const anchoEtiqueta = filas.reduce((max, [label]) =>
+        Math.max(max, ctx.measureText(label).width), 0);
+      const valorX = 60 + Math.ceil(anchoEtiqueta) + 40;
+
+      filas.forEach(([label, value]) => {
+        ctx.textAlign = 'left';
         ctx.font = 'bold 29px Arial, sans-serif';
         ctx.fillStyle = '#126f99';
         ctx.fillText(label, 60, y);
         ctx.font = '29px Arial, sans-serif';
         ctx.fillStyle = '#4a4a4a';
-        const lines = wrapCanvasText(ctx, value, W - 60 - 340);
-        lines.forEach((line, i) => ctx.fillText(line, 340, y + i * 36));
+        const lines = wrapCanvasText(ctx, value, W - 60 - valorX);
+        lines.forEach((line, i) => ctx.fillText(line, valorX, y + i * 36));
         y += Math.max(36, lines.length * 36) + 18;
-      };
-
-      if (q.airline) row('Aerolínea', q.airline);
-      row('Tipo de vuelo', textoTipoVuelo(q.tipoVuelo, q.escalaLugar, q.escalaTiempo));
-      row('Fecha de ida', q.departDate || '-');
-      if (q.departTime || q.arriveTime) {
-        row('Horario ida', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
-      }
-      if (q.returnDate) {
-        if (q.returnMultidestino && (q.returnOrigin || q.returnDest || q.returnAirline)) {
-          const retOriginAirport = findAirport(q.returnOrigin);
-          const retDestAirport = findAirport(q.returnDest);
-          const retOriginLabel = retOriginAirport ? `${retOriginAirport.city} (${retOriginAirport.code})` : q.returnOrigin;
-          const retDestLabel = retDestAirport ? `${retDestAirport.city} (${retDestAirport.code})` : q.returnDest;
-          row('Ruta de regreso', `${retOriginLabel || '-'} → ${retDestLabel || '-'}`);
-          if (q.returnAirline) row('Aerolínea regreso', q.returnAirline);
-        }
-        row('Fecha de regreso', q.returnDate);
-        if (q.returnDepartTime || q.returnArriveTime) {
-          row('Horario regreso', `Salida ${q.returnDepartTime || '-'}   Llegada ${q.returnArriveTime || '-'}`);
-        }
-        row('Tipo de vuelo (regreso)', textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo));
-      }
-      const conPax = q.tarifas.filas.filter((f) => f.cantidad > 0);
-      if (conPax.length === 1 && conPax[0].clave === 'adultos') {
-        const f = conPax[0];
-        row('Pasajeros', `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
-          + (f.precio ? `  ×  ${formatMoney(String(f.precio), q.currency)}` : ''));
-      } else {
-        conPax.forEach((f, i) => {
-          row(i === 0 ? 'Pasajeros' : '',
-            `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`
-            + (f.precio
-              ? `  ×  ${formatMoney(String(f.precio), q.currency)}  =  ${formatMoney(String(f.subtotal), q.currency)}`
-              : ''));
-        });
-      }
-      row('Equipaje', luggageSummary(q.luggage));
+      });
       y += 15;
 
       const boxH = 160;
@@ -1509,20 +1660,31 @@ function drawQuoteImageCard(q) {
         ctx.font = '27px Arial, sans-serif';
         ctx.fillStyle = '#4a4a4a';
         ctx.fillText(`⏳ Cotización válida hasta: ${q.validUntil}`, 60, y);
+        y += 20;
       }
 
+      // Recorte final: el alto sale del contenido, no de un numero fijo.
       const footerH = 110;
-      ctx.fillStyle = '#033c69';
-      ctx.fillRect(0, H - footerH, W, footerH);
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 32px Arial, sans-serif';
-      ctx.fillText('Blue Travel · Agencia de Viajes', W / 2, H - footerH + 45);
-      ctx.font = '24px Arial, sans-serif';
-      ctx.fillStyle = '#cfe3ee';
-      ctx.fillText(`${AGENCY_WHATSAPP}   ·   ${AGENCY_EMAIL}`, W / 2, H - footerH + 80);
+      const H = Math.min(MAX, y + 50 + footerH);
+      const final = document.createElement('canvas');
+      final.width = W;
+      final.height = H;
+      const fx = final.getContext('2d');
+      fx.fillStyle = '#ffffff';
+      fx.fillRect(0, 0, W, H);
+      fx.drawImage(canvas, 0, 0, W, H - footerH, 0, 0, W, H - footerH);
 
-      resolve(canvas);
+      fx.fillStyle = '#033c69';
+      fx.fillRect(0, H - footerH, W, footerH);
+      fx.textAlign = 'center';
+      fx.fillStyle = '#ffffff';
+      fx.font = 'bold 32px Arial, sans-serif';
+      fx.fillText('Blue Travel · Agencia de Viajes', W / 2, H - footerH + 45);
+      fx.font = '24px Arial, sans-serif';
+      fx.fillStyle = '#cfe3ee';
+      fx.fillText(`${AGENCY_WHATSAPP}   ·   ${AGENCY_EMAIL}`, W / 2, H - footerH + 80);
+
+      resolve(final);
     };
 
     const img = new Image();
