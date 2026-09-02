@@ -185,6 +185,7 @@ document.getElementById('hasReturn').addEventListener('change', (e) => {
 populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
+populateAirportSelect(document.getElementById('qReturnEscalaLugar'));
 populateAirportSelect(document.getElementById('qReturnOrigin'));
 populateAirportSelect(document.getElementById('qReturnDest'));
 populateCountryCodeSelect(document.getElementById('qClientCountryCode'), '+57');
@@ -227,6 +228,21 @@ document.querySelectorAll('.q-tipo').forEach(radio => {
   radio.addEventListener('change', () => {
     qEscalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
   });
+});
+
+// El regreso tiene su propia escala: puede hacer conexion en otro lugar que la
+// ida, o ser directo cuando la ida no lo es.
+const qReturnEscalaFields = document.querySelector('.q-return-escala-fields');
+document.querySelectorAll('.q-return-tipo').forEach(radio => {
+  radio.addEventListener('change', () => {
+    qReturnEscalaFields.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
+  });
+});
+
+const qReturnEscalaTiempo = document.getElementById('qReturnEscalaTiempo');
+qReturnEscalaTiempo.addEventListener('input', () => {
+  const digits = qReturnEscalaTiempo.value.replace(/\D/g, '').slice(0, 4);
+  qReturnEscalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
 });
 
 const qEscalaTiempo = document.getElementById('qEscalaTiempo');
@@ -1164,6 +1180,9 @@ function collectQuoteFields() {
     tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
     escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
     escalaLugar: document.getElementById('qEscalaLugar').value,
+    returnTipoVuelo: (document.querySelector('.q-return-tipo:checked') || {}).value || 'DIRECTO',
+    returnEscalaTiempo: document.getElementById('qReturnEscalaTiempo').value.trim(),
+    returnEscalaLugar: document.getElementById('qReturnEscalaLugar').value,
     luggage: {
       personal: document.getElementById('qEqPersonal').checked,
       mano: document.getElementById('qEqMano').checked,
@@ -1175,6 +1194,16 @@ function collectQuoteFields() {
     validUntil: formatDate(document.getElementById('qValidUntil').value),
     conditions: document.getElementById('qConditions').value.trim(),
   };
+}
+
+// Descripcion de la escala de un tramo. Estaba repetida en tres sitios con la
+// misma formula; ahora vive en un solo lugar.
+function textoTipoVuelo(tipo, lugar, tiempo) {
+  if (tipo !== 'ESCALA') return 'Directo';
+  const aeropuerto = lugar
+    ? airportLabel(findAirport(lugar) || { code: lugar, city: '', country: '' })
+    : '-';
+  return `Con escala en ${aeropuerto}${tiempo ? ' · ' + tiempo + ' hrs' : ''}`;
 }
 
 function buildQuoteText(q) {
@@ -1193,10 +1222,7 @@ function buildQuoteText(q) {
   lines.push('');
   if (originLabel || destLabel) lines.push(`✈️ Ruta: ${originLabel || '-'} → ${destLabel || '-'}`);
   if (q.airline) lines.push(`🛫 Aerolínea: ${q.airline}`);
-  const tipoVueloText = q.tipoVuelo === 'ESCALA'
-    ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
-    : 'Directo';
-  lines.push(`🔁 Tipo de vuelo: ${tipoVueloText}`);
+  lines.push(`🔁 Tipo de vuelo: ${textoTipoVuelo(q.tipoVuelo, q.escalaLugar, q.escalaTiempo)}`);
   lines.push(`📅 Fecha de ida: ${q.departDate || '-'}`);
   if (q.departTime || q.arriveTime) {
     lines.push(`🕐 Salida: ${q.departTime || '-'}   Llegada: ${q.arriveTime || '-'}`);
@@ -1214,6 +1240,7 @@ function buildQuoteText(q) {
     if (q.returnDepartTime || q.returnArriveTime) {
       lines.push(`🕐 Salida: ${q.returnDepartTime || '-'}   Llegada: ${q.returnArriveTime || '-'}`);
     }
+    lines.push(`🔁 Tipo de vuelo (regreso): ${textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo)}`);
   }
   lines.push(`👤 Pasajeros: ${q.passengers}`);
   lines.push(`🎒 Equipaje: ${luggageSummary(q.luggage)}`);
@@ -1354,10 +1381,7 @@ function drawQuoteImageCard(q) {
       };
 
       if (q.airline) row('Aerolínea', q.airline);
-      const tipoVueloText = q.tipoVuelo === 'ESCALA'
-        ? `Con escala en ${q.escalaLugar ? airportLabel(findAirport(q.escalaLugar) || { code: q.escalaLugar, city: '', country: '' }) : '-'}${q.escalaTiempo ? ' · ' + q.escalaTiempo + ' hrs' : ''}`
-        : 'Directo';
-      row('Tipo de vuelo', tipoVueloText);
+      row('Tipo de vuelo', textoTipoVuelo(q.tipoVuelo, q.escalaLugar, q.escalaTiempo));
       row('Fecha de ida', q.departDate || '-');
       if (q.departTime || q.arriveTime) {
         row('Horario ida', `Salida ${q.departTime || '-'}   Llegada ${q.arriveTime || '-'}`);
@@ -1375,6 +1399,7 @@ function drawQuoteImageCard(q) {
         if (q.returnDepartTime || q.returnArriveTime) {
           row('Horario regreso', `Salida ${q.returnDepartTime || '-'}   Llegada ${q.returnArriveTime || '-'}`);
         }
+        row('Tipo de vuelo (regreso)', textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo));
       }
       row('Pasajeros', String(q.passengers));
       row('Equipaje', luggageSummary(q.luggage));
