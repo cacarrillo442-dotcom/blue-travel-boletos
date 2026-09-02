@@ -1528,6 +1528,9 @@ function drawQuoteImageCard(q) {
       ctx.fillStyle = '#ffc300';
       ctx.fillRect(0, headerH + 10, W, 5);
 
+      // Va el logo blanco, no el azul: la cabecera es azul oscura y el logo azul
+      // se perdia contra el fondo. En el cupon y en los PDF sigue el azul,
+      // porque alli se dibuja sobre blanco.
       if (logoImg) {
         const logoH = 110;
         const logoW = logoH * LOGO_ASPECT;
@@ -1690,7 +1693,7 @@ function drawQuoteImageCard(q) {
     const img = new Image();
     img.onload = () => build(img);
     img.onerror = () => build(null);
-    img.src = LOGO_BLUE_BASE64;
+    img.src = typeof LOGO_WHITE_BASE64 !== 'undefined' ? LOGO_WHITE_BASE64 : LOGO_BLUE_BASE64;
   });
 }
 
