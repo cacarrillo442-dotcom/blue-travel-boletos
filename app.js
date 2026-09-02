@@ -1820,6 +1820,70 @@ document.getElementById('qCopyImageBtn').addEventListener('click', async () => {
   const menuBtn = document.getElementById('menuBtn');
   const titulo = document.getElementById('seccionTitulo');
   const desc = document.getElementById('seccionDesc');
+  const plegarBtn = document.getElementById('plegarBtn');
+
+  function nombreDeModulo(btn) {
+    const etiqueta = btn.querySelector('span:not(.nav-conteo)');
+    return (etiqueta ? etiqueta.textContent : btn.textContent).trim();
+  }
+
+  // ---------- Plegar la barra ----------
+  //
+  // En pantalla ancha la barra ocupa 244px fijos. Plegada baja a 68 y devuelve
+  // 176px al contenido, que es donde de verdad se trabaja: las tablas de
+  // ventas y el historial se ven mucho mejor.
+  //
+  // No se esconde del todo a proposito. Esconderla devolveria los 244 pero
+  // obligaria a abrirla para cada cambio de modulo; el riel de iconos mantiene
+  // la navegacion en un clic.
+
+  const RECUERDO = 'blue.barraPlegada';
+
+  function leerRecuerdo() {
+    // En ventana privada de Safari leer localStorage lanza excepcion.
+    try { return localStorage.getItem(RECUERDO) === '1'; } catch (e) { return false; }
+  }
+
+  function guardarRecuerdo(plegada) {
+    try { localStorage.setItem(RECUERDO, plegada ? '1' : '0'); } catch (e) { /* sin memoria */ }
+  }
+
+  function aplicarPlegado(plegada) {
+    document.body.classList.toggle('barra-plegada', plegada);
+    if (plegarBtn) {
+      plegarBtn.setAttribute('aria-expanded', String(!plegada));
+      plegarBtn.title = (plegada ? 'Desplegar' : 'Plegar') + ' el panel (Ctrl+B)';
+      plegarBtn.setAttribute('aria-label', (plegada ? 'Desplegar' : 'Plegar') + ' el panel lateral');
+    }
+    // Plegada solo se ve el icono, asi que el nombre pasa al tooltip. Estando
+    // desplegada el nombre ya esta escrito y el tooltip solo estorbaria.
+    document.querySelectorAll('.sidebar-nav .tab-btn').forEach((b) => {
+      if (plegada) b.title = nombreDeModulo(b);
+      else b.removeAttribute('title');
+    });
+  }
+
+  aplicarPlegado(leerRecuerdo());
+
+  if (plegarBtn) {
+    plegarBtn.addEventListener('click', () => {
+      const plegada = !document.body.classList.contains('barra-plegada');
+      aplicarPlegado(plegada);
+      guardarRecuerdo(plegada);
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'b' && e.key !== 'B') return;
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    // Escribiendo en un campo, Ctrl+B mueve el cursor en Mac: no se secuestra.
+    const foco = document.activeElement;
+    if (foco && /^(INPUT|TEXTAREA|SELECT)$/.test(foco.tagName)) return;
+    e.preventDefault();
+    const plegada = !document.body.classList.contains('barra-plegada');
+    aplicarPlegado(plegada);
+    guardarRecuerdo(plegada);
+  });
 
   // En movil la barra es un cajon que tapa el contenido: se cierra sola al
   // elegir modulo, al tocar fuera y con Escape.
@@ -1853,7 +1917,11 @@ document.getElementById('qCopyImageBtn').addEventListener('click', async () => {
 
       // El encabezado repite en que modulo estas: en la barra lateral el
       // nombre queda arriba a la izquierda, lejos de donde se trabaja.
-      if (titulo) titulo.textContent = btn.textContent.trim();
+      //
+      // Se lee del span del nombre y no de btn.textContent, que arrastra el
+      // numerito del contador: "Proximos viajes" salia como "Proximos viajes3"
+      // cuando habia viajes pendientes.
+      if (titulo) titulo.textContent = nombreDeModulo(btn);
       if (desc) desc.textContent = btn.dataset.desc || '';
 
       cerrarMenu();

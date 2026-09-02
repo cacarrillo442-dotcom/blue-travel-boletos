@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260902-171848" />
+<meta name="app-version" content="20260902-173224" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260902-171848" />
+<link rel="stylesheet" href="style.css?v=20260902-173224" />
 </head>
 <body>
 
@@ -100,7 +100,9 @@
      al cliente, y al final lo de consulta y administracion. -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-marca">
-    <img src="assets/logo-white.png" alt="" class="sidebar-logo" />
+    <!-- Recortado: el logo-white.png original mide 405x500 y la marca solo
+         ocupa 170px de alto, asi que aqui se veia diminuta dentro de su caja. -->
+    <img src="assets/logo-white-recortado.png" alt="" class="sidebar-logo" />
     <div class="sidebar-marca-texto">
       <strong>Blue Travel</strong>
       <span>Sistema de Operación</span>
@@ -139,8 +141,10 @@
   </nav>
 
   <div class="sidebar-pie">
-    <button type="button" id="actualizarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-refrescar"></use></svg>Actualizar</button>
-    <button type="button" id="gateLogoutBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-salir"></use></svg>Cerrar sesión</button>
+    <!-- El texto va en un span para poder ocultarlo cuando la barra se pliega;
+         el title queda como respaldo en modo icono. -->
+    <button type="button" id="actualizarBtn" title="Actualizar"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-refrescar"></use></svg><span>Actualizar</span></button>
+    <button type="button" id="gateLogoutBtn" title="Cerrar sesión"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-salir"></use></svg><span>Cerrar sesión</span></button>
     <p class="version-actual" id="versionActual"></p>
   </div>
 </aside>
@@ -152,6 +156,10 @@
 <header class="topbar">
   <button type="button" class="menu-btn" id="menuBtn" aria-label="Abrir el menú"
     aria-controls="sidebar" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#ic-menu"></use></svg></button>
+  <!-- En pantalla ancha la barra no se esconde del todo: se pliega a una
+       columna de iconos, para no perder la navegacion de un clic. -->
+  <button type="button" class="plegar-btn" id="plegarBtn" title="Plegar el panel (Ctrl+B)"
+    aria-label="Plegar el panel lateral" aria-controls="sidebar" aria-expanded="true"><svg class="ic" aria-hidden="true"><use href="#ic-panel"></use></svg></button>
   <div class="topbar-text">
     <h1 id="seccionTitulo">Inicio</h1>
     <p id="seccionDesc">Cómo va la semana y qué quedó pendiente.</p>
@@ -1243,29 +1251,29 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260902-171848"></script>
-<script src="assets/version.js?v=20260902-171848"></script>
-<script src="assets/trm.js?v=20260902-171848"></script>
+<script src="assets/iconos.js?v=20260902-173224"></script>
+<script src="assets/version.js?v=20260902-173224"></script>
+<script src="assets/trm.js?v=20260902-173224"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260902-171848"></script>
-<script src="assets/country-codes-data.js?v=20260902-171848"></script>
+<script src="assets/catalog-data.js?v=20260902-173224"></script>
+<script src="assets/country-codes-data.js?v=20260902-173224"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260902-171848"></script>
-<script src="assets/cupon-imagen.js?v=20260902-171848"></script>
-<script src="assets/publicidad-imagen.js?v=20260902-171848"></script>
-<script src="assets/precios-datos.js?v=20260902-171848"></script>
-<script src="app.js?v=20260902-171848"></script>
-<script src="assets/inicio.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260902-171848"></script>
-<script src="assets/precios-ui.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-history.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260902-171848"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260902-171848"></script>
+<script src="assets/sales-parse.js?v=20260902-173224"></script>
+<script src="assets/cupon-imagen.js?v=20260902-173224"></script>
+<script src="assets/publicidad-imagen.js?v=20260902-173224"></script>
+<script src="assets/precios-datos.js?v=20260902-173224"></script>
+<script src="app.js?v=20260902-173224"></script>
+<script src="assets/inicio.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260902-173224"></script>
+<script src="assets/precios-ui.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-history.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260902-173224"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260902-173224"></script>
 </body>
 </html>

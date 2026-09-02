@@ -51,6 +51,8 @@
 
     // Barra lateral
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    // Un panel con su columna izquierda marcada: dice de que lado se pliega.
+    panel: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M9.5 4.5v15"/>',
     salir: '<path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4M6 12h9"/>',
   };
 

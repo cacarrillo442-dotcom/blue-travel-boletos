@@ -369,7 +369,9 @@ body {
 }
 
 .sidebar-logo {
-  height: 38px;
+  /* 30px sobre el recorte real (405x172) deja la marca en 71px de ancho, que
+     cabe de sobra en los 244 de la barra. */
+  height: 30px;
   width: auto;
 }
 
@@ -2747,4 +2749,131 @@ select:focus {
 .btn-anular:hover {
   background: #fbf1f1;
   border-color: #cfa8a8;
+}
+
+/* ---------- La barra plegada ----------
+   No se esconde del todo: se reduce a una columna de iconos. Esconderla
+   entera devolveria 244px pero obligaria a abrirla cada vez que se cambia de
+   modulo; asi se recuperan 176px y la navegacion sigue siendo de un clic.
+*/
+.plegar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.plegar-btn .ic {
+  width: 19px;
+  height: 19px;
+}
+
+.plegar-btn:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-strong);
+  border-color: var(--color-primary-2);
+}
+
+/*
+   Todo el plegado vive dentro de esta media query, y no al reves con
+   excepciones para movil.
+
+   El primer intento fue escribir el plegado suelto y deshacerlo abajo de
+   900px con `revert`, pero `revert` devuelve el valor del NAVEGADOR, no la
+   regla anterior de la hoja: `.sidebar-marca-texto` habria perdido su
+   `display:flex` y el padding de la barra se habria ido a cero. Encerrandolo
+   aqui, en movil sencillamente no existe.
+*/
+@media (min-width: 901px) {
+  body.barra-plegada .sidebar {
+    flex-basis: 68px;
+    width: 68px;
+  }
+
+  /* Plegada no cabe la marca: son 52px utiles contra los 71 que ocupa, y
+     encogerla mas la deja ilegible. Se va, y queda solo un respiro para que
+     el primer icono no pegue con el borde. */
+  body.barra-plegada .sidebar-marca {
+    padding: 0;
+    height: 22px;
+  }
+
+  body.barra-plegada .sidebar-logo,
+  body.barra-plegada .sidebar-marca-texto,
+  body.barra-plegada .nav-grupo,
+  body.barra-plegada .version-actual,
+  body.barra-plegada .sidebar-nav .tab-btn > span:not(.nav-conteo),
+  body.barra-plegada .sidebar-pie button > span {
+    display: none;
+  }
+
+  body.barra-plegada .sidebar-nav {
+    padding: 4px 8px 14px;
+  }
+
+  body.barra-plegada .sidebar-pie {
+    padding: 12px 8px 14px;
+  }
+
+  body.barra-plegada .sidebar-nav .tab-btn,
+  body.barra-plegada .sidebar-pie button {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+  }
+
+  /* Plegada, el hover ya no puede correr el boton a la derecha: en 52px ese
+     gesto se sale del riel. Queda el fondo, que sigue diciendo "por aqui". */
+  body.barra-plegada .sidebar-nav .tab-btn:hover {
+    transform: none;
+  }
+
+  body.barra-plegada .sidebar-nav .tab-btn:active {
+    transform: scale(0.94);
+  }
+
+  body.barra-plegada .sidebar-nav .tab-btn .ic,
+  body.barra-plegada .sidebar-pie .ic {
+    width: 1.35em;
+    height: 1.35em;
+    margin: 0;
+  }
+
+  /* El conteo no cabe al lado del texto porque no hay texto: se vuelve un
+     punto sobre el icono. Sigue avisando sin ocupar ancho. */
+  body.barra-plegada .nav-conteo {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    margin: 0;
+    min-width: 0;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    border: 2px solid var(--color-primary);
+  }
+
+  /* Plegada, el titulo del modulo en el encabezado deja de ser un adorno: es
+     lo unico que dice donde estas. */
+  body.barra-plegada .topbar-text h1 {
+    font-size: 1.26rem;
+  }
+}
+
+/* En movil la barra es un cajon y el plegado no aplica: el boton sobra. */
+@media (max-width: 900px) {
+  .plegar-btn {
+    display: none;
+  }
 }
