@@ -2522,3 +2522,67 @@ select:focus {
     padding-top: 18px;
   }
 }
+
+/* ---------- Aviso de version nueva ----------
+   Una franja delgada arriba del todo, no un cuadro que tape lo que se estaba
+   haciendo: enterarse puede esperar a terminar la frase. */
+.version-aviso {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.version-aviso button {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+}
+
+.version-aviso button:hover { background: rgba(255, 255, 255, 0.24); }
+.version-aviso button:disabled { opacity: 0.6; cursor: default; }
+
+/* El boton de la barra lateral comparte el aspecto de Cerrar sesion */
+#actualizarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d6e3ed;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#actualizarBtn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+/* La version que se esta corriendo, discreta: sirve para saber que hay cuando
+   algo se ve raro, no para leerla todos los dias. */
+.version-actual {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.68rem;
+  color: #7d99ad;
+  font-variant-numeric: tabular-nums;
+}

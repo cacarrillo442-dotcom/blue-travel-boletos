@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Blue Travel · Sistema de Operación Blue</title>
 <link rel="icon" href="assets/logo.png" />
+<!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
+     version.json para saber si hay algo mas nuevo publicado. -->
+<meta name="app-version" content="20260901-212137" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -20,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=48" />
+<link rel="stylesheet" href="style.css?v=20260901-212137" />
 </head>
 <body>
 
@@ -136,7 +139,9 @@
   </nav>
 
   <div class="sidebar-pie">
+    <button type="button" id="actualizarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-refrescar"></use></svg>Actualizar</button>
     <button type="button" id="gateLogoutBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-salir"></use></svg>Cerrar sesión</button>
+    <p class="version-actual" id="versionActual"></p>
   </div>
 </aside>
 
@@ -1192,27 +1197,28 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=4"></script>
-<script src="assets/trm.js?v=2"></script>
+<script src="assets/iconos.js?v=20260901-212137"></script>
+<script src="assets/version.js?v=20260901-212137"></script>
+<script src="assets/trm.js?v=20260901-212137"></script>
 <script src="assets/logo-blue-data.js"></script>
-<script src="assets/catalog-data.js?v=3"></script>
-<script src="assets/country-codes-data.js?v=2"></script>
+<script src="assets/catalog-data.js?v=20260901-212137"></script>
+<script src="assets/country-codes-data.js?v=20260901-212137"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=14"></script>
-<script src="assets/cupon-imagen.js?v=2"></script>
-<script src="assets/publicidad-imagen.js?v=2"></script>
-<script src="assets/precios-datos.js?v=5"></script>
-<script src="app.js?v=14"></script>
-<script src="assets/inicio.js?v=19"></script>
-<script type="module" src="assets/firebase-clients.js?v=12"></script>
-<script type="module" src="assets/firebase-catalog.js?v=3"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=2"></script>
-<script type="module" src="assets/firebase-cupones.js?v=4"></script>
-<script src="assets/precios-ui.js?v=9"></script>
-<script type="module" src="assets/firebase-history.js?v=7"></script>
-<script type="module" src="assets/firebase-sales.js?v=18"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=1"></script>
-<script type="module" src="assets/firebase-trips.js?v=13"></script>
-<script type="module" src="assets/firebase-gate.js?v=2"></script>
+<script src="assets/sales-parse.js?v=20260901-212137"></script>
+<script src="assets/cupon-imagen.js?v=20260901-212137"></script>
+<script src="assets/publicidad-imagen.js?v=20260901-212137"></script>
+<script src="assets/precios-datos.js?v=20260901-212137"></script>
+<script src="app.js?v=20260901-212137"></script>
+<script src="assets/inicio.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260901-212137"></script>
+<script src="assets/precios-ui.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-history.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260901-212137"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260901-212137"></script>
 </body>
 </html>
