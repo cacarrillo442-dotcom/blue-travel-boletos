@@ -435,6 +435,10 @@
 
   function ponerValoresPorDefecto() {
     el('pkOperador').value = 'Europamundo';
+    // Resumir es el comportamiento por defecto, no un dato que el usuario
+    // escribio: al limpiar tiene que volver marcada. Sin esto, despues de
+    // limpiar el mensaje salia con el itinerario completo sin avisar.
+    el('pkResumir').checked = true;
     el('pkIncluye').value = INCLUYE_POR_DEFECTO;
     el('pkNoIncluye').value = NO_INCLUYE_POR_DEFECTO;
     el('pkCondiciones').value = CONDICIONES_POR_DEFECTO;
@@ -453,6 +457,53 @@
   // SEGURIDAD: del documento se saca solo TEXTO. Nunca se inserta su HTML en la
   // pagina. Es un archivo que viene de afuera y meterlo como HTML seria abrirle
   // la puerta a cualquier cosa que traiga dentro.
+
+  // Europamundo entrega el itinerario en dos formatos distintos y hay que
+  // aguantar los dos:
+  //
+  //   - "Itinerario Word" antiguo: HTML con extension .doc. Trae los hoteles.
+  //   - Word binario de verdad (Word 97-2003). Trae la tabla de precios por
+  //     temporada, las fechas de salida y las ciudades con sus noches, pero de
+  //     los hoteles solo dice que se miren en el folleto.
+  //
+  // El binario se reconoce por su firma: todo documento OLE empieza con estos
+  // ocho bytes.
+  const FIRMA_OLE = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+
+  // Todo lo que salga del documento y se pinte como HTML pasa por aqui. El
+  // archivo viene de afuera: escribirlo crudo en la pagina seria dejar entrar
+  // lo que traiga dentro.
+  function escapar(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function esWordBinario(buffer) {
+    const b = new Uint8Array(buffer.slice(0, 8));
+    return FIRMA_OLE.every((x, i) => b[i] === x);
+  }
+
+  // En el Word binario el texto va en UTF-16LE dentro del contenedor. No se
+  // parsea el formato entero -seria escribir medio Word-: se decodifica todo y
+  // despues se acota a la region legible con las anclas del documento. Lo que
+  // queda fuera es binario y se descarta.
+  function textoPlanoDeWordBinario(buffer) {
+    const crudo = new TextDecoder('utf-16le').decode(buffer);
+    const desde = crudo.search(/CARACTER[IÍ]STICAS DEL VIAJE/i);
+    // "Europamundo-OnLine" es lo primero que aparece pasada la parte legible.
+    let hasta = crudo.indexOf('Europamundo-OnLine');
+    if (hasta < 0) hasta = crudo.length;
+    if (desde < 0 || hasta <= desde) return '';
+
+    return crudo.slice(Math.max(0, desde - 400), hasta)
+      // En Word el \r cierra parrafo y el \x0b es salto de linea; el \x07
+      // separa celdas de tabla, que es como vienen los precios.
+      .replace(/\x0b/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\x07/g, ' | ')
+      .replace(/[\x00-\x08\x0e-\x1f]/g, '');
+  }
 
   function textoPlanoDeHtml(html) {
     // Se marcan los cortes de bloque ANTES de parsear, porque textContent los
@@ -556,6 +607,93 @@
     return r;
   }
 
+  // ---------- Lectura del Word binario ----------
+  //
+  // Su itinerario no dice "Día 1" sino "01 MAR / MIE / DOM. Barcelona .-": el
+  // numero al principio y los dias de salida en siglas. Se traduce al mismo
+  // formato que ya usa el resto del modulo, en vez de abrir un segundo camino
+  // por todos lados.
+  const DIA_BINARIO = /^(\d{1,2})\s+[A-ZÁÉÍÓÚ]{3}(?:\s*\/\s*[A-ZÁÉÍÓÚ]{3})*\.\s*(.*?)\s*\.-\s*$/;
+
+  function leerItinerarioBinarioTexto(texto) {
+    const lineas = texto.split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const r = { lineas: lineas.length };
+
+    // Cabecera: "... / Barcelona, Madrid y París Turista / ID:2600935 / 8 Dias"
+    const cab = lineas.find((l) => /ID:\s*\d+/i.test(l) && /\d+\s*D[ií]as/i.test(l));
+    if (cab) {
+      // Se lee de una sola pasada y no partiendo por "/", porque la linea
+      // empieza con la fecha de impresion -"01/08/2026 Hora Local:12:01:18"- y
+      // esas barras rompian el corte: el nombre salia con la hora pegada.
+      // El nombre es el tramo anterior a "/ ID:" que no cruza ni "/" ni "|".
+      const m = cab.match(/([^/|]+?)\s*\/\s*ID:\s*(\d+)\s*\/\s*(\d{1,2})\s*D[ií]as/i);
+      if (m) {
+        r.nombre = m[1].trim();
+        r.codigo = m[2];
+        r.dias = Number(m[3]);
+      }
+    }
+
+    // El mapa trae las ciudades con las noches: "-> BARCELONA 1 -> MADRID 2".
+    const iMapa = lineas.findIndex((l) => /^MAPA$/i.test(l));
+    if (iMapa >= 0 && lineas[iMapa + 1]) {
+      const tramos = lineas[iMapa + 1].split('->').map((x) => x.trim()).filter(Boolean);
+      const ciudades = tramos.map((x) => x.replace(/\s*\d+\s*$/, '').trim()).filter(Boolean);
+      if (ciudades.length) {
+        r.ciudadInicio = ciudades[0];
+        r.ciudadFin = ciudades[ciudades.length - 1];
+        r.paises = '';   // el binario no los nombra; se dejan al usuario
+        r.recorrido = ciudades.join(' · ');
+      }
+    }
+
+    // Tabla de precios por temporada. NO se rellenan solos: cual aplica depende
+    // de la fecha de salida, y meter un precio equivocado en una cotizacion es
+    // peor que no meter ninguno. Se muestran para copiar el que toque.
+    const iPre = lineas.findIndex((l) => /^PRECIOS POR PERSONA$/i.test(l));
+    if (iPre >= 0 && lineas[iPre + 1]) {
+      const celdas = lineas[iPre + 1].split('|').map((x) => x.trim()).filter(Boolean);
+      const tarifas = [];
+      celdas.forEach((c, i) => {
+        if (/^\*?T\./i.test(c) && /^\d+$/.test(celdas[i + 1] || '') && /^\d+$/.test(celdas[i + 2] || '')) {
+          tarifas.push({ temporada: c.replace(/^\*/, ''), doble: celdas[i + 1], individual: celdas[i + 2] });
+        }
+      });
+      if (tarifas.length) r.tarifas = tarifas;
+    }
+
+    // Itinerario: de "ITINERARIO" hasta "PRECIO INCLUYE".
+    const iIt = lineas.findIndex((l) => /^ITINERARIO$/i.test(l));
+    const iInc = lineas.findIndex((l) => /^PRECIO INCLUYE$/i.test(l));
+    if (iIt >= 0) {
+      const hasta = iInc > iIt ? iInc : lineas.length;
+      const salida = [];
+      let dias = 0;
+      lineas.slice(iIt + 1, hasta).forEach((l) => {
+        const m = DIA_BINARIO.exec(l);
+        if (m) {
+          dias += 1;
+          salida.push(`Día ${Number(m[1])}`);
+          if (m[2]) salida.push(m[2]);       // ciudades del dia
+        } else {
+          salida.push(l);
+        }
+      });
+      if (dias) { r.itinerario = salida.join('\n'); r.diasLeidos = dias; }
+    }
+
+    // Lo que incluye: hasta los hoteles, que en este formato solo remiten al
+    // folleto y no sirven de nada.
+    if (iInc >= 0) {
+      const iHot = lineas.findIndex((l, k) => k > iInc && /^HOTELES PREVISTOS$/i.test(l));
+      const hasta = iHot > iInc ? iHot : lineas.length;
+      r.incluye = lineas.slice(iInc + 1, hasta).join('\n').trim();
+    }
+
+    r.formato = 'word-binario';
+    return r;
+  }
+
   function aplicarLectura(r) {
     const puesto = [];
     const poner = (id, valor, etiqueta) => {
@@ -568,6 +706,8 @@
     poner('pkPaises', r.paises, 'países');
     poner('pkCodigo', r.codigo, 'código');
     poner('pkCategoria', r.categoria, 'categoría');
+    poner('pkCiudadInicio', r.ciudadInicio, 'ciudad de inicio');
+    poner('pkCiudadFin', r.ciudadFin, 'ciudad de fin');
     poner('pkItinerario', r.itinerario, `itinerario (${r.diasLeidos || 0} días)`);
     poner('pkIncluye', r.incluye, 'lo que incluye');
     if (r.hoteles && r.hoteles.length) {
@@ -590,14 +730,22 @@
     lector.onload = () => {
       let r;
       try {
-        r = leerItinerarioEuropamundo(lector.result, archivo.name);
+        // El formato se decide por la firma del archivo, no por su extension:
+        // los dos se llaman .doc y son cosas distintas por dentro.
+        if (esWordBinario(lector.result)) {
+          const texto = textoPlanoDeWordBinario(lector.result);
+          r = texto ? leerItinerarioBinarioTexto(texto) : {};
+        } else {
+          const html = new TextDecoder('utf-8').decode(lector.result);
+          r = leerItinerarioEuropamundo(html, archivo.name);
+        }
       } catch (e) {
         estado.textContent = `No se pudo entender el archivo: ${e.message}`;
         return;
       }
       if (!r.nombre && !r.itinerario) {
         estado.textContent = 'Ese archivo no parece un itinerario de Europamundo. '
-          + 'Descárgalo con el botón «Itinerario Word» de la página del circuito.';
+          + 'Descárgalo desde la página del circuito.';
         return;
       }
       const puesto = aplicarLectura(r);
@@ -607,11 +755,28 @@
       if (r.dias && r.diasLeidos && r.dias !== r.diasLeidos) {
         msg += ` ⚠️ Ojo: el circuito dice ${r.dias} días pero el itinerario trae ${r.diasLeidos}. Revísalo.`;
       }
+      if (r.recorrido) msg += ` Recorrido: ${r.recorrido}.`;
       estado.textContent = msg;
+
+      // Los precios no se rellenan solos porque dependen de la temporada de la
+      // salida. Se muestran para que se copie el que corresponde.
+      const caja = el('pkTarifasDelDoc');
+      if (r.tarifas && r.tarifas.length) {
+        caja.innerHTML = '<strong>Precios por persona que trae el documento</strong>'
+          + ' <span class="hint-inline">(elige según la temporada de la salida; no se llenan solos)</span>'
+          + '<table class="tarifas-doc"><tr><th>Temporada</th><th>Doble</th><th>Individual</th></tr>'
+          + r.tarifas.map((t) => `<tr><td>${escapar(t.temporada)}</td>`
+            + `<td>${escapar(t.doble)}</td><td>${escapar(t.individual)}</td></tr>`).join('')
+          + '</table>';
+        caja.classList.remove('hidden');
+      } else {
+        caja.classList.add('hidden');
+        caja.innerHTML = '';
+      }
     };
-    // Los itinerarios vienen en UTF-8; leerlos como texto plano alcanza porque
-    // por dentro son HTML.
-    lector.readAsText(archivo, 'utf-8');
+    // Se lee como bytes y no como texto: hasta no ver la firma no se sabe si
+    // es HTML en UTF-8 o un Word binario en UTF-16.
+    lector.readAsArrayBuffer(archivo);
   });
 
   // ---------- Imagen para WhatsApp ----------

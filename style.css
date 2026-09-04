@@ -2884,3 +2884,35 @@ select:focus {
   color: var(--ink-soft);
   font-size: 0.78rem;
 }
+
+/* Tabla de precios que trae el itinerario del operador. Es de consulta: se
+   muestra para copiar el precio de la temporada que aplique, no se rellena
+   sola porque cual corresponde depende de la fecha de salida. */
+.tarifas-doc {
+  width: auto;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tarifas-doc th,
+.tarifas-doc td {
+  padding: 5px 14px 5px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.tarifas-doc th {
+  color: var(--color-primary-2);
+  font-weight: 700;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tarifas-doc td:not(:first-child) {
+  text-align: right;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
