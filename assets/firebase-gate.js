@@ -84,7 +84,15 @@ function detenerVigilante() {
   if (vigilante) { clearInterval(vigilante); vigilante = null; }
 }
 
+// Se quita cuando Firebase ya dijo si hay sesion o no. Hasta ese momento no se
+// sabe que pantalla mostrar, y mostrar la equivocada es peor que esperar.
+function quitarCargador() {
+  const c = document.getElementById('cargando');
+  if (c) c.classList.add('hidden');
+}
+
 onAuthStateChanged(auth, (user) => {
+  quitarCargador();
   if (user) {
     // Al volver a abrir el navegador el temporizador no corrio, hay que
     // revisar de una vez cuanto tiempo paso.

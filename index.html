@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260904-172112" />
+<meta name="app-version" content="20260904-173325" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,12 +23,31 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260904-172112" />
-<script src="assets/tema.js?v=20260904-172112"></script>
+<link rel="stylesheet" href="style.css?v=20260904-173325" />
+<script src="assets/tema.js?v=20260904-173325"></script>
 </head>
 <body>
 
-<div id="appGate" class="app-gate">
+<!-- Se ve desde el primer instante y tapa el arranque. Sin esto la pantalla
+     de login alcanzaba a parpadear en cada carga aunque hubiera sesion, porque
+     el gate arranca visible y solo se oculta cuando Firebase responde. -->
+<div id="cargando" class="cargando">
+  <div class="cargando-orbita">
+    <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <circle class="cargando-pista" cx="100" cy="100" r="72" />
+      <!-- Estela y avion en el MISMO grupo que gira: separados, cada uno se
+           animaba por su lado y quedaban en lados opuestos del circulo. -->
+      <g class="cargando-giro">
+        <circle class="cargando-estela" cx="100" cy="100" r="72" pathLength="1000" />
+        <path class="cargando-avion" d="M-9 -6 L11 0 L-9 6 L-4 0 Z" transform="translate(100 28)" />
+      </g>
+    </svg>
+    <img src="assets/logo-white-recortado.png" alt="Blue Travel" class="cargando-logo" />
+  </div>
+  <p class="cargando-texto">Preparando tu operación…</p>
+</div>
+
+<div id="appGate" class="app-gate hidden">
   <!-- Siluetas de nube. Tres formas que se reutilizan a distintos tamanos:
        el dibujo va una sola vez y cada nube es una referencia. -->
   <svg class="svg-cero" aria-hidden="true" focusable="false">
@@ -1447,32 +1466,32 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260904-172112"></script>
-<script src="assets/version.js?v=20260904-172112"></script>
-<script src="assets/trm.js?v=20260904-172112"></script>
+<script src="assets/iconos.js?v=20260904-173325"></script>
+<script src="assets/version.js?v=20260904-173325"></script>
+<script src="assets/trm.js?v=20260904-173325"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260904-172112"></script>
-<script src="assets/country-codes-data.js?v=20260904-172112"></script>
+<script src="assets/catalog-data.js?v=20260904-173325"></script>
+<script src="assets/country-codes-data.js?v=20260904-173325"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260904-172112"></script>
-<script src="assets/cupon-imagen.js?v=20260904-172112"></script>
-<script src="assets/publicidad-imagen.js?v=20260904-172112"></script>
-<script src="assets/precios-datos.js?v=20260904-172112"></script>
-<script src="app.js?v=20260904-172112"></script>
-<script src="assets/vuelos-bloque.js?v=20260904-172112"></script>
-<script src="assets/paquetes.js?v=20260904-172112"></script>
-<script src="assets/inicio.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260904-172112"></script>
-<script src="assets/clientes-autocompletar.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260904-172112"></script>
-<script src="assets/precios-ui.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-history.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260904-172112"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260904-172112"></script>
+<script src="assets/sales-parse.js?v=20260904-173325"></script>
+<script src="assets/cupon-imagen.js?v=20260904-173325"></script>
+<script src="assets/publicidad-imagen.js?v=20260904-173325"></script>
+<script src="assets/precios-datos.js?v=20260904-173325"></script>
+<script src="app.js?v=20260904-173325"></script>
+<script src="assets/vuelos-bloque.js?v=20260904-173325"></script>
+<script src="assets/paquetes.js?v=20260904-173325"></script>
+<script src="assets/inicio.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260904-173325"></script>
+<script src="assets/clientes-autocompletar.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260904-173325"></script>
+<script src="assets/precios-ui.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-history.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260904-173325"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260904-173325"></script>
 </body>
 </html>
