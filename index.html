@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260902-173224" />
+<meta name="app-version" content="20260904-094543" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260902-173224" />
+<link rel="stylesheet" href="style.css?v=20260904-094543" />
 </head>
 <body>
 
@@ -118,6 +118,8 @@
       data-desc="Arma el boleto del pasajero y descárgalo en PDF."><svg class="ic" aria-hidden="true"><use href="#ic-boleto"></use></svg><span>Boletos</span></button>
     <button type="button" class="tab-btn" data-tab="quotesPanel"
       data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
+    <button type="button" class="tab-btn" data-tab="packagesPanel"
+      data-desc="Cotiza un circuito de varios días, con su itinerario."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes</span></button>
     <button type="button" class="tab-btn" data-tab="invoicePanel"
       data-desc="Emite la factura cuando el cliente la pide."><svg class="ic" aria-hidden="true"><use href="#ic-factura"></use></svg><span>Facturas</span></button>
 
@@ -386,6 +388,192 @@
     </div>
     <p class="hint" id="ticketClienteStatus" style="text-align:right"></p>
 
+  </form>
+</div>
+
+<div id="packagesPanel" class="tab-panel hidden">
+  <form id="packageForm">
+    <section class="card">
+      <h2>Cotización de paquete</h2>
+      <p class="hint">Para circuitos de varios días con itinerario, como los de Europamundo. Para un vuelo suelto usa <strong>Cotizaciones</strong>.</p>
+    </section>
+
+    <section class="card">
+      <h3>Datos del cliente</h3>
+      <div class="grid-2">
+        <label>Nombre del cliente
+          <input type="text" id="pkClientName" placeholder="Ej. Juan Pérez" />
+        </label>
+      </div>
+      <div class="grid-3">
+        <label>Indicativo
+          <select id="pkClientCountryCode"></select>
+        </label>
+        <label>Teléfono
+          <input type="text" id="pkClientPhone" placeholder="Ej. 300 123 4567" />
+        </label>
+        <label>Correo
+          <input type="text" id="pkClientEmail" placeholder="Ej. cliente@correo.com" />
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>El circuito</h3>
+      <div class="grid-2">
+        <label>Nombre del circuito
+          <input type="text" id="pkNombre" placeholder="Ej. Corazón de Alemania y Perlas Checas" />
+        </label>
+        <label>Operador
+          <input type="text" id="pkOperador" value="Europamundo" />
+        </label>
+      </div>
+      <div class="grid-3">
+        <label>Países que recorre
+          <input type="text" id="pkPaises" placeholder="Ej. Alemania, República Checa" />
+        </label>
+        <label>Fecha de inicio
+          <input type="date" id="pkFechaInicio" />
+        </label>
+        <label>Días
+          <input type="number" min="1" max="60" id="pkDias" placeholder="Ej. 10" />
+        </label>
+      </div>
+      <div class="grid-3">
+        <label>Ciudad de inicio
+          <input type="text" id="pkCiudadInicio" placeholder="Ej. Berlín" />
+        </label>
+        <label>Ciudad de fin
+          <input type="text" id="pkCiudadFin" placeholder="Ej. Praga" />
+        </label>
+        <label>Termina el
+          <input type="text" id="pkFechaFin" readonly placeholder="Se calcula sola" />
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Vuelos</h3>
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="pkIncluyeVuelo" />
+        Esta cotización incluye los tiquetes aéreos
+      </label>
+      <div class="pk-vuelo-campos hidden">
+        <div class="grid-3">
+          <label>Aerolínea
+            <select id="pkAerolinea" class="airline-select"></select>
+          </label>
+          <label>Origen
+            <select id="pkOrigen" class="airport-select"></select>
+          </label>
+          <label>Destino
+            <select id="pkDestino" class="airport-select"></select>
+          </label>
+        </div>
+        <div class="grid-2">
+          <label>Sale el
+            <input type="date" id="pkVueloIda" />
+          </label>
+          <label>Regresa el
+            <input type="date" id="pkVueloRegreso" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Itinerario</h3>
+      <p class="hint">Cópialo de la página del circuito y pégalo aquí tal cual. Se reconocen solos los bloques que empiezan por «Día 1», «Día 2»…</p>
+      <label>Itinerario día a día
+        <textarea id="pkItinerario" rows="8" placeholder="Día 1 - LUN.&#10;BERLÍN&#10;¡Bienvenidos a nuestro circuito! Traslado al hotel y tiempo libre.&#10;&#10;Día 2 - MAR.&#10;BERLÍN&#10;Visita panorámica por la capital de Alemania…"></textarea>
+      </label>
+      <p class="hint" id="pkItinerarioLeido"></p>
+    </section>
+
+    <section class="card">
+      <h3>Qué incluye y qué no</h3>
+      <label>El precio incluye
+        <textarea id="pkIncluye" rows="4"></textarea>
+      </label>
+      <label>El precio no incluye
+        <textarea id="pkNoIncluye" rows="3"></textarea>
+      </label>
+    </section>
+
+    <section class="card">
+      <h3>Precio por acomodación</h3>
+      <p class="hint">El precio es por persona y cambia según cómo se acomoden en la habitación. Deja en cero las que no apliquen.</p>
+      <div class="tarifas">
+        <div class="tarifa-encabezado">
+          <span>Acomodación</span><span>Personas</span><span>Precio por persona</span><span>Subtotal</span>
+        </div>
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo"><strong>Doble</strong><small>dos personas por habitación</small></span>
+          <input type="number" min="0" step="1" id="pkNumDoble" placeholder="0" />
+          <input type="text" inputmode="decimal" id="pkPrecioDoble" placeholder="0.00" />
+          <span class="tarifa-subtotal" id="pkSubDoble">—</span>
+        </div>
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo"><strong>Triple</strong><small>tres personas por habitación</small></span>
+          <input type="number" min="0" step="1" id="pkNumTriple" placeholder="0" />
+          <input type="text" inputmode="decimal" id="pkPrecioTriple" placeholder="0.00" />
+          <span class="tarifa-subtotal" id="pkSubTriple">—</span>
+        </div>
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo"><strong>Individual</strong><small>habitación para una sola persona</small></span>
+          <input type="number" min="0" step="1" id="pkNumIndividual" placeholder="0" />
+          <input type="text" inputmode="decimal" id="pkPrecioIndividual" placeholder="0.00" />
+          <span class="tarifa-subtotal" id="pkSubIndividual">—</span>
+        </div>
+        <div class="tarifa-fila">
+          <span class="tarifa-tipo"><strong>Niño</strong><small>compartiendo con dos adultos</small></span>
+          <input type="number" min="0" step="1" id="pkNumNino" placeholder="0" />
+          <input type="text" inputmode="decimal" id="pkPrecioNino" placeholder="0.00" />
+          <span class="tarifa-subtotal" id="pkSubNino">—</span>
+        </div>
+        <div class="tarifa-total">
+          <span id="pkResumenPax">Sin viajeros</span>
+          <span id="pkTotal">—</span>
+        </div>
+      </div>
+      <div class="grid-3">
+        <label>Moneda
+          <select id="pkMoneda">
+            <option value="USD">Dólares (USD)</option>
+            <option value="COP">Pesos (COP)</option>
+          </select>
+        </label>
+        <label>Válida hasta
+          <input type="date" id="pkValidUntil" />
+        </label>
+      </div>
+      <label>Condiciones
+        <textarea id="pkCondiciones" rows="2"></textarea>
+      </label>
+    </section>
+
+    <section class="card">
+      <div class="inline-add-row">
+        <button type="submit" class="btn-primary"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cotizacion"></use></svg>Generar cotización</button>
+        <button type="button" class="btn-add" id="pkGenerateImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-imagen"></use></svg>Generar imagen</button>
+        <button type="button" class="btn-secondary" id="pkLimpiarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-limpiar"></use></svg>Limpiar</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="pkOutputCard">
+      <h3>Mensaje para WhatsApp</h3>
+      <textarea id="pkOutputText" rows="14"></textarea>
+      <div class="inline-add-row">
+        <button type="button" class="btn-primary" id="pkCopyBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar mensaje</button>
+      </div>
+      <div id="pkImageWrap" class="hidden">
+        <h3>Imagen</h3>
+        <img id="pkImagePreview" alt="Cotización del paquete" class="quote-image-preview" />
+        <div class="inline-add-row">
+          <button type="button" class="btn-add" id="pkDownloadImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar imagen</button>
+        </div>
+      </div>
+    </section>
   </form>
 </div>
 
@@ -1251,29 +1439,30 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260902-173224"></script>
-<script src="assets/version.js?v=20260902-173224"></script>
-<script src="assets/trm.js?v=20260902-173224"></script>
+<script src="assets/iconos.js?v=20260904-094543"></script>
+<script src="assets/version.js?v=20260904-094543"></script>
+<script src="assets/trm.js?v=20260904-094543"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260902-173224"></script>
-<script src="assets/country-codes-data.js?v=20260902-173224"></script>
+<script src="assets/catalog-data.js?v=20260904-094543"></script>
+<script src="assets/country-codes-data.js?v=20260904-094543"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260902-173224"></script>
-<script src="assets/cupon-imagen.js?v=20260902-173224"></script>
-<script src="assets/publicidad-imagen.js?v=20260902-173224"></script>
-<script src="assets/precios-datos.js?v=20260902-173224"></script>
-<script src="app.js?v=20260902-173224"></script>
-<script src="assets/inicio.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260902-173224"></script>
-<script src="assets/precios-ui.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-history.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260902-173224"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260902-173224"></script>
+<script src="assets/sales-parse.js?v=20260904-094543"></script>
+<script src="assets/cupon-imagen.js?v=20260904-094543"></script>
+<script src="assets/publicidad-imagen.js?v=20260904-094543"></script>
+<script src="assets/precios-datos.js?v=20260904-094543"></script>
+<script src="app.js?v=20260904-094543"></script>
+<script src="assets/paquetes.js?v=20260904-094543"></script>
+<script src="assets/inicio.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260904-094543"></script>
+<script src="assets/precios-ui.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-history.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260904-094543"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260904-094543"></script>
 </body>
 </html>
