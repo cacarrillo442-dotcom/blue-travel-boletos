@@ -115,7 +115,7 @@ function pintarSemana() {
     weekStats.innerHTML = window.vacio('ventas', 'Aún no hay ventas cargadas',
       'Sube el <em>Reporte Conciliar</em> de Wompi en «Importar ventas», acá abajo. '
       + 'Desde ahí sale todo lo demás de esta pantalla.');
-    weekRange.textContent = 'La semana va de sábado a viernes, igual que en tu Excel.';
+    weekRange.textContent = 'La semana va de viernes a jueves, igual que el reporte de Wompi.';
     acciones.classList.add('hidden');
     wrap.classList.add('hidden');
     return;
@@ -123,7 +123,7 @@ function pintarSemana() {
 
   acciones.classList.remove('hidden');
   wrap.classList.remove('hidden');
-  weekRange.textContent = `Del sábado ${V.fechaCorta(s.inicio)} al viernes ${V.fechaCorta(s.corte)}`
+  weekRange.textContent = `Del viernes ${V.fechaCorta(s.inicio)} al jueves ${V.fechaCorta(s.corte)}`
     + ` · ${s.ventas} ventas · contadas por fecha de canje, cuando el dinero entra a la cuenta`;
 
   let nota = '';
@@ -158,7 +158,7 @@ function pintarMeta(s) {
   // Mientras la semana corre no se opina: solo se muestra el avance.
   const clase = !m.cerrada ? 'corriendo' : (m.cumplida ? 'lograda' : 'fallada');
   const mensaje = !m.cerrada
-    ? 'La semana va corriendo. Se mide al cerrar el viernes.'
+    ? 'La semana va corriendo. Se mide al cerrar el jueves.'
     : (m.cumplida
       ? `Cumplida, ${V.pesos(m.diferencia)} por encima.`
       : `No se cumplió, faltaron ${V.pesos(-m.diferencia)}.`);
@@ -370,7 +370,7 @@ function pintarDashboard() {
   ].join('');
 
   el('weeklyHint').textContent = esMes
-    ? 'Las semanas que tocan el mes elegido, completas de sábado a viernes aunque crucen de mes.'
+    ? 'Las semanas que tocan el mes elegido, completas de viernes a jueves aunque crucen de mes.'
     : 'Pasa el cursor sobre una barra para ver el detalle.';
 
   pintarGraficaMensual();

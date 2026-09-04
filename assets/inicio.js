@@ -91,8 +91,8 @@
     }
 
     destino.innerHTML = `
-      <p class="inicio-periodo">Del sábado ${V.fechaCorta(s.inicio)} al viernes ${V.fechaCorta(s.corte)}
-        · ${s.ventas} ${s.ventas === 1 ? 'venta' : 'ventas'}${enCurso ? ' · va corriendo, cierra el viernes' : ''}</p>
+      <p class="inicio-periodo">Del viernes ${V.fechaCorta(s.inicio)} al jueves ${V.fechaCorta(s.corte)}
+        · ${s.ventas} ${s.ventas === 1 ? 'venta' : 'ventas'}${enCurso ? ' · va corriendo, cierra el jueves' : ''}</p>
       <div class="stat-row">
         <div class="stat-tile stat-tile-strong">
           <div class="stat-label">Ganancia neta</div>

@@ -222,7 +222,16 @@
     return { ventas: [...vistas.values()], repetidas };
   }
 
-  // ---------- Semanas (sabado a viernes, corte el viernes) ----------
+  // ---------- Semanas (viernes a jueves, corte el jueves) ----------
+  //
+  // El corte es el jueves porque asi lo arma Wompi: sus reportes de
+  // conciliacion van de viernes a jueves, por fecha de canje. Con el cierre
+  // anterior -sabado a viernes- las dos ventanas quedaban corridas un dia, y el
+  // primer dia de CADA reporte caia en la semana anterior de la app.
+  //
+  // No era aleatorio: pasaba todas las semanas. En el reporte del 28/08 al
+  // 03/09 se fueron dos ventas por $1.629.628 netos, que es plata de un reparto
+  // contada en otro. Ahora un archivo descargado es exactamente una semana.
 
   function aFecha(iso) {
     const [y, m, d] = iso.split('-').map(Number);
@@ -233,19 +242,19 @@
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
   }
 
-  // Viernes en que cierra la semana de una fecha dada.
-  // Ojo: en getDay() el viernes es 5 (domingo = 0), no 4.
-  const VIERNES = 5;
+  // Jueves en que cierra la semana de una fecha dada.
+  // Ojo: en getDay() el jueves es 4 (domingo = 0), no 3.
+  const JUEVES = 4;
   function corteDe(iso) {
     const d = aFecha(iso);
-    const desplazamiento = (VIERNES - d.getDay() + 7) % 7;
+    const desplazamiento = (JUEVES - d.getDay() + 7) % 7;
     d.setDate(d.getDate() + desplazamiento);
     return isoDe(d);
   }
 
   function inicioDeCorte(corteIso) {
     const d = aFecha(corteIso);
-    d.setDate(d.getDate() - 6); // sabado anterior
+    d.setDate(d.getDate() - 6); // viernes anterior
     return isoDe(d);
   }
 
