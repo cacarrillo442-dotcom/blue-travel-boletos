@@ -51,12 +51,42 @@ const AIRPORTS = [
   { code: 'BJX', city: 'Zona metropolitana de León', country: 'México', name: 'Aeropuerto Internacional de Guanajuato' },
   { code: 'VVI', city: 'Santa Cruz de la Sierra', country: 'Bolivia', name: 'Aeropuerto Internacional Viru Viru' },
   { code: 'LPB', city: 'La Paz', country: 'Bolivia', name: 'Aeropuerto Internacional El Alto' },
+  // ---------- Europa ----------
+  // Agregados para las cotizaciones de paquetes: los circuitos de Europamundo
+  // salen y terminan en estas ciudades, y sin ellas la cotizacion no podia
+  // decir siquiera "IAD -> BCN". Los del catalogo en la nube se siguen
+  // sumando encima de esta lista, no la reemplazan.
+  { code: 'MAD', city: 'Madrid', country: 'España', name: 'Aeropuerto Adolfo Suárez Madrid-Barajas' },
+  { code: 'BCN', city: 'Barcelona', country: 'España', name: 'Aeropuerto Josep Tarradellas Barcelona-El Prat' },
+  { code: 'LIS', city: 'Lisboa', country: 'Portugal', name: 'Aeropuerto Humberto Delgado' },
+  { code: 'CDG', city: 'París', country: 'Francia', name: 'Aeropuerto Charles de Gaulle' },
+  { code: 'ORY', city: 'París-Orly', country: 'Francia', name: 'Aeropuerto de París-Orly' },
+  { code: 'FCO', city: 'Roma', country: 'Italia', name: 'Aeropuerto Leonardo da Vinci-Fiumicino' },
+  { code: 'MXP', city: 'Milán', country: 'Italia', name: 'Aeropuerto de Milán-Malpensa' },
+  { code: 'LHR', city: 'Londres', country: 'Reino Unido', name: 'Aeropuerto de Heathrow' },
+  { code: 'AMS', city: 'Ámsterdam', country: 'Países Bajos', name: 'Aeropuerto de Ámsterdam-Schiphol' },
+  { code: 'BRU', city: 'Bruselas', country: 'Bélgica', name: 'Aeropuerto de Bruselas' },
+  { code: 'FRA', city: 'Fráncfort', country: 'Alemania', name: 'Aeropuerto de Fráncfort del Meno' },
+  { code: 'MUC', city: 'Múnich', country: 'Alemania', name: 'Aeropuerto de Múnich' },
+  { code: 'BER', city: 'Berlín', country: 'Alemania', name: 'Aeropuerto de Berlín-Brandeburgo' },
+  { code: 'ZRH', city: 'Zúrich', country: 'Suiza', name: 'Aeropuerto de Zúrich' },
+  { code: 'VIE', city: 'Viena', country: 'Austria', name: 'Aeropuerto Internacional de Viena' },
+  { code: 'PRG', city: 'Praga', country: 'República Checa', name: 'Aeropuerto Václav Havel de Praga' },
+  { code: 'BUD', city: 'Budapest', country: 'Hungría', name: 'Aeropuerto Ferenc Liszt de Budapest' },
+  { code: 'WAW', city: 'Varsovia', country: 'Polonia', name: 'Aeropuerto Chopin de Varsovia' },
+  { code: 'ATH', city: 'Atenas', country: 'Grecia', name: 'Aeropuerto Internacional Eleftherios Venizelos' },
+  { code: 'IST', city: 'Estambul', country: 'Turquía', name: 'Aeropuerto de Estambul' },
+  { code: 'DUB', city: 'Dublín', country: 'Irlanda', name: 'Aeropuerto de Dublín' },
+  { code: 'CPH', city: 'Copenhague', country: 'Dinamarca', name: 'Aeropuerto de Copenhague-Kastrup' },
 ];
 
 const AIRLINES = [
   'AVIANCA', 'LATAM', 'UNITED', 'VOLARIS', 'SPIRIT', 'COPA AIRLINES', 'DELTA',
   'SOUTH WEST', 'QATAR AIRWAYS', 'AMERICAN AIRLINES', 'ALASKA AIRLINES',
   'AEROMEXICO', 'FRONTIER AIRLINES', 'AIR CANADA', 'ARAJET',
+  // Europeas, para los vuelos de los paquetes.
+  'IBERIA', 'AIR EUROPA', 'AIR FRANCE', 'KLM', 'LUFTHANSA', 'TAP AIR PORTUGAL',
+  'BRITISH AIRWAYS', 'SWISS', 'ITA AIRWAYS', 'TURKISH AIRLINES',
 ];
 
 // La primera linea decia "La informacion detallada es la correcta". Estaba

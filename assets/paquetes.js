@@ -253,8 +253,13 @@
   el('pkDias').addEventListener('input', calcularFechaFin);
 
   // ---------- Vuelos, solo si aplica ----------
+  //
+  // Es el mismo bloque de la cotizacion de vuelos, con todo: horas, escala en
+  // cada tramo y multidestino. Se genera con la funcion compartida en vez de
+  // copiar el marcado, para que una correccion valga en los dos sitios.
   const casillaVuelo = el('pkIncluyeVuelo');
   const camposVuelo = panel.querySelector('.pk-vuelo-campos');
+  crearBloqueVuelos(camposVuelo, 'pkV');
   casillaVuelo.addEventListener('change', () => {
     camposVuelo.classList.toggle('hidden', !casillaVuelo.checked);
   });
@@ -279,11 +284,7 @@
       ciudadInicio: el('pkCiudadInicio').value.trim(),
       ciudadFin: el('pkCiudadFin').value.trim(),
       incluyeVuelo: casillaVuelo.checked,
-      aerolinea: el('pkAerolinea').value,
-      origen: el('pkOrigen').value,
-      destino: el('pkDestino').value,
-      vueloIda: formatDate(el('pkVueloIda').value),
-      vueloRegreso: formatDate(el('pkVueloRegreso').value),
+      vuelos: casillaVuelo.checked ? leerBloqueVuelos('pkV') : null,
       itinerario: parsearItinerario(el('pkItinerario').value),
       resumir: el('pkResumir').checked,
       incluye: el('pkIncluye').value.trim(),
@@ -330,11 +331,34 @@
         + (p.categoria ? ` · categoría ${p.categoria}` : ''));
     }
 
-    if (p.incluyeVuelo && (p.origen || p.destino)) {
+    const v = p.vuelos;
+    if (p.incluyeVuelo && v && (v.origin || v.dest)) {
       L.push('');
-      L.push(`🛫 *Vuelos incluidos:* ${p.origen || '-'} → ${p.destino || '-'}`
-        + (p.aerolinea ? ` con ${p.aerolinea}` : ''));
-      if (p.vueloIda) L.push(`   Sale ${p.vueloIda}${p.vueloRegreso ? ` · Regresa ${p.vueloRegreso}` : ''}`);
+      L.push('🛫 *Vuelos incluidos*');
+
+      // Ida
+      L.push(`✈️ ${v.origin || '-'} → ${v.dest || '-'}`
+        + (v.airline ? ` · ${v.airline}` : ''));
+      if (v.departDate) L.push(`📅 Sale el ${formatDate(v.departDate)}`);
+      if (v.departTime || v.arriveTime) {
+        L.push(`🕐 Salida ${formatTime(v.departTime) || '-'}   Llegada ${formatTime(v.arriveTime) || '-'}`);
+      }
+      L.push(`🔁 ${textoTipoVuelo(v.tipoVuelo, v.escalaLugar, v.escalaTiempo)}`);
+
+      // Regreso. En multidestino sale de otra ciudad y puede ir con otra
+      // aerolinea; si no, es el mismo trayecto al reves.
+      if (v.returnDate) {
+        const rOrigen = v.returnMultidestino ? (v.returnOrigin || '-') : (v.dest || '-');
+        const rDestino = v.returnMultidestino ? (v.returnDest || '-') : (v.origin || '-');
+        const rAerolinea = (v.returnMultidestino && v.returnAirline) ? v.returnAirline : v.airline;
+        L.push('');
+        L.push(`↩️ ${rOrigen} → ${rDestino}` + (rAerolinea ? ` · ${rAerolinea}` : ''));
+        L.push(`📅 Regresa el ${formatDate(v.returnDate)}`);
+        if (v.returnDepartTime || v.returnArriveTime) {
+          L.push(`🕐 Salida ${formatTime(v.returnDepartTime) || '-'}   Llegada ${formatTime(v.returnArriveTime) || '-'}`);
+        }
+        L.push(`🔁 ${textoTipoVuelo(v.returnTipoVuelo, v.returnEscalaLugar, v.returnEscalaTiempo)}`);
+      }
     }
 
     // El precio va antes del itinerario: es lo que el cliente busca primero, y
@@ -1015,9 +1039,7 @@
   });
 
   // ---------- Arranque ----------
-  populateAirlineSelect(el('pkAerolinea'));
-  populateAirportSelect(el('pkOrigen'));
-  populateAirportSelect(el('pkDestino'));
+  // Los selects de vuelo ya los llena crearBloqueVuelos al generarlos.
   populateCountryCodeSelect(el('pkClientCountryCode'), '+57');
   ponerValoresPorDefecto();
   pintarPrecios();
