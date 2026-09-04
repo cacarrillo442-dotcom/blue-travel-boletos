@@ -107,6 +107,7 @@ function subscribeClients() {
     avisarClientesCargados();
     // Cupones se alimenta de esta misma lista.
     if (typeof window.onClientesChange === 'function') window.onClientesChange(currentClients);
+    avisarOyentes(currentClients);
     if (window.limpiarFalloConexion) window.limpiarFalloConexion('clientes');
   }, (err) => {
     if (window.reportarFalloConexion) window.reportarFalloConexion('clientes', err);
@@ -254,6 +255,21 @@ function normalizePhone(phone) {
 }
 
 window.obtenerClientes = () => currentClients;
+
+// `window.onClientesChange` es un solo cupo y ya lo ocupa Cupones: el que
+// cargue de ultimo pisa al anterior. Esto permite varios interesados sin que
+// se estorben, y le entrega la lista al que llegue tarde.
+const oyentesClientes = [];
+function avisarOyentes(lista) {
+  oyentesClientes.forEach((fn) => {
+    try { fn(lista); } catch (e) { /* que un oyente falle no tumba a los demas */ }
+  });
+}
+window.alCambiarClientes = function alCambiarClientes(fn) {
+  if (typeof fn !== 'function') return;
+  oyentesClientes.push(fn);
+  if (currentClients.length) fn(currentClients);
+};
 
 // ---------- Exportar para campañas de correo ----------
 
