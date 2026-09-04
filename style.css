@@ -2877,3 +2877,10 @@ select:focus {
     display: none;
   }
 }
+
+/* Aclaracion corta dentro de la etiqueta de un campo, sin robarle peso. */
+.hint-inline {
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}

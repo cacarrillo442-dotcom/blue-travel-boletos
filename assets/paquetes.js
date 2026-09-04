@@ -195,6 +195,9 @@
       correo: el('pkClientEmail').value.trim(),
       nombre: el('pkNombre').value.trim(),
       operador: el('pkOperador').value.trim(),
+      codigo: el('pkCodigo').value.trim(),
+      categoria: el('pkCategoria').value.trim(),
+      hoteles: el('pkHoteles').value.trim(),
       paises: el('pkPaises').value.trim(),
       fechaInicio: formatDate(el('pkFechaInicio').value),
       fechaFin: el('pkFechaFin').value,
@@ -245,7 +248,12 @@
     if (p.ciudadInicio || p.ciudadFin) {
       L.push(`🚩 Empieza en ${p.ciudadInicio || '-'} y termina en ${p.ciudadFin || '-'}`);
     }
-    if (p.operador) L.push(`🏢 Operado por ${p.operador}`);
+    if (p.operador) {
+      // El codigo va pegado al operador porque es con lo que se reserva.
+      L.push(`🏢 Operado por ${p.operador}`
+        + (p.codigo ? ` · circuito ${p.codigo}` : '')
+        + (p.categoria ? ` · categoría ${p.categoria}` : ''));
+    }
 
     if (p.incluyeVuelo && (p.origen || p.destino)) {
       L.push('');
@@ -277,6 +285,12 @@
       L.push('');
       L.push('❌ *No incluye:*');
       lineasDeLista(p.noIncluye, '   •').forEach((l) => L.push(l));
+    }
+
+    if (p.hoteles) {
+      L.push('');
+      L.push('🏨 *Hoteles previstos o similares:*');
+      lineasDeLista(p.hoteles, '   •').forEach((l) => L.push(l));
     }
 
     if (p.itinerario.length) {
@@ -343,6 +357,9 @@
       else if (c.id !== 'pkOperador') c.value = '';
     });
     ponerValoresPorDefecto();
+    // El aviso del archivo se quedaba diciendo lo que se cargo, con el
+    // formulario ya vacio.
+    el('pkArchivoEstado').textContent = '';
     camposVuelo.classList.add('hidden');
     pintarPrecios();
     avisarItinerario();
@@ -356,6 +373,179 @@
     el('pkCondiciones').value = CONDICIONES_POR_DEFECTO;
     el('pkFechaFin').value = '';
   }
+
+  // ---------- Cargar el itinerario de Europamundo ----------
+  //
+  // El "Itinerario Word" que ofrece Europamundo no es un .doc de verdad: es
+  // HTML con otra extension. Eso lo vuelve facil de leer -no hace falta ninguna
+  // libreria de Word ni de PDF- y ademas viene mucho mas limpio que la pagina
+  // web, que arrastra diez lineas de menu y no trae "el precio incluye".
+  //
+  // Se lee entero en el navegador: el archivo no sale del equipo.
+  //
+  // SEGURIDAD: del documento se saca solo TEXTO. Nunca se inserta su HTML en la
+  // pagina. Es un archivo que viene de afuera y meterlo como HTML seria abrirle
+  // la puerta a cualquier cosa que traiga dentro.
+
+  function textoPlanoDeHtml(html) {
+    // Se marcan los cortes de bloque ANTES de parsear, porque textContent los
+    // pierde: sin esto el documento entero saldria como un solo parrafo.
+    const conSaltos = String(html)
+      .replace(/<\s*br[^>]*>/gi, '\n')
+      .replace(/<\s*\/\s*(p|div|tr|li|h[1-6]|td)\s*>/gi, '\n$&');
+    const doc = new DOMParser().parseFromString(conSaltos, 'text/html');
+    doc.querySelectorAll('script, style').forEach((n) => n.remove());
+    return (doc.body ? doc.body.textContent : '') || '';
+  }
+
+  const PAISES = [
+    'ESPAÑA', 'FRANCIA', 'ITALIA', 'ALEMANIA', 'PORTUGAL', 'SUIZA', 'AUSTRIA',
+    'HOLANDA', 'PAISES BAJOS', 'BELGICA', 'BÉLGICA', 'LUXEMBURGO', 'REPUBLICA CHECA',
+    'REPÚBLICA CHECA', 'CHEQUIA', 'POLONIA', 'HUNGRIA', 'HUNGRÍA', 'ESLOVAQUIA',
+    'ESLOVENIA', 'CROACIA', 'GRECIA', 'TURQUIA', 'TURQUÍA', 'REINO UNIDO',
+    'IRLANDA', 'DINAMARCA', 'NORUEGA', 'SUECIA', 'FINLANDIA', 'MARRUECOS',
+    'SERBIA', 'BOSNIA-HERZEGOVINA', 'MONTENEGRO', 'ALBANIA', 'RUMANIA', 'BULGARIA',
+  ];
+
+  function leerItinerarioEuropamundo(html, nombreArchivo) {
+    const lineas = textoPlanoDeHtml(html)
+      .split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const todo = lineas.join('\n');
+    const r = { lineas: lineas.length };
+
+    // Ancla de cabecera: "8 Días | Pag. 0 | Temporada 2026-27 | Turista".
+    // El nombre del circuito es la linea inmediatamente anterior.
+    const iCab = lineas.findIndex((l) => /^\d{1,2}\s*D[ií]as\s*\|/i.test(l));
+    if (iCab > 0) {
+      const cab = lineas[iCab];
+      r.dias = parseInt(cab, 10);
+      const temp = cab.match(/Temporada\s*([\d/-]+)/i);
+      if (temp) r.temporada = temp[1];
+      // La categoria es el ultimo tramo separado por "|"
+      const tramos = cab.split('|').map((x) => x.trim());
+      if (tramos.length >= 4) r.categoria = tramos[tramos.length - 1];
+      r.nombre = lineas[iCab - 1];
+    }
+
+    // El itinerario va desde el primer "Día 1" hasta "El Precio Incluye".
+    const iDia1 = lineas.findIndex((l) => /^D[ií]a\s+1\b/i.test(l));
+    const iIncluye = lineas.findIndex((l) => /^El Precio Incluye$/i.test(l));
+    if (iDia1 >= 0) {
+      const hasta = iIncluye > iDia1 ? iIncluye : lineas.length;
+      r.itinerario = lineas.slice(iDia1, hasta).join('\n');
+      r.diasLeidos = (r.itinerario.match(/^\s*D[ií]a\s+\d{1,2}\b/gim) || []).length;
+    }
+
+    // Lo que incluye: entre su titulo y el de los hoteles.
+    const iHoteles = lineas.findIndex((l) => /^Hoteles Previstos$/i.test(l));
+    if (iIncluye >= 0) {
+      const hasta = iHoteles > iIncluye ? iHoteles : lineas.length;
+      r.incluye = lineas.slice(iIncluye + 1, hasta).join('\n').trim();
+    }
+
+    // Hoteles: la linea del nombre termina en estrellas, y la ciudad viene en
+    // la linea con codigo postal unas lineas mas abajo.
+    if (iHoteles >= 0) {
+      const bloque = lineas.slice(iHoteles + 1);
+      const hoteles = [];
+      bloque.forEach((linea, i) => {
+        // El espacio antes de las estrellas es opcional: en el documento el
+        // nombre y la categoria van en elementos distintos y al sacar el texto
+        // quedan pegados ("FRONT AIR CONGRESS****").
+        const m = linea.match(/^(.+?)\s*(\*{1,5})$/);
+        if (!m) return;
+        let ciudad = '';
+        for (let k = i + 1; k < Math.min(i + 7, bloque.length); k += 1) {
+          const cp = bloque[k].match(/^\d{4,6}\s+(.+)$/);
+          if (cp) { ciudad = cp[1].trim(); break; }
+        }
+        hoteles.push(`${m[1].trim()} ${m[2]}${ciudad ? ` · ${ciudad}` : ''}`);
+      });
+      // El documento repite hoteles cuando sirven a varias salidas; al cliente
+      // se le manda la lista una sola vez.
+      r.hoteles = [...new Set(hoteles)];
+    }
+
+    // Los paises salen de las lineas del bloque de hoteles: ahi vienen solos y
+    // en mayusculas, sin el riesgo de pescar un pais que solo se menciona de
+    // pasada en la descripcion de un dia.
+    const encontrados = [];
+    (iHoteles >= 0 ? lineas.slice(iHoteles + 1) : []).forEach((l) => {
+      const limpia = l.toUpperCase().trim();
+      if (PAISES.includes(limpia) && !encontrados.includes(limpia)) encontrados.push(limpia);
+    });
+    if (encontrados.length) {
+      r.paises = encontrados
+        .map((p) => p.charAt(0) + p.slice(1).toLowerCase())
+        .join(', ');
+    }
+
+    // El codigo no esta en el texto, pero si en el nombre del archivo:
+    // "Tour2600935.doc".
+    const cod = String(nombreArchivo || '').match(/(\d{6,})/);
+    if (cod) r.codigo = cod[1];
+
+    r.esDeEuropamundo = /Europamundo/i.test(todo);
+    return r;
+  }
+
+  function aplicarLectura(r) {
+    const puesto = [];
+    const poner = (id, valor, etiqueta) => {
+      if (!valor) return;
+      el(id).value = valor;
+      puesto.push(etiqueta);
+    };
+    poner('pkNombre', r.nombre, 'nombre');
+    poner('pkDias', r.dias, 'días');
+    poner('pkPaises', r.paises, 'países');
+    poner('pkCodigo', r.codigo, 'código');
+    poner('pkCategoria', r.categoria, 'categoría');
+    poner('pkItinerario', r.itinerario, `itinerario (${r.diasLeidos || 0} días)`);
+    poner('pkIncluye', r.incluye, 'lo que incluye');
+    if (r.hoteles && r.hoteles.length) {
+      el('pkHoteles').value = r.hoteles.join('\n');
+      puesto.push(`${r.hoteles.length} hoteles`);
+    }
+    calcularFechaFin();
+    avisarItinerario();
+    return puesto;
+  }
+
+  el('pkArchivo').addEventListener('change', (ev) => {
+    const archivo = ev.target.files && ev.target.files[0];
+    const estado = el('pkArchivoEstado');
+    if (!archivo) return;
+    estado.textContent = 'Leyendo…';
+
+    const lector = new FileReader();
+    lector.onerror = () => { estado.textContent = 'No se pudo leer el archivo.'; };
+    lector.onload = () => {
+      let r;
+      try {
+        r = leerItinerarioEuropamundo(lector.result, archivo.name);
+      } catch (e) {
+        estado.textContent = `No se pudo entender el archivo: ${e.message}`;
+        return;
+      }
+      if (!r.nombre && !r.itinerario) {
+        estado.textContent = 'Ese archivo no parece un itinerario de Europamundo. '
+          + 'Descárgalo con el botón «Itinerario Word» de la página del circuito.';
+        return;
+      }
+      const puesto = aplicarLectura(r);
+      let msg = `✅ Se llenó: ${puesto.join(', ')}.`;
+      // Los dias declarados y los del itinerario tienen que cuadrar. Si no,
+      // se avisa en vez de dejar pasar una cotizacion con un dia de menos.
+      if (r.dias && r.diasLeidos && r.dias !== r.diasLeidos) {
+        msg += ` ⚠️ Ojo: el circuito dice ${r.dias} días pero el itinerario trae ${r.diasLeidos}. Revísalo.`;
+      }
+      estado.textContent = msg;
+    };
+    // Los itinerarios vienen en UTF-8; leerlos como texto plano alcanza porque
+    // por dentro son HTML.
+    lector.readAsText(archivo, 'utf-8');
+  });
 
   // ---------- Imagen para WhatsApp ----------
   //

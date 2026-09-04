@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260904-094543" />
+<meta name="app-version" content="20260904-112720" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260904-094543" />
+<link rel="stylesheet" href="style.css?v=20260904-112720" />
 </head>
 <body>
 
@@ -398,6 +398,15 @@
       <p class="hint">Para circuitos de varios días con itinerario, como los de Europamundo. Para un vuelo suelto usa <strong>Cotizaciones</strong>.</p>
     </section>
 
+    <section class="card card-principal">
+      <h3>Cargar desde el itinerario de Europamundo</h3>
+      <p class="hint">En la página del circuito descarga <strong>«Itinerario Word»</strong> y suelta aquí el archivo. Llena el nombre, los días, los países, el itinerario completo, lo que incluye y los hoteles. Todo queda editable.</p>
+      <label>Archivo del itinerario
+        <input type="file" id="pkArchivo" accept=".doc,.docx,.html,.htm" />
+      </label>
+      <p class="hint" id="pkArchivoEstado"></p>
+    </section>
+
     <section class="card">
       <h3>Datos del cliente</h3>
       <div class="grid-2">
@@ -426,6 +435,14 @@
         </label>
         <label>Operador
           <input type="text" id="pkOperador" value="Europamundo" />
+        </label>
+      </div>
+      <div class="grid-2">
+        <label>Código del circuito
+          <input type="text" id="pkCodigo" placeholder="Ej. 2600935" />
+        </label>
+        <label>Categoría
+          <input type="text" id="pkCategoria" placeholder="Ej. Turista" />
         </label>
       </div>
       <div class="grid-3">
@@ -497,6 +514,9 @@
       </label>
       <label>El precio no incluye
         <textarea id="pkNoIncluye" rows="3"></textarea>
+      </label>
+      <label>Hoteles previstos <span class="hint-inline">(opcional; si lo dejas vacío no se menciona)</span>
+        <textarea id="pkHoteles" rows="3" placeholder="Se llenan solos al cargar el itinerario"></textarea>
       </label>
     </section>
 
@@ -1439,30 +1459,30 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260904-094543"></script>
-<script src="assets/version.js?v=20260904-094543"></script>
-<script src="assets/trm.js?v=20260904-094543"></script>
+<script src="assets/iconos.js?v=20260904-112720"></script>
+<script src="assets/version.js?v=20260904-112720"></script>
+<script src="assets/trm.js?v=20260904-112720"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260904-094543"></script>
-<script src="assets/country-codes-data.js?v=20260904-094543"></script>
+<script src="assets/catalog-data.js?v=20260904-112720"></script>
+<script src="assets/country-codes-data.js?v=20260904-112720"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260904-094543"></script>
-<script src="assets/cupon-imagen.js?v=20260904-094543"></script>
-<script src="assets/publicidad-imagen.js?v=20260904-094543"></script>
-<script src="assets/precios-datos.js?v=20260904-094543"></script>
-<script src="app.js?v=20260904-094543"></script>
-<script src="assets/paquetes.js?v=20260904-094543"></script>
-<script src="assets/inicio.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260904-094543"></script>
-<script src="assets/precios-ui.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-history.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260904-094543"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260904-094543"></script>
+<script src="assets/sales-parse.js?v=20260904-112720"></script>
+<script src="assets/cupon-imagen.js?v=20260904-112720"></script>
+<script src="assets/publicidad-imagen.js?v=20260904-112720"></script>
+<script src="assets/precios-datos.js?v=20260904-112720"></script>
+<script src="app.js?v=20260904-112720"></script>
+<script src="assets/paquetes.js?v=20260904-112720"></script>
+<script src="assets/inicio.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260904-112720"></script>
+<script src="assets/precios-ui.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-history.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260904-112720"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260904-112720"></script>
 </body>
 </html>
