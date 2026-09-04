@@ -29,6 +29,84 @@
   --shadow-lg: 0 12px 32px rgba(16, 40, 60, 0.14);
 
   --focus-ring: 0 0 0 3px rgba(18, 111, 153, 0.18);
+
+  /* El azul de marca hacia dos trabajos a la vez: fondo de las superficies
+     azules y color de los titulos. En claro dan igual, pero en oscuro se
+     separan: el fondo sigue siendo azul oscuro y el titulo tiene que
+     aclararse para poder leerse. Por eso van en tokens distintos. */
+  --titulo: var(--color-primary);
+  --acento: var(--color-primary-2);
+}
+
+/* ---------- Modo noche ----------
+   Se activa de dos maneras: siguiendo lo que tenga puesto el sistema, o con el
+   interruptor de la barra lateral, que manda sobre el sistema y se recuerda.
+
+   No es invertir los colores. El azul de marca se queda -la barra y el hero
+   siguen siendo azules, que en oscuro es justo lo que se quiere-, y lo que
+   cambia son las superficies, las lineas y la tinta. El amarillo tampoco se
+   toca: sigue significando "algo te esta esperando".
+
+   Los documentos que ve el cliente -PDF, imagenes de cotizacion y cupones- se
+   dibujan en canvas con sus propios colores y NO cambian. Una factura en modo
+   noche no tendria sentido.
+*/
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --bg: #0d1620;
+    --surface: #16212d;
+    --surface-sunken: #111b26;
+    --line: #27343f;
+    --line-soft: #1d2833;
+    --ink-strong: #e9eff5;
+    --ink: #b6c5d2;
+    --ink-soft: #93a7b7;
+    --color-text: #c2cedb;
+    --color-neutral: #2a3846;
+    --color-secondary: #e9eff5;
+    --titulo: #8cc4e8;
+    --acento: #6fb8e0;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+    --focus-ring: 0 0 0 3px rgba(111, 184, 224, 0.35);
+    /* Recuadros de color: avisos, etiquetas y estados. En claro llevan un
+       fondo palido con tinta oscura; en oscuro hay que invertir los dos, o
+       queda un parche brillante -o texto oscuro sobre fondo oscuro-. */
+    --tinte-ambar-bg: #3a2c12;   --tinte-ambar-tinta: #e8b866;
+    --tinte-rojo-bg: #3a1f1f;    --tinte-rojo-tinta: #f0a3a3;
+    --tinte-azul-bg: #16313f;    --tinte-azul-tinta: #9ecde6;
+    --tinte-morado-bg: #2a2137;  --tinte-morado-tinta: #c7aede;
+    --tinte-verde-bg: #16301f;   --tinte-verde-tinta: #8fd2a8;
+  }
+}
+
+:root[data-tema="oscuro"] {
+  --bg: #0d1620;
+  --surface: #16212d;
+  --surface-sunken: #111b26;
+  --line: #27343f;
+  --line-soft: #1d2833;
+  --ink-strong: #e9eff5;
+  --ink: #b6c5d2;
+  --ink-soft: #93a7b7;
+  --color-text: #c2cedb;
+  --color-neutral: #2a3846;
+  --color-secondary: #e9eff5;
+  --titulo: #8cc4e8;
+  --acento: #6fb8e0;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --focus-ring: 0 0 0 3px rgba(111, 184, 224, 0.35);
+  /* Recuadros de color: avisos, etiquetas y estados. En claro llevan un
+     fondo palido con tinta oscura; en oscuro hay que invertir los dos, o
+     queda un parche brillante -o texto oscuro sobre fondo oscuro-. */
+  --tinte-ambar-bg: #3a2c12;   --tinte-ambar-tinta: #e8b866;
+  --tinte-rojo-bg: #3a1f1f;    --tinte-rojo-tinta: #f0a3a3;
+  --tinte-azul-bg: #16313f;    --tinte-azul-tinta: #9ecde6;
+  --tinte-morado-bg: #2a2137;  --tinte-morado-tinta: #c7aede;
+  --tinte-verde-bg: #16301f;   --tinte-verde-tinta: #8fd2a8;
 }
 
 * {
@@ -230,7 +308,7 @@ body {
   z-index: 1;
   width: 100%;
   max-width: 380px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 14px;
   padding: 32px 28px;
   box-shadow: 0 10px 30px rgba(3, 60, 105, 0.25);
@@ -284,7 +362,7 @@ body {
 .app-gate-card h1 {
   margin: 0;
   font-size: 1.15rem;
-  color: var(--color-primary);
+  color: var(--titulo);
   text-align: center;
 }
 
@@ -322,7 +400,7 @@ body {
   padding: 6px 14px;
   border-radius: 20px;
   border: 1px solid #d9a441;
-  background: #fff;
+  background: var(--surface);
   color: #8a5a08;
   cursor: pointer;
 }
@@ -521,6 +599,7 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+#temaBtn,
 #gateLogoutBtn {
   display: flex;
   align-items: center;
@@ -537,6 +616,7 @@ body {
   cursor: pointer;
 }
 
+#temaBtn:hover,
 #gateLogoutBtn:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
@@ -661,7 +741,7 @@ body {
 .card h2 {
   margin: 0 0 20px;
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: var(--titulo);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -673,7 +753,7 @@ body {
   padding-left: 10px;
   border-left: 3px solid var(--color-primary-2);
   font-size: 0.82rem;
-  color: var(--color-primary);
+  color: var(--titulo);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -766,7 +846,7 @@ input:hover, textarea:hover, select:hover {
 input:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary-2);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--focus-ring);
 }
 
@@ -892,8 +972,8 @@ textarea {
 }
 
 .btn-secondary {
-  background: #fff;
-  color: var(--color-primary);
+  background: var(--surface);
+  color: var(--titulo);
   border: 1.5px solid #c3d3e0;
   padding: 13px 24px;
   border-radius: var(--radius-sm);
@@ -905,7 +985,7 @@ textarea {
 }
 
 .btn-secondary:hover {
-  background: #f0f5f8;
+  background: var(--surface-sunken);
   border-color: var(--color-primary-2);
 }
 
@@ -1070,7 +1150,7 @@ textarea {
   padding: 10px 14px;
   border: 1px solid var(--color-neutral);
   border-radius: 8px;
-  background: #fafbfc;
+  background: var(--surface);
 }
 
 .promo-row-info {
@@ -1079,7 +1159,7 @@ textarea {
 }
 
 .promo-row-info strong {
-  color: var(--color-primary);
+  color: var(--titulo);
 }
 
 .promo-empty {
@@ -1095,7 +1175,7 @@ textarea {
   padding: 14px 18px;
   border: 1px solid var(--color-neutral);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 1px 2px rgba(3, 60, 105, 0.06);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
@@ -1129,7 +1209,7 @@ textarea {
 
 .trip-badge.later {
   background: #e7f0f7;
-  color: var(--color-primary-2);
+  color: var(--acento);
 }
 
 .trip-info {
@@ -1139,7 +1219,7 @@ textarea {
 
 .trip-name {
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--titulo);
   font-size: 0.95rem;
   margin-bottom: 3px;
 }
@@ -1156,7 +1236,7 @@ textarea {
   letter-spacing: 0.04em;
   vertical-align: middle;
   background: #e7f0f7;
-  color: var(--color-primary-2);
+  color: var(--acento);
 }
 
 .trip-leg.vuelta {
@@ -1206,7 +1286,7 @@ textarea {
   flex: 0 0 auto;
   border-radius: 50%;
   border: 1px solid var(--color-neutral);
-  background: #fff;
+  background: var(--surface);
   color: #2a9d5c;
   font-size: 1.1rem;
   font-weight: 700;
@@ -1366,7 +1446,7 @@ textarea {
   width: 21px;
   height: 21px;
   margin-bottom: 5px;
-  color: var(--color-primary-2);
+  color: var(--acento);
 }
 
 .atajo strong {
@@ -1802,7 +1882,7 @@ input[type="file"] {
 
 input[type="file"]:hover {
   border-color: var(--color-primary-2);
-  background: #f2f6fa;
+  background: var(--surface-sunken);
 }
 
 @media (max-width: 640px) {
@@ -1882,14 +1962,16 @@ select {
 }
 
 select option {
-  color: #222;
-  background: #fafbfc;
+  /* La tinta va con el fondo: si el fondo sigue al tema y el texto se queda
+     en #222, en oscuro no se lee. */
+  color: var(--ink-strong);
+  background: var(--surface);
 }
 
 select:focus {
   outline: none;
   border-color: var(--color-primary-2);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--focus-ring);
 }
 
@@ -1954,7 +2036,7 @@ select:focus {
 /* Toggles destacados (agregar regreso, multidestino, autoriza promos...) */
 .toggle-return {
   font-size: 0.9rem;
-  color: var(--color-primary);
+  color: var(--titulo);
   font-weight: 600;
   margin-top: 18px;
   padding: 13px 16px;
@@ -1970,7 +2052,7 @@ select:focus {
 
 .toggle-return:hover {
   border-color: #c4d2dd;
-  background: #f2f6fa;
+  background: var(--surface-sunken);
 }
 
 .toggle-return:has(input:checked) {
@@ -2067,7 +2149,7 @@ select:focus {
   padding-left: 10px;
   border-left: 3px solid var(--color-primary-2);
   font-size: 0.78rem;
-  color: var(--color-primary);
+  color: var(--titulo);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2202,13 +2284,13 @@ select:focus {
   font-family: 'Poppins', sans-serif;
   font-size: .88rem;
   font-weight: 600;
-  color: var(--color-primary-2);
+  color: var(--acento);
   list-style: none;
 }
 
 .plegable summary::-webkit-details-marker { display: none; }
 
-.plegable summary:hover { color: var(--color-primary); }
+.plegable summary:hover { color: var(--titulo); }
 
 .plegable summary:focus-visible {
   outline: none;
@@ -2736,7 +2818,7 @@ select:focus {
   vertical-align: middle;
   /* #b22222 daba 4.32 sobre blanco, por debajo del minimo de 4.5 */
   color: #a01b1b;
-  background: #fff;
+  background: var(--surface);
 }
 
 /* Rojo, pero no el rojo de eliminar: es una accion seria y reversible solo
@@ -2904,7 +2986,7 @@ select:focus {
 }
 
 .tarifas-doc th {
-  color: var(--color-primary-2);
+  color: var(--acento);
   font-weight: 700;
   font-size: 0.76rem;
   text-transform: uppercase;
@@ -2915,4 +2997,288 @@ select:focus {
   text-align: right;
   font-weight: 600;
   color: var(--ink-strong);
+}
+
+
+/* ---------- Recuadros de color en modo noche ----------
+   Las etiquetas y avisos llevan fondo palido con tinta oscura. En oscuro hay
+   que invertir los dos a la vez: cambiar solo el fondo deja texto oscuro sobre
+   fondo oscuro, y cambiar solo la tinta deja un parche brillante.
+
+   Va dos veces -para el sistema y para el interruptor- pero sale de una sola
+   lista en el script que genero esto; el mapa selector->familia esta en el
+   commit.
+*/
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .conexion-aviso {
+    background: var(--tinte-ambar-bg);
+    color: var(--tinte-ambar-tinta);
+    border-color: var(--tinte-ambar-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-badge.soon {
+    background: var(--tinte-ambar-bg);
+    color: var(--tinte-ambar-tinta);
+    border-color: var(--tinte-ambar-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .btn-remove {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .btn-remove-inline {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-badge.urgent {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-card.anulada {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .btn-anular:hover {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .meta-caja.fallada {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-card.anulada .trip-leg {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .sello-anulada {
+    background: var(--tinte-rojo-bg);
+    color: var(--tinte-rojo-tinta);
+    border-color: var(--tinte-rojo-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-badge.later {
+    background: var(--tinte-azul-bg);
+    color: var(--tinte-azul-tinta);
+    border-color: var(--tinte-azul-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-leg {
+    background: var(--tinte-azul-bg);
+    color: var(--tinte-azul-tinta);
+    border-color: var(--tinte-azul-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .toggle-return:has(input:checked) {
+    background: var(--tinte-azul-bg);
+    color: var(--tinte-azul-tinta);
+    border-color: var(--tinte-azul-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trm-var.arriba {
+    background: var(--tinte-azul-bg);
+    color: var(--tinte-azul-tinta);
+    border-color: var(--tinte-azul-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-leg.vuelta {
+    background: var(--tinte-morado-bg);
+    color: var(--tinte-morado-tinta);
+    border-color: var(--tinte-morado-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trm-var.abajo {
+    background: var(--tinte-morado-bg);
+    color: var(--tinte-morado-tinta);
+    border-color: var(--tinte-morado-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .inicio-libre {
+    background: var(--tinte-verde-bg);
+    color: var(--tinte-verde-tinta);
+    border-color: var(--tinte-verde-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .vacio.bien {
+    background: var(--tinte-verde-bg);
+    color: var(--tinte-verde-tinta);
+    border-color: var(--tinte-verde-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .meta-caja.lograda {
+    background: var(--tinte-verde-bg);
+    color: var(--tinte-verde-tinta);
+    border-color: var(--tinte-verde-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .trip-done-btn:hover {
+    background: var(--tinte-verde-bg);
+    color: var(--tinte-verde-tinta);
+    border-color: var(--tinte-verde-tinta);
+  }
+}
+
+:root[data-tema="oscuro"] .conexion-aviso {
+  background: var(--tinte-ambar-bg);
+  color: var(--tinte-ambar-tinta);
+  border-color: var(--tinte-ambar-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-badge.soon {
+  background: var(--tinte-ambar-bg);
+  color: var(--tinte-ambar-tinta);
+  border-color: var(--tinte-ambar-tinta);
+}
+
+:root[data-tema="oscuro"] .btn-remove {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .btn-remove-inline {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-badge.urgent {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-card.anulada {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .btn-anular:hover {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .meta-caja.fallada {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-card.anulada .trip-leg {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .sello-anulada {
+  background: var(--tinte-rojo-bg);
+  color: var(--tinte-rojo-tinta);
+  border-color: var(--tinte-rojo-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-badge.later {
+  background: var(--tinte-azul-bg);
+  color: var(--tinte-azul-tinta);
+  border-color: var(--tinte-azul-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-leg {
+  background: var(--tinte-azul-bg);
+  color: var(--tinte-azul-tinta);
+  border-color: var(--tinte-azul-tinta);
+}
+
+:root[data-tema="oscuro"] .toggle-return:has(input:checked) {
+  background: var(--tinte-azul-bg);
+  color: var(--tinte-azul-tinta);
+  border-color: var(--tinte-azul-tinta);
+}
+
+:root[data-tema="oscuro"] .trm-var.arriba {
+  background: var(--tinte-azul-bg);
+  color: var(--tinte-azul-tinta);
+  border-color: var(--tinte-azul-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-leg.vuelta {
+  background: var(--tinte-morado-bg);
+  color: var(--tinte-morado-tinta);
+  border-color: var(--tinte-morado-tinta);
+}
+
+:root[data-tema="oscuro"] .trm-var.abajo {
+  background: var(--tinte-morado-bg);
+  color: var(--tinte-morado-tinta);
+  border-color: var(--tinte-morado-tinta);
+}
+
+:root[data-tema="oscuro"] .inicio-libre {
+  background: var(--tinte-verde-bg);
+  color: var(--tinte-verde-tinta);
+  border-color: var(--tinte-verde-tinta);
+}
+
+:root[data-tema="oscuro"] .vacio.bien {
+  background: var(--tinte-verde-bg);
+  color: var(--tinte-verde-tinta);
+  border-color: var(--tinte-verde-tinta);
+}
+
+:root[data-tema="oscuro"] .meta-caja.lograda {
+  background: var(--tinte-verde-bg);
+  color: var(--tinte-verde-tinta);
+  border-color: var(--tinte-verde-tinta);
+}
+
+:root[data-tema="oscuro"] .trip-done-btn:hover {
+  background: var(--tinte-verde-bg);
+  color: var(--tinte-verde-tinta);
+  border-color: var(--tinte-verde-tinta);
+}
+
+
+/* El vacio de buena noticia lleva su verde tambien en los hijos, que traen su
+   propio color y pisan al del contenedor. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .vacio.bien .ic,
+  :root:not([data-tema="claro"]) .vacio.bien .vacio-titulo {
+    color: var(--tinte-verde-tinta);
+  }
+}
+
+:root[data-tema="oscuro"] .vacio.bien .ic,
+:root[data-tema="oscuro"] .vacio.bien .vacio-titulo {
+  color: var(--tinte-verde-tinta);
+}
+
+
+/* Los tres botones del pie de la barra, con aire entre ellos. */
+#temaBtn { margin-bottom: 8px; }
+
+/* El motivo de la anulacion lleva un rojo oscuro pensado para fondo claro. Con
+   la tarjeta ya en rojo oscuro queda en 1,79 de contraste, y es justo el dato
+   por el que esa factura no vale. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .trip-card.anulada .trip-sub {
+    color: var(--tinte-rojo-tinta);
+  }
+}
+
+:root[data-tema="oscuro"] .trip-card.anulada .trip-sub {
+  color: var(--tinte-rojo-tinta);
 }
