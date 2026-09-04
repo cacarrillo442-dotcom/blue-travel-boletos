@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260904-112720" />
+<meta name="app-version" content="20260904-120918" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260904-112720" />
+<link rel="stylesheet" href="style.css?v=20260904-120918" />
 </head>
 <body>
 
@@ -505,6 +505,11 @@
         <textarea id="pkItinerario" rows="8" placeholder="Día 1 - LUN.&#10;BERLÍN&#10;¡Bienvenidos a nuestro circuito! Traslado al hotel y tiempo libre.&#10;&#10;Día 2 - MAR.&#10;BERLÍN&#10;Visita panorámica por la capital de Alemania…"></textarea>
       </label>
       <p class="hint" id="pkItinerarioLeido"></p>
+      <label class="checkbox-label toggle-return">
+        <input type="checkbox" id="pkResumir" checked />
+        Resumir el itinerario en el mensaje
+      </label>
+      <p class="hint">El operador escribe para un catálogo. Resumido se van los avisos de check-in y las notas de horarios, y queda lo que se hace cada día. Destildándolo va el texto completo.</p>
     </section>
 
     <section class="card">
@@ -1459,30 +1464,30 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/iconos.js?v=20260904-112720"></script>
-<script src="assets/version.js?v=20260904-112720"></script>
-<script src="assets/trm.js?v=20260904-112720"></script>
+<script src="assets/iconos.js?v=20260904-120918"></script>
+<script src="assets/version.js?v=20260904-120918"></script>
+<script src="assets/trm.js?v=20260904-120918"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260904-112720"></script>
-<script src="assets/country-codes-data.js?v=20260904-112720"></script>
+<script src="assets/catalog-data.js?v=20260904-120918"></script>
+<script src="assets/country-codes-data.js?v=20260904-120918"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260904-112720"></script>
-<script src="assets/cupon-imagen.js?v=20260904-112720"></script>
-<script src="assets/publicidad-imagen.js?v=20260904-112720"></script>
-<script src="assets/precios-datos.js?v=20260904-112720"></script>
-<script src="app.js?v=20260904-112720"></script>
-<script src="assets/paquetes.js?v=20260904-112720"></script>
-<script src="assets/inicio.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260904-112720"></script>
-<script src="assets/precios-ui.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-history.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260904-112720"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260904-112720"></script>
+<script src="assets/sales-parse.js?v=20260904-120918"></script>
+<script src="assets/cupon-imagen.js?v=20260904-120918"></script>
+<script src="assets/publicidad-imagen.js?v=20260904-120918"></script>
+<script src="assets/precios-datos.js?v=20260904-120918"></script>
+<script src="app.js?v=20260904-120918"></script>
+<script src="assets/paquetes.js?v=20260904-120918"></script>
+<script src="assets/inicio.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260904-120918"></script>
+<script src="assets/precios-ui.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-history.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260904-120918"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260904-120918"></script>
 </body>
 </html>

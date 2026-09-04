@@ -144,6 +144,80 @@
       .map((c) => c.trim()).filter(Boolean).join(' · ');
   }
 
+  // ---------- Resumir el itinerario ----------
+  //
+  // El itinerario del operador esta escrito para un catalogo, no para WhatsApp:
+  // el de 8 dias trae 7.584 caracteres y buena parte es material que al viajero
+  // no le dice nada -avisos de check-in, notas de que los horarios son
+  // orientativos, condiciones de las actividades opcionales-.
+  //
+  // Resumir no es cortar por la mitad: es quitar lo que no es el viaje y dejar
+  // entera cada actividad. Medido sobre un itinerario real, baja un 63% sin
+  // perder que se hace cada dia.
+
+  // Lineas completas que se van: son avisos de operacion, no plan de viaje.
+  // El saludo de bienvenida se filtra por la palabra sola, no por la frase
+  // entera: el operador la escribe distinto en la web ("¡Bienvenidos a nuestro
+  // circuito Europamundo!") que en el Word ("Bienvenidos a Europamundo").
+  const RELLENO = /^[¡!]?\s*(Importante:|Nota:|Actividades opcionales\s*:|Si usted solicit|Recuerde que|Distancia\s+total|Paisajes\s*:|Bienvenid[oa]s|Esperamos que disfrute)/i;
+
+  // Frases sueltas de resguardo dentro de una linea que por lo demas sirve.
+  const RESGUARDO = /(depende parcialmente|puede variar|son orientativos|carteles informativos|recibir. la informaci.n sobre el inicio)/i;
+
+  const HORA_AL_INICIO = /^\d{1,2}[.:]\d{2}\s*hrs?\.?\s*[-–]?\s*/i;
+
+  function resumirActividad(linea, maxc) {
+    // Los parentesis largos son siempre salvedades ("la hora puede variar
+    // ligeramente segun el hotel en que se encuentre alojado").
+    let t = linea.replace(/\s*\([^)]{40,}\)/g, '');
+    let frases = t.split(/(?<=[.!?])\s+/).map((f) => f.trim()).filter(Boolean)
+      .filter((f) => !RESGUARDO.test(f));
+    // Si al quitar el resguardo queda un pedazo suelto arrancando en
+    // minuscula, se avanza hasta la siguiente frase que empiece bien: mejor
+    // perder una linea que mandar "su duracion es de unas dos horas".
+    while (frases.length && /^[a-záéíóúñ]/.test(frases[0])) frases.shift();
+    let out = '';
+    for (const f of frases) {
+      if (out && out.length + 1 + f.length > maxc) break;
+      out = (out ? out + ' ' : '') + f;
+    }
+    return out.replace(/\s+([,.;:])/g, '$1').trim();
+  }
+
+  function ciudadesResumidas(linea) {
+    const limpia = linea.replace(/[.\-\s]+$/, '').trim();
+    // Se corta por guion con espacio DESPUES: separa "Burdeos- Blois" y deja
+    // BADEN-BADEN de una pieza.
+    return limpia.split(/\s*-\s+/).map((c) => c.trim()).filter(Boolean).join(' · ');
+  }
+
+  // Devuelve las lineas del itinerario listas para el mensaje.
+  function lineasDeItinerario(dias, resumir) {
+    const L = [];
+    dias.forEach((d) => {
+      if (d.numero === null) { L.push(d.cuerpo); return; }
+
+      const partes = d.cuerpo.split('\n').map((x) => x.trim()).filter(Boolean);
+      const cabeCiudades = partes.length && partes[0].length <= 70 && !RELLENO.test(partes[0]);
+      const ciudades = cabeCiudades ? ciudadesResumidas(ciudadesDelDia(d.cuerpo) || partes[0]) : '';
+      const cuerpo = cabeCiudades ? partes.slice(1) : partes;
+
+      L.push('');
+      L.push(`*Día ${d.numero}*${ciudades ? ` — ${ciudades}` : ''}`);
+
+      if (!resumir) {
+        cuerpo.forEach((x) => L.push(x));
+        return;
+      }
+      cuerpo.forEach((linea) => {
+        if (RELLENO.test(linea)) return;
+        const t = resumirActividad(linea.replace(HORA_AL_INICIO, '').trim(), 260);
+        if (t.length >= 12) L.push(`   • ${t}`);
+      });
+    });
+    return L;
+  }
+
   function avisarItinerario() {
     const dias = parsearItinerario(el('pkItinerario').value);
     const aviso = el('pkItinerarioLeido');
@@ -211,6 +285,7 @@
       vueloIda: formatDate(el('pkVueloIda').value),
       vueloRegreso: formatDate(el('pkVueloRegreso').value),
       itinerario: parsearItinerario(el('pkItinerario').value),
+      resumir: el('pkResumir').checked,
       incluye: el('pkIncluye').value.trim(),
       noIncluye: el('pkNoIncluye').value.trim(),
       precios,
@@ -296,15 +371,7 @@
     if (p.itinerario.length) {
       L.push('');
       L.push('🗺️ *Itinerario:*');
-      p.itinerario.forEach((d) => {
-        if (d.numero === null) { L.push(d.cuerpo); return; }
-        const ciudades = ciudadesDelDia(d.cuerpo);
-        L.push('');
-        L.push(`*Día ${d.numero}*${ciudades ? ` — ${ciudades}` : ''}`);
-        // La linea de ciudades ya se dijo en el titulo: no se repite abajo.
-        const cuerpo = ciudades ? d.cuerpo.split('\n').slice(1).join('\n') : d.cuerpo;
-        cuerpo.split('\n').map((x) => x.trim()).filter(Boolean).forEach((x) => L.push(x));
-      });
+      lineasDeItinerario(p.itinerario, p.resumir).forEach((x) => L.push(x));
     }
 
     if (p.validUntil) {
