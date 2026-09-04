@@ -71,12 +71,10 @@
       if (campos.telefono && el(campos.telefono)) {
         const { indicativo, numero } = partirTelefono(c.telefono);
         const campoInd = campos.indicativo && el(campos.indicativo);
-        // El indicativo solo se cambia si el guardado existe en la lista; si
-        // no, se deja el que estaba, que es mas util que uno invalido.
-        if (campoInd && indicativo
-            && [...campoInd.options].some((o) => o.value === indicativo)) {
-          campoInd.value = indicativo;
-        }
+        // Se elige con elegirIndicativo y no fijando el valor: el +1 lo
+        // comparten Estados Unidos y Canada, y a secas quedaba en Canada.
+        // Si el guardado no existe en la lista, deja el que estaba.
+        if (campoInd && indicativo) elegirIndicativo(campoInd, indicativo);
         el(campos.telefono).value = numero;
       }
       if (campos.correo && el(campos.correo)) el(campos.correo).value = c.correo || '';

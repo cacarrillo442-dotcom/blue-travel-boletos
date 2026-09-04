@@ -51,6 +51,37 @@ const COUNTRY_CODES = [
   ['Zambia', '+260'], ['Zimbabue', '+263'],
 ];
 
+// Tres indicativos los comparten dos paises, y en los tres el que queda
+// primero por orden alfabetico es el menos probable. Poner `select.value` a
+// secas agarra ese primero: un telefono de Washington aparecia como Canada.
+//
+// Para Blue Travel el +1 importa de verdad: sus clientes viven en Washington.
+const INDICATIVO_PREFERIDO = {
+  '+1': 'Estados Unidos',   // lo comparte con Canadá
+  '+39': 'Italia',          // lo comparte con Ciudad del Vaticano
+  '+7': 'Rusia',            // lo comparte con Kazajistán
+};
+
+// Selecciona el indicativo escogiendo el pais, no solo el numero.
+function elegirIndicativo(select, dial) {
+  if (!select || !dial) return false;
+  const opciones = Array.from(select.options);
+
+  // Si ya esta en un pais con ese mismo indicativo se respeta: pudo haberse
+  // elegido a mano y el telefono guardado no distingue cual de los dos era.
+  const actual = select.options[select.selectedIndex];
+  if (actual && actual.value === dial) return true;
+
+  const preferido = INDICATIVO_PREFERIDO[dial];
+  const opcion = (preferido && opciones.find(
+    (o) => o.value === dial && o.textContent.indexOf(preferido) === 0
+  )) || opciones.find((o) => o.value === dial);
+
+  if (!opcion) return false;
+  select.selectedIndex = opciones.indexOf(opcion);
+  return true;
+}
+
 function populateCountryCodeSelect(select, defaultDial) {
   select.innerHTML = '';
   COUNTRY_CODES.forEach(([name, dial]) => {
@@ -59,5 +90,5 @@ function populateCountryCodeSelect(select, defaultDial) {
     opt.textContent = `${name} (${dial})`;
     select.appendChild(opt);
   });
-  if (defaultDial) select.value = defaultDial;
+  if (defaultDial) elegirIndicativo(select, defaultDial);
 }

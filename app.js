@@ -971,7 +971,9 @@ window.fillTicketForm = function fillTicketForm(raw) {
   document.getElementById('bookingRef').value = raw.bookingRef || '';
   document.getElementById('ticketNumber').value = raw.ticketNumber || '';
   if (raw.contactCountryCode) {
-    document.getElementById('ticketContactCountryCode').value = raw.contactCountryCode;
+    // Con elegirIndicativo y no fijando el valor: el +1 lo comparten Estados
+    // Unidos y Canada, y a secas el select se quedaba en Canada.
+    elegirIndicativo(document.getElementById('ticketContactCountryCode'), raw.contactCountryCode);
   }
   document.getElementById('ticketContactPhone').value = raw.contactPhone || '';
 
