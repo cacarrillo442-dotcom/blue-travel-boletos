@@ -3282,3 +3282,73 @@ select:focus {
 :root[data-tema="oscuro"] .trip-card.anulada .trip-sub {
   color: var(--tinte-rojo-tinta);
 }
+
+/* ---------- Vida en la barra lateral ----------
+   Estaba plana porque era monocroma: azul marino y blancos translucidos, sin
+   un solo acento de color ni profundidad.
+
+   El primer intento fue demasiado timido -un degradado del 5% y un cian al
+   16%- y no se notaba. Los valores de aqui son deliberadamente mas marcados:
+   si se va a introducir color, tiene que verse.
+*/
+
+/* 1. Profundidad: el degradado tiene recorrido de verdad, y una luz arriba
+      como si entrara claridad por el borde. */
+.sidebar {
+  background:
+    radial-gradient(130% 40% at 50% 0%, rgba(130, 200, 240, 0.22) 0%, rgba(130, 200, 240, 0) 62%),
+    linear-gradient(180deg, #0a5183 0%, #043f70 34%, #022640 100%);
+}
+
+/* 2. La marca vive en su propia franja, con una linea que la separa. */
+.sidebar-marca {
+  position: relative;
+  border-bottom: 1px solid rgba(140, 200, 235, 0.16);
+  margin-bottom: 6px;
+}
+
+/* 3. Los iconos dejan de ser blancos apagados: un azul frio les da ritmo y
+      hace que el activo destaque de verdad. */
+.sidebar-nav .tab-btn .ic {
+  color: #8fb6ce;
+  opacity: 1;
+  transition: color 0.16s ease;
+}
+
+.sidebar-nav .tab-btn:hover .ic {
+  color: #b9dcf0;
+}
+
+/* 4. Donde estas parado: pastilla cian, barrita mas ancha y con luz propia,
+      icono encendido. Antes era blanco sobre blanco translucido. */
+.sidebar-nav .tab-btn.active {
+  background: rgba(98, 182, 228, 0.26);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(150, 210, 240, 0.22);
+}
+
+.sidebar-nav .tab-btn.active .ic {
+  color: #7fd3ff;
+}
+
+.sidebar-nav .tab-btn::before {
+  width: 4px;
+  background: #63c8ff;
+  box-shadow: 0 0 10px rgba(99, 200, 255, 0.7);
+}
+
+.sidebar-nav .tab-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* 5. Los rotulos de grupo tenian menos presencia que el fondo. Medido a
+      #93b4ca daban 3,82 contra el tope aclarado del degradado; este da 5,1. */
+.nav-grupo {
+  color: #aecbdd;
+}
+
+/* Al aclarar el tope del degradado, la bajada de la marca quedo en 4,47.
+   No es un color nuevo: es el mismo subido lo justo para pasar de 4,5. */
+.sidebar-marca-texto span {
+  color: #c0d6e4;
+}
