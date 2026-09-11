@@ -486,14 +486,40 @@ function generatePDF(data) {
     }
   }
 
-  // Passengers
+  // Pasajeros
+  //
+  // Antes iban todos en un solo renglon con doc.text, y jsPDF no parte el
+  // texto: desde unos 5 nombres el renglon se salia por el borde derecho y los
+  // ultimos quedaban cortados. Ahora se acomodan en varias lineas, metiendo
+  // nombres ENTEROS en cada una: un nombre partido entre dos lineas en un
+  // boleto se puede leer como dos personas.
   ensureSpace(12);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(...TEXT);
-  doc.text('Pasajero(s):', MARGIN, y);
+  doc.text(data.passengers.length > 1 ? 'Pasajeros:' : 'Pasajero:', MARGIN, y);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.passengers.join(', ') || '-', MARGIN + 27, y);
+
+  const xNombres = MARGIN + 27;
+  const anchoNombres = PAGE_W - MARGIN - xNombres;
+  const lineasNombres = [];
+  let actual = '';
+  (data.passengers.length ? data.passengers : ['-']).forEach((nombre, i, todos) => {
+    const pieza = nombre + (i < todos.length - 1 ? ',' : '');
+    const prueba = actual ? `${actual} ${pieza}` : pieza;
+    if (actual && doc.getTextWidth(prueba) > anchoNombres) {
+      lineasNombres.push(actual);
+      actual = pieza;
+    } else {
+      actual = prueba;
+    }
+  });
+  if (actual) lineasNombres.push(actual);
+
+  lineasNombres.forEach((linea, i) => {
+    if (i > 0) { y += 5; ensureSpace(5); }
+    doc.text(linea, xNombres, y);
+  });
   y += 9;
 
   // Luggage
