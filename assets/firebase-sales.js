@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, onSnapshot, writeBatch,
+  getFirestore, collection, doc, onSnapshot, writeBatch, setDoc, deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -49,6 +49,7 @@ onAuthStateChanged(auth, (user) => {
       pintarSelectorPeriodo();
       pintarSemana();
       pintarDashboard();
+      pintarManuales();
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('ventas');
     }, (err) => {
       if (window.reportarFalloConexion) window.reportarFalloConexion('ventas', err);
@@ -61,6 +62,7 @@ onAuthStateChanged(auth, (user) => {
     pintarSelectorPeriodo();
     pintarSemana();
     pintarDashboard();
+    pintarManuales();
   }
 });
 
@@ -679,3 +681,151 @@ el('importConfirmBtn').addEventListener('click', async () => {
   }
   btn.disabled = false;
 });
+
+
+// ---------- Ventas que no pasaron por Wompi ----------
+//
+// No todo lo que entra pasa por la pasarela: hay pagos en efectivo, por Zelle
+// o por transferencia. Sin registrarlos el cierre de la semana sale corto y el
+// reparto con Milena tambien.
+//
+// Se guardan en la misma coleccion y con la misma forma que las importadas,
+// para que todo lo que ya existe -semanas, meta, graficas, reparto- las cuente
+// sin cambiar nada. Tres campos se dejan a proposito distintos:
+//
+//   comision/retefuente/reteica/reteiva van en null, no en cero. La tarifa real
+//   de Wompi se mide sobre las ventas que TIENEN comision; metiendo ceros se
+//   diluiria el 1,99% y el calculador de cuanto cobrar daria de menos.
+//
+//   tarjeta va vacia, asi que quedan fuera del analisis de recompra, que agrupa
+//   por tarjeta. Sin eso, todas las manuales se verian como un mismo cliente.
+//
+//   franquicia lleva el medio de pago, para que la grafica muestre de donde
+//   viene la plata y no un monton llamado "Sin franquicia".
+
+const MEDIOS = {
+  EFECTIVO: 'Efectivo', ZELLE: 'Zelle', TRANSFERENCIA: 'Transferencia',
+  PAYPAL: 'PayPal', OTRO: 'Otro',
+};
+
+// Pesos escritos a mano. No sirve ninguno de los parsers que ya habia:
+// V.aNumero lee "250.000" como 250 -trata el punto como decimal, porque asi
+// vienen los CSV de Wompi ("161021.00")- y parseMoney lee "1.250.500" como 0.
+// Registrar 250 en vez de 250.000 es un error de mil veces que nadie nota.
+//
+// Aqui manda la forma en que se escribe en Colombia: la coma es el decimal y
+// el punto separa miles. El punto solo se toma como decimal cuando NO esta
+// separando grupos de tres, para que "250.5" siga siendo 250 con cincuenta.
+function pesosEscritos(texto) {
+  const limpio = String(texto || '').replace(/[^\d.,]/g, '').trim();
+  if (!limpio) return 0;
+
+  if (limpio.includes(',')) {
+    return Number(limpio.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+  const partes = limpio.split('.');
+  const milesBienFormados = partes.length > 1
+    && partes.slice(1).every((p) => p.length === 3)
+    && partes[0].length > 0 && partes[0].length <= 3;
+  if (milesBienFormados) return Number(partes.join('')) || 0;
+  return Number(limpio) || 0;
+}
+
+function escapar(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function pintarManuales() {
+  const caja = el('mvLista');
+  if (!caja) return;
+  const manuales = (ventas || []).filter((v) => v.manual)
+    .sort((a, b) => String(b.fechaCanje || '').localeCompare(String(a.fechaCanje || '')));
+
+  if (!manuales.length) { caja.innerHTML = ''; return; }
+
+  caja.innerHTML = '<h3>Ventas agregadas a mano</h3>'
+    + manuales.map((v) => `<div class="trip-card">
+        <div class="trip-info">
+          <div class="trip-name">${escapar(v.cliente || 'Sin cliente')}
+            <span class="trip-leg">${escapar(MEDIOS[v.franquicia] || v.franquicia || 'Otro')}</span></div>
+          <div class="trip-route">${V.pesos(v.neto)} &nbsp;·&nbsp; ${V.fechaCorta(v.fechaCanje)}</div>
+          ${v.nota ? `<div class="trip-sub">${escapar(v.nota)}</div>` : ''}
+        </div>
+        <div class="trip-actions">
+          <button type="button" class="trip-done-btn" data-borrar="${escapar(v.id)}"
+            title="Eliminar esta venta">${window.icono('eliminar')}</button>
+        </div>
+      </div>`).join('');
+}
+
+// Delegado: la lista se vuelve a pintar con cada cambio y los botones cambian.
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('#mvLista [data-borrar]');
+  if (!btn) return;
+  if (!window.confirm('¿Eliminar esta venta? Dejará de contar en el cierre de la semana.')) return;
+  try {
+    await deleteDoc(doc(db, 'ventas', btn.dataset.borrar));
+  } catch (e) {
+    el('mvEstado').textContent = `No se pudo eliminar: ${e.message}`;
+  }
+});
+
+const mvGuardar = el('mvGuardarBtn');
+if (mvGuardar) {
+  mvGuardar.addEventListener('click', async () => {
+    const estado = el('mvEstado');
+    const fecha = el('mvFecha').value;
+    const medio = el('mvMedio').value;
+    const cliente = el('mvCliente').value.trim();
+    const nota = el('mvNota').value.trim();
+    const valor = pesosEscritos(el('mvValor').value);
+
+    if (!auth.currentUser) { estado.textContent = 'Inicia sesión para guardar.'; return; }
+    if (!fecha) { estado.textContent = 'Falta la fecha en que recibiste el dinero.'; return; }
+    if (!(valor > 0)) { estado.textContent = 'El valor debe ser mayor que cero.'; return; }
+
+    // Nada impide registrar dos veces la misma venta, asi que al menos se
+    // avisa cuando ya hay una igual ese mismo dia.
+    const igual = (ventas || []).some((v) => v.manual && v.fechaCanje === fecha
+      && Math.round(v.neto) === Math.round(valor)
+      && (v.cliente || '') === cliente);
+    if (igual && !window.confirm('Ya hay una venta manual igual ese día. ¿La agrego de todos modos?')) return;
+
+    mvGuardar.disabled = true;
+    estado.textContent = 'Guardando…';
+    const id = `m-${fecha.replace(/-/g, '')}-${Math.round(valor)}-${Math.random().toString(36).slice(2, 6)}`;
+    try {
+      await setDoc(doc(db, 'ventas', id), {
+        numero: '', autorizacion: '',
+        fecha, fechaCanje: fecha,
+        bruto: valor, neto: valor,      // sin pasarela no hay comision que descontar
+        tipo: 'COMPRA',
+        franquicia: medio, plataforma: medio,
+        cliente, tarjeta: '',
+        comision: null, retefuente: null, reteica: null, reteiva: null,
+        manual: true, nota,
+        registrado: new Date().toISOString(),
+      });
+      estado.textContent = `✅ Agregada: ${V.pesos(valor)} el ${V.fechaCorta(fecha)}.`;
+      el('mvValor').value = ''; el('mvCliente').value = ''; el('mvNota').value = '';
+    } catch (e) {
+      estado.textContent = `No se pudo guardar: ${e.message}`;
+    }
+    mvGuardar.disabled = false;
+  });
+}
+
+// Se muestra lo que se va a guardar mientras se escribe: un cero de mas o de
+// menos se ve antes de grabarlo, no despues en el cierre de la semana.
+const mvValor = el('mvValor');
+if (mvValor) {
+  mvValor.addEventListener('input', () => {
+    const v = pesosEscritos(mvValor.value);
+    const aviso = el('mvValorLeido');
+    if (aviso) aviso.textContent = v > 0 ? `Se guardará ${V.pesos(v)}` : '';
+  });
+}
+
+window.__pesosEscritos = pesosEscritos;   // para poder probarlo

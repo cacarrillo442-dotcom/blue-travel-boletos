@@ -116,6 +116,8 @@
       indicativo: 'pkClientCountryCode', telefono: 'pkClientPhone', correo: 'pkClientEmail',
     });
     conectar('invBuyerName', {});
+    // Venta manual: solo sugiere el nombre, no hay telefono ni correo que llenar.
+    conectar('mvCliente', {});
     if (window.alCambiarClientes) window.alCambiarClientes(pintar);
   }
 
