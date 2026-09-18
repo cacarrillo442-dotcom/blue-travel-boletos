@@ -167,7 +167,7 @@ el('cuponDescargarBtn').addEventListener('click', () => {
   if (!ultimoCanvas) return;
   const a = document.createElement('a');
   a.href = ultimoCanvas.toDataURL('image/png');
-  a.download = `cupon-${cuponImagen.dataset.numero || 'blue-travel'}.png`;
+  a.download = nombreArchivo('cupon', [cuponImagen.dataset.numero], 'png');
   a.click();
 });
 

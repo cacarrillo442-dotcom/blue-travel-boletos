@@ -552,9 +552,8 @@ function generatePDF(data) {
 
   drawFooter(doc, page);
 
-  const firstPassenger = data.passengers[0] || 'boleto';
-  const safeName = firstPassenger.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  doc.save(`boleto-${safeName || 'blue-travel'}.pdf`);
+  doc.save(nombreArchivo('boleto',
+    [data.bookingRef, data.passengers[0]], 'pdf'));
 }
 
 // ---------- Factura (opcional) ----------
@@ -906,10 +905,8 @@ function generateInvoicePDF(ticketData, inv) {
     }
   }
 
-  const safeName = buyerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  const numero = inv.numero ? `${String(inv.numero).replace(/[^A-Za-z0-9-]/g, '')}-` : '';
-  const marca = inv.anulada ? 'ANULADA-' : '';
-  doc.save(`factura-${marca}${numero}${safeName || 'blue-travel'}.pdf`);
+  doc.save(nombreArchivo(inv.anulada ? 'factura-anulada' : 'factura',
+    [inv.numero, buyerName], 'pdf'));
 }
 
 // ---------- Form submit ----------
@@ -1818,7 +1815,7 @@ document.getElementById('qDownloadImageBtn').addEventListener('click', () => {
   const safeName = clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const a = document.createElement('a');
   a.href = qLastCanvas.toDataURL('image/png');
-  a.download = `cotizacion-${safeName}.png`;
+  a.download = nombreArchivo('cotizacion-vuelo', [safeName], 'png');
   document.body.appendChild(a);
   a.click();
   a.remove();

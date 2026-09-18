@@ -93,7 +93,7 @@ el('respaldoBajarBtn').addEventListener('click', async () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `respaldo-blue-travel-${hoy}.json`;
+    a.download = nombreArchivo('respaldo', [], 'json');
     a.click();
     URL.revokeObjectURL(url);
 

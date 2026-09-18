@@ -243,7 +243,7 @@ downloadCsvBtn.addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'clientes-blue-travel.csv';
+  a.download = nombreArchivo('clientes', [], 'csv');
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -328,7 +328,7 @@ if (campanasBtn) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `contactos-campanas-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = nombreArchivo('contactos-campanas', [], 'csv');
     document.body.appendChild(a);
     a.click();
     a.remove();

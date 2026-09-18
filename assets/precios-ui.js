@@ -474,7 +474,7 @@
     if (!lienzo) return;
     const a = document.createElement('a');
     a.href = lienzo.toDataURL('image/png');
-    a.download = `promo-${mejorOferta.origen}-${mejorOferta.destino}.png`;
+    a.download = nombreArchivo('publicidad', [mejorOferta.origen, mejorOferta.destino], 'png');
     a.click();
   });
 })();

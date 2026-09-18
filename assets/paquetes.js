@@ -1030,11 +1030,9 @@
   el('pkDownloadImageBtn').addEventListener('click', () => {
     const src = el('pkImagePreview').src;
     if (!src) return;
-    const nombre = (recoger().nombre || 'paquete').toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const a = document.createElement('a');
     a.href = src;
-    a.download = `cotizacion-${nombre || 'paquete'}.png`;
+    a.download = nombreArchivo('cotizacion-paquete', [recoger().nombre], 'png');
     a.click();
   });
 
