@@ -603,11 +603,29 @@
   }
 
   // Mensaje de reparto listo para WhatsApp.
-  function textoReporteSemanal(semana) {
+  // El texto cambia segun la semana haya cerrado o no.
+  //
+  // Antes siempre decia "Cierre semanal", incluso de una semana que llevaba un
+  // dia. El viernes es cuando mas se nota: la semana nueva arranca ese mismo
+  // dia, y el mensaje salia como un cierre con las ventas de una sola jornada
+  // y un "64% menos que la semana pasada" que no significaba nada, porque
+  // comparaba un dia contra siete.
+  function textoReporteSemanal(semana, hoyISO) {
     if (!semana) return '';
+    const hoy = hoyISO || (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+    const cerrada = hoy > semana.corte;
+
     const lineas = [];
-    lineas.push(`*Cierre semanal Blue Travel* 📊`);
+    lineas.push(cerrada
+      ? `*Cierre semanal Blue Travel* 📊`
+      : `*Blue Travel · semana en curso* 📊`);
     lineas.push(`_${fechaCorta(semana.inicio)} al ${fechaCorta(semana.corte)}_`);
+    if (!cerrada) {
+      lineas.push(`⏳ Va corriendo: cierra el jueves ${fechaCorta(semana.corte)}. Cifras parciales.`);
+    }
     lineas.push('');
     lineas.push(`🧾 Ventas de la semana: ${semana.ventas}`);
     lineas.push(`💵 Recaudado: ${pesos(semana.bruto)}`);
@@ -616,7 +634,8 @@
     lineas.push('*Reparto*');
     lineas.push(`• Milena (80%): *${pesos(semana.milena)}*`);
     lineas.push(`• César (20%): *${pesos(semana.cesar)}*`);
-    if (semana.variacion != null) {
+    // La comparacion solo tiene sentido entre semanas completas.
+    if (cerrada && semana.variacion != null) {
       const pct = Math.round(Math.abs(semana.variacion) * 100);
       lineas.push('');
       lineas.push(semana.variacion >= 0

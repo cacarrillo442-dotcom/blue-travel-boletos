@@ -92,16 +92,32 @@ function corto(n) {
 
 // ---------- Cierre semanal ----------
 
+function hoyISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function pintarSelectorSemanas() {
   const previo = weekPicker.value;
+  const hoy = hoyISO();
   weekPicker.innerHTML = '';
   semanas.forEach((s) => {
     const o = document.createElement('option');
     o.value = s.corte;
-    o.textContent = `${V.fechaDiaMes(s.inicio)} – ${V.fechaDiaMes(s.corte)}`;
+    o.textContent = `${V.fechaDiaMes(s.inicio)} – ${V.fechaDiaMes(s.corte)}`
+      + (hoy > s.corte ? '' : ' · va corriendo');
     weekPicker.appendChild(o);
   });
-  if (previo && semanas.some((s) => s.corte === previo)) weekPicker.value = previo;
+
+  if (previo && semanas.some((s) => s.corte === previo)) {
+    weekPicker.value = previo;
+    return;
+  }
+  // Por defecto, la ultima semana CERRADA y no la mas reciente. La semana nueva
+  // arranca el viernes, asi que ese dia lo primero que se veia -y se enviaba-
+  // era un "cierre" con las ventas de una sola jornada.
+  const cerrada = semanas.find((s) => hoy > s.corte);
+  if (cerrada) weekPicker.value = cerrada.corte;
 }
 
 function semanaActual() {
