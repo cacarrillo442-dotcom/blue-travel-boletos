@@ -357,15 +357,6 @@ function drawHeader(doc, data) {
 
   const inicio = cabeceraMarcaPDF(doc, { titulo: 'BOLETO DE VIAJE', lineas });
 
-  // El unico amarillo del cuerpo, y subraya una sola cosa. Un acento que
-  // aparece en todas partes deja de dirigir la mirada.
-  if (data.bookingRef) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    const ancho = doc.getTextWidth(data.bookingRef);
-    doc.setFillColor(255, 195, 0);
-    doc.rect(PAGE_W - MARGIN - ancho, 21.7, ancho, 1, 'F');
-  }
   return inicio;
 }
 
