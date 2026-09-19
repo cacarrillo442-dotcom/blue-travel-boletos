@@ -346,14 +346,27 @@ const HEADER_H = 24;
 const LOGO_ASPECT = 987 / 420; // width / height of assets/logo-blue.png
 
 function drawHeader(doc, data) {
-  const refParts = [];
-  if (data.bookingRef) refParts.push(`Código de reserva: ${data.bookingRef}`);
-  if (data.ticketNumber) refParts.push(`No. de ticket: ${data.ticketNumber}`);
+  // El codigo de reserva es lo que pide el mostrador, y estaba en gris
+  // diminuto pesando menos que el rotulo "VUELO DE IDA". Ahora va con su
+  // etiqueta pequena arriba y el codigo grande debajo.
+  const lineas = [];
+  if (data.bookingRef) {
+    lineas.push({ texto: 'CÓDIGO DE RESERVA', y: 15.5, tam: 6.5 });
+    lineas.push({ texto: data.bookingRef, y: 20.5, tam: 13, color: PRIMARY, negrita: true });
+  }
 
-  return cabeceraMarcaPDF(doc, {
-    titulo: 'BOLETO DE VIAJE',
-    lineas: refParts.length ? [{ texto: refParts.join('   ·   '), y: 17 }] : [],
-  });
+  const inicio = cabeceraMarcaPDF(doc, { titulo: 'BOLETO DE VIAJE', lineas });
+
+  // El unico amarillo del cuerpo, y subraya una sola cosa. Un acento que
+  // aparece en todas partes deja de dirigir la mirada.
+  if (data.bookingRef) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    const ancho = doc.getTextWidth(data.bookingRef);
+    doc.setFillColor(255, 195, 0);
+    doc.rect(PAGE_W - MARGIN - ancho, 21.7, ancho, 1, 'F');
+  }
+  return inicio;
 }
 
 function drawFooter(doc, pageNum) {
@@ -380,14 +393,17 @@ function drawContactFooter(doc, pageNum) {
   doc.text(`WhatsApp ${AGENCY_WHATSAPP}  ·  ${AGENCY_EMAIL}`, MARGIN, PAGE_H - 5.5);
 }
 
+// El rotulo es una etiqueta, no un titular. Bajarlo de 11 a 8,5 y pasarlo a
+// mayusculas espaciadas le devuelve el peso a los datos, que es lo que la
+// persona vino a leer.
 function sectionTitle(doc, y, label) {
   doc.setFillColor(...PRIMARY_2);
-  doc.rect(MARGIN, y, 3, 5, 'F');
-  doc.setTextColor(...PRIMARY);
+  doc.rect(MARGIN, y, 2.2, 4, 'F');
+  doc.setTextColor(...PRIMARY_2);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text(label, MARGIN + 6, y + 4);
-  return y + 10;
+  doc.setFontSize(8.5);
+  doc.text(label, MARGIN + 5, y + 3.4, { charSpace: 0.3 });
+  return y + 9;
 }
 
 function flightSummaryLines(f) {
@@ -593,7 +609,18 @@ function generatePDF(data) {
     if (i > 0) { y += 5; ensureSpace(5); }
     doc.text(linea, xNombres, y);
   });
-  y += 9;
+  y += 5;
+
+  // El numero de ticket vive aqui y no en la cabecera. Arriba solo caben tres
+  // datos apretados y terminaba montado sobre la franja de color; ademas le
+  // quitaba peso al codigo de reserva, que es el que de verdad se muestra.
+  if (data.ticketNumber) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY);
+    doc.text(`No. de ticket ${data.ticketNumber}`, xNombres, y);
+  }
+  y += 8;
 
   // Luggage
   ensureSpace(8);

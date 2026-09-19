@@ -51,12 +51,15 @@
       doc.text(l.texto, PAGE_W - MARGIN, l.y, { align: 'right' });
     });
 
+    // Cian y amarillo, en la misma proporcion 2:1 que las imagenes. Antes el
+    // filete de abajo era azul, asi que el PDF y las imagenes no se parecian y
+    // el amarillo de la marca no aparecia en los documentos impresos.
     doc.setFillColor(...PRIMARY_2);
     doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
-    doc.setFillColor(...PRIMARY);
-    doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
+    doc.setFillColor(255, 195, 0);
+    doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.9, 'F');
 
-    return HEADER_H + 1.8 + 0.7 + 10;
+    return HEADER_H + 1.8 + 0.9 + 10;
   };
 
   // ---------- Imagenes (cotizaciones) ----------
