@@ -561,8 +561,7 @@ function generatePDF(data) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...GRAY);
-    doc.text('Estos son los datos de tu vuelo. Guarda este documento y tenlo a mano en el aeropuerto.',
-      MARGIN, y);
+    doc.text('Estos son los datos de tu vuelo.', MARGIN, y);
     y += 10;
   }
 
