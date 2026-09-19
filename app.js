@@ -399,44 +399,111 @@ function flightSummaryLines(f) {
   return { originAirport, destAirport, tipoLine };
 }
 
+// La escala, dicha corto. En el boleto no cabe "BOG - Bogotá, Colombia ·
+// 01:30 hrs" entre las dos horas: basta la ciudad y la duracion en lenguaje
+// normal.
+function escalaCortaPDF(f) {
+  if (f.tipo !== 'ESCALA') return 'Vuelo directo';
+  const a = findAirport(f.escalaLugar);
+  const donde = a ? a.city : (f.escalaLugar || '');
+  const m = /^(\d{1,2}):?(\d{2})$/.exec(f.escalaTiempo || '');
+  let cuanto = '';
+  if (m) {
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    cuanto = (h ? `${h}h` : '') + (min ? `${h ? ' ' : ''}${min}m` : '');
+  }
+  if (!donde) return cuanto ? `Escala de ${cuanto}` : 'Con escala';
+  return `Escala en ${donde}${cuanto ? ` · ${cuanto}` : ''}`;
+}
+
+// Cuantos dias despues aterriza. Un vuelo que sale de noche y llega al dia
+// siguiente es justo lo que un pasajero necesita ver antes de viajar.
+function diasDespues(salidaDDMMAAAA, llegadaDDMMAAAA) {
+  const parse = (t) => {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t || '');
+    return m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : null;
+  };
+  const a = parse(salidaDDMMAAAA);
+  const b = parse(llegadaDDMMAAAA);
+  if (!a || !b) return 0;
+  return Math.round((b - a) / 86400000);
+}
+
+// El vuelo dibujado como un pasabordo: los dos codigos grandes con su hora
+// debajo, y en el medio la linea del vuelo con la escala escrita encima. Antes
+// eran dos columnas de "ORIGEN / DESTINO" con la ciudad y la fecha en texto
+// corrido; se leia como un formulario y no como un viaje.
 function drawFlightCard(doc, y, title, f, ensureSpace) {
-  ensureSpace(46);
+  ensureSpace(52);
   y = sectionTitle(doc, y, title);
 
-  const { originAirport, destAirport, tipoLine } = flightSummaryLines(f);
-  const boxH = 38;
+  const { originAirport, destAirport } = flightSummaryLines(f);
+  const boxH = 40;
+  const x0 = MARGIN;
+  const x1 = PAGE_W - MARGIN;
+  const izq = x0 + 8;
+  const der = x1 - 8;
+  const centro = (x0 + x1) / 2;
+
   doc.setDrawColor(...NEUTRAL);
   doc.setFillColor(248, 250, 251);
-  doc.roundedRect(MARGIN, y, PAGE_W - MARGIN * 2, boxH, 2, 2, 'FD');
+  doc.roundedRect(x0, y, x1 - x0, boxH, 2, 2, 'FD');
 
+  // Aerolinea a la izquierda, fecha con su dia de la semana a la derecha: es
+  // lo primero que uno contrasta con su calendario.
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(...PRIMARY);
-  doc.text(f.airline || 'Aerolínea', MARGIN + 5, y + 7);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...TEXT);
-  doc.text(tipoLine, MARGIN + 5, y + 13);
-
-  const colOrigin = MARGIN + 5;
-  const colDest = MARGIN + 100;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...PRIMARY_2);
-  doc.text('ORIGEN', colOrigin, y + 21);
-  doc.text('DESTINO', colDest, y + 21);
-
-  doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.setTextColor(...TEXT);
-  doc.text(originAirport ? `${originAirport.city}, ${originAirport.country} (${originAirport.code})` : (f.origin || '-'), colOrigin, y + 27);
-  doc.text(destAirport ? `${destAirport.city}, ${destAirport.country} (${destAirport.code})` : (f.dest || '-'), colDest, y + 27);
+  doc.setTextColor(...PRIMARY_2);
+  doc.text(f.airline || 'Aerolínea', izq, y + 8);
+  const fecha = fechaEnPalabras(f.fechaSalida) || f.fechaSalida || '';
+  if (fecha) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    doc.text(fecha, der, y + 8, { align: 'right' });
+  }
 
-  doc.setFontSize(8);
+  // Los codigos de aeropuerto, que es el dato que se busca primero.
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(...PRIMARY);
+  doc.text(f.origin || '---', izq, y + 22);
+  doc.text(f.dest || '---', der, y + 22, { align: 'right' });
+
+  // La linea del vuelo, punteada, con el avion encima.
+  doc.setDrawColor(157, 192, 212);
+  doc.setLineWidth(0.4);
+  doc.setLineDashPattern([1, 1.2], 0);
+  // La linea se corta en el medio y el avion va en el hueco. De un solo trazo,
+  // el avion quedaba montado encima y se veia como un borron.
+  doc.line(centro - 26, y + 19, centro - 5, y + 19);
+  doc.line(centro + 5, y + 19, centro + 26, y + 19);
+  doc.setLineDashPattern([], 0);
+  doc.setFillColor(...PRIMARY_2);
+  doc.triangle(centro - 2.1, y + 17.4, centro + 2.6, y + 19, centro - 2.1, y + 20.6, 'F');
+
+  // De un vuelo directo tambien se dice que es directo: la ausencia de escala
+  // es justo lo que el pasajero quiere confirmar.
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...(f.tipo === 'ESCALA' ? [138, 90, 8] : GRAY));
+  doc.text(escalaCortaPDF(f), centro, y + 25.5, { align: 'center' });
+
+  // Las horas, cada una bajo su aeropuerto.
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...TEXT);
+  doc.text(f.horaSalida || '-', izq, y + 30);
+  const dias = diasDespues(f.fechaSalida, f.fechaLlegada);
+  const llegada = (f.horaLlegada || '-') + (dias > 0 ? `  +${dias} día${dias === 1 ? '' : 's'}` : '');
+  doc.text(llegada, der, y + 30, { align: 'right' });
+
+  // Y las ciudades, en pequeño: el codigo manda, el nombre acompaña.
+  doc.setFontSize(7.5);
   doc.setTextColor(...GRAY);
-  doc.text(`Salida: ${f.fechaSalida || '-'} ${f.horaSalida || ''}`.trim(), colOrigin, y + 33);
-  doc.text(`Llegada: ${f.fechaLlegada || '-'} ${f.horaLlegada || ''}`.trim(), colDest, y + 33);
+  if (originAirport) doc.text(originAirport.city, izq, y + 35);
+  if (destAirport) doc.text(destAirport.city, der, y + 35, { align: 'right' });
 
   return y + boxH + 6;
 }
@@ -465,6 +532,31 @@ function generatePDF(data) {
       page += 1;
       y = drawHeader(doc, data);
     }
+  }
+
+  // Un saludo antes de los datos. El boleto era correcto pero frio: abria
+  // directo con "Pasajero(s):". Con el nombre propio deja de parecer un
+  // formulario y se parece a lo que es, el viaje de alguien.
+  //
+  // Con varios pasajeros el saludo va sin nombre: decir solo el del primero
+  // dejaria a los demas por fuera de su propio boleto.
+  {
+    const primero = (data.passengers[0] || '').trim().split(/\s+/)[0];
+    const saludo = (data.passengers.length === 1 && primero)
+      ? `¡Buen viaje, ${primero}!`
+      : '¡Buen viaje!';
+    ensureSpace(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...PRIMARY);
+    doc.text(saludo, MARGIN, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...GRAY);
+    doc.text('Estos son los datos de tu vuelo. Guarda este documento y tenlo a mano en el aeropuerto.',
+      MARGIN, y);
+    y += 10;
   }
 
   // Pasajeros
