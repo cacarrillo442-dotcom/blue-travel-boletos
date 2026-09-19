@@ -346,33 +346,14 @@ const HEADER_H = 24;
 const LOGO_ASPECT = 987 / 420; // width / height of assets/logo-blue.png
 
 function drawHeader(doc, data) {
-  const logoH = 15;
-  const logoY = (HEADER_H - logoH) / 2;
-  try {
-    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, logoY, logoH * LOGO_ASPECT, logoH);
-  } catch (e) { /* logo optional */ }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...PRIMARY);
-  doc.text('BOLETO DE VIAJE', PAGE_W - MARGIN, 10, { align: 'right' });
-
   const refParts = [];
   if (data.bookingRef) refParts.push(`Código de reserva: ${data.bookingRef}`);
   if (data.ticketNumber) refParts.push(`No. de ticket: ${data.ticketNumber}`);
-  if (refParts.length) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(...GRAY);
-    doc.text(refParts.join('   ·   '), PAGE_W - MARGIN, 17, { align: 'right' });
-  }
 
-  doc.setFillColor(...PRIMARY_2);
-  doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
-
-  return HEADER_H + 1.8 + 0.7 + 10;
+  return cabeceraMarcaPDF(doc, {
+    titulo: 'BOLETO DE VIAJE',
+    lineas: refParts.length ? [{ texto: refParts.join('   ·   '), y: 17 }] : [],
+  });
 }
 
 function drawFooter(doc, pageNum) {
@@ -692,35 +673,13 @@ function collectInvoiceFields() {
 }
 
 function drawInvoiceHeader(doc, inv) {
-  const logoH = 15;
-  const logoY = (HEADER_H - logoH) / 2;
-  try {
-    doc.addImage(LOGO_BLUE_BASE64, 'PNG', MARGIN, logoY, logoH * LOGO_ASPECT, logoH);
-  } catch (e) { /* logo optional */ }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...PRIMARY);
-  doc.text('FACTURA', PAGE_W - MARGIN, 10, { align: 'right' });
-
-  if (inv.numero) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...PRIMARY_2);
-    doc.text(`No. ${inv.numero}`, PAGE_W - MARGIN, 16, { align: 'right' });
-  }
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...GRAY);
-  doc.text(`Fecha: ${inv.date || '-'}`, PAGE_W - MARGIN, inv.numero ? 21 : 17, { align: 'right' });
-
-  doc.setFillColor(...PRIMARY_2);
-  doc.rect(0, HEADER_H, PAGE_W, 1.8, 'F');
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, HEADER_H + 1.8, PAGE_W, 0.7, 'F');
-
-  let inicio = HEADER_H + 1.8 + 0.7 + 10;
+  let inicio = cabeceraMarcaPDF(doc, {
+    titulo: 'FACTURA',
+    lineas: [
+      inv.numero && { texto: `No. ${inv.numero}`, y: 16, tam: 10, color: PRIMARY_2, negrita: true },
+      { texto: `Fecha: ${inv.date || '-'}`, y: inv.numero ? 21 : 17 },
+    ],
+  });
 
   // Una factura anulada tiene que verse anulada. Si al volver a descargarla
   // saliera igual a una valida, anularla no serviria de nada: el PDF circula
@@ -1603,31 +1562,11 @@ function drawQuoteImageCard(q) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, MAX);
 
-      const headerH = 230;
-      ctx.fillStyle = '#033c69';
-      ctx.fillRect(0, 0, W, headerH);
-      ctx.fillStyle = '#126f99';
-      ctx.fillRect(0, headerH, W, 10);
-      ctx.fillStyle = '#ffc300';
-      ctx.fillRect(0, headerH + 10, W, 5);
+      const finCabecera = cabeceraMarcaCanvas(ctx, {
+        ancho: W, titulo: 'COTIZACIÓN', subtitulo: 'DE VIAJE', logo: logoImg,
+      });
 
-      // Va el logo blanco, no el azul: la cabecera es azul oscura y el logo azul
-      // se perdia contra el fondo. En el cupon y en los PDF sigue el azul,
-      // porque alli se dibuja sobre blanco.
-      if (logoImg) {
-        const logoH = 110;
-        const logoW = logoH * LOGO_ASPECT;
-        ctx.drawImage(logoImg, 60, 60, logoW, logoH);
-      }
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 46px Arial, sans-serif';
-      ctx.fillText('COTIZACIÓN', W - 60, 110);
-      ctx.font = '600 30px Arial, sans-serif';
-      ctx.fillStyle = '#cfe3ee';
-      ctx.fillText('DE VIAJE', W - 60, 150);
-
-      let y = headerH + 90;
+      let y = finCabecera + 75;
       ctx.textAlign = 'left';
       ctx.fillStyle = '#033c69';
       ctx.font = 'bold 42px Arial, sans-serif';
@@ -1760,15 +1699,7 @@ function drawQuoteImageCard(q) {
       fx.fillRect(0, 0, W, H);
       fx.drawImage(canvas, 0, 0, W, H - footerH, 0, 0, W, H - footerH);
 
-      fx.fillStyle = '#033c69';
-      fx.fillRect(0, H - footerH, W, footerH);
-      fx.textAlign = 'center';
-      fx.fillStyle = '#ffffff';
-      fx.font = 'bold 32px Arial, sans-serif';
-      fx.fillText('Blue Travel · Agencia de Viajes', W / 2, H - footerH + 45);
-      fx.font = '24px Arial, sans-serif';
-      fx.fillStyle = '#cfe3ee';
-      fx.fillText(`${AGENCY_WHATSAPP}   ·   ${AGENCY_EMAIL}`, W / 2, H - footerH + 80);
+      pieMarcaCanvas(fx, { ancho: W, alto: H });
 
       resolve(final);
     };

@@ -823,27 +823,11 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, W, MAX);
 
-        const altoCab = 230;
-        ctx.fillStyle = '#033c69';
-        ctx.fillRect(0, 0, W, altoCab);
-        ctx.fillStyle = '#126f99';
-        ctx.fillRect(0, altoCab, W, 10);
-        ctx.fillStyle = '#ffc300';
-        ctx.fillRect(0, altoCab + 10, W, 5);
+        const finCabecera = cabeceraMarcaCanvas(ctx, {
+          ancho: W, titulo: 'COTIZACIÓN', subtitulo: 'DE PAQUETE', logo,
+        });
 
-        if (logo) {
-          const h = 110;
-          ctx.drawImage(logo, 60, 60, h * LOGO_ASPECT, h);
-        }
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 46px Arial, sans-serif';
-        ctx.fillText('COTIZACIÓN', W - 60, 110);
-        ctx.font = '600 30px Arial, sans-serif';
-        ctx.fillStyle = '#cfe3ee';
-        ctx.fillText('DE PAQUETE', W - 60, 150);
-
-        let y = altoCab + 90;
+        let y = finCabecera + 75;
         ctx.textAlign = 'left';
 
         ctx.fillStyle = '#033c69';
@@ -990,15 +974,7 @@
         fx.fillRect(0, 0, W, H);
         fx.drawImage(lienzo, 0, 0, W, H - altoPie, 0, 0, W, H - altoPie);
 
-        fx.fillStyle = '#033c69';
-        fx.fillRect(0, H - altoPie, W, altoPie);
-        fx.textAlign = 'center';
-        fx.fillStyle = '#ffffff';
-        fx.font = 'bold 32px Arial, sans-serif';
-        fx.fillText('Blue Travel · Agencia de Viajes', W / 2, H - altoPie + 45);
-        fx.font = '24px Arial, sans-serif';
-        fx.fillStyle = '#cfe3ee';
-        fx.fillText(`${AGENCY_WHATSAPP}   ·   ${AGENCY_EMAIL}`, W / 2, H - altoPie + 80);
+        pieMarcaCanvas(fx, { ancho: W, alto: H });
 
         resolve(fin);
       };
