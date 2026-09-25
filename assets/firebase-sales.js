@@ -765,8 +765,10 @@ function pintarManuales() {
     + manuales.map((v) => `<div class="trip-card">
         <div class="trip-info">
           <div class="trip-name">${escapar(v.cliente || 'Sin cliente')}
-            <span class="trip-leg">${escapar(MEDIOS[v.franquicia] || v.franquicia || 'Otro')}</span></div>
-          <div class="trip-route">${V.pesos(v.neto)} &nbsp;·&nbsp; ${V.fechaCorta(v.fechaCanje)}</div>
+            <span class="trip-leg">${escapar(MEDIOS[v.franquicia] || v.franquicia || 'Otro')}</span>
+            ${v.tipo === 'DEVOLUCION' ? '<span class="sello-anulada">DEVOLUCIÓN</span>' : ''}</div>
+          <div class="trip-route">${v.neto < 0 ? '−' : ''}${V.pesos(Math.abs(v.neto))}`
+            + ` &nbsp;·&nbsp; ${V.fechaCorta(v.fechaCanje)}</div>
           ${v.nota ? `<div class="trip-sub">${escapar(v.nota)}</div>` : ''}
         </div>
         <div class="trip-actions">
@@ -796,18 +798,24 @@ if (mvGuardar) {
     const medio = el('mvMedio').value;
     const cliente = el('mvCliente').value.trim();
     const nota = el('mvNota').value.trim();
-    const valor = pesosEscritos(el('mvValor').value);
+    const esDevolucion = (document.querySelector('.mv-tipo:checked') || {}).value === 'DEVOLUCION';
+    const magnitud = pesosEscritos(el('mvValor').value);
 
     if (!auth.currentUser) { estado.textContent = 'Inicia sesión para guardar.'; return; }
-    if (!fecha) { estado.textContent = 'Falta la fecha en que recibiste el dinero.'; return; }
-    if (!(valor > 0)) { estado.textContent = 'El valor debe ser mayor que cero.'; return; }
+    if (!fecha) { estado.textContent = 'Falta la fecha del movimiento.'; return; }
+    if (!(magnitud > 0)) { estado.textContent = 'El valor debe ser mayor que cero.'; return; }
+
+    // Se escribe siempre en positivo y el signo lo pone el tipo: pedir que
+    // teclee "-250.000" seria una trampa facil de olvidar, y un signo perdido
+    // convierte una devolucion en un ingreso.
+    const valor = esDevolucion ? -magnitud : magnitud;
 
     // Nada impide registrar dos veces la misma venta, asi que al menos se
     // avisa cuando ya hay una igual ese mismo dia.
     const igual = (ventas || []).some((v) => v.manual && v.fechaCanje === fecha
       && Math.round(v.neto) === Math.round(valor)
       && (v.cliente || '') === cliente);
-    if (igual && !window.confirm('Ya hay una venta manual igual ese día. ¿La agrego de todos modos?')) return;
+    if (igual && !window.confirm('Ya hay un movimiento manual igual ese día. ¿Lo agrego de todos modos?')) return;
 
     mvGuardar.disabled = true;
     estado.textContent = 'Guardando…';
@@ -817,14 +825,19 @@ if (mvGuardar) {
         numero: '', autorizacion: '',
         fecha, fechaCanje: fecha,
         bruto: valor, neto: valor,      // sin pasarela no hay comision que descontar
-        tipo: 'COMPRA',
+        // El tipo importa mas alla del signo: las devoluciones quedan fuera del
+        // analisis de recompra y del calculo de la tarifa real, que solo miran
+        // las COMPRA. Una devolucion no es un cliente comprando.
+        tipo: esDevolucion ? 'DEVOLUCION' : 'COMPRA',
         franquicia: medio, plataforma: medio,
         cliente, tarjeta: '',
         comision: null, retefuente: null, reteica: null, reteiva: null,
         manual: true, nota,
         registrado: new Date().toISOString(),
       });
-      estado.textContent = `✅ Agregada: ${V.pesos(valor)} el ${V.fechaCorta(fecha)}.`;
+      estado.textContent = esDevolucion
+        ? `✅ Devolución registrada: ${V.pesos(magnitud)} menos el ${V.fechaCorta(fecha)}.`
+        : `✅ Agregada: ${V.pesos(valor)} el ${V.fechaCorta(fecha)}.`;
       el('mvValor').value = ''; el('mvCliente').value = ''; el('mvNota').value = '';
     } catch (e) {
       estado.textContent = `No se pudo guardar: ${e.message}`;
@@ -840,8 +853,21 @@ if (mvValor) {
   mvValor.addEventListener('input', () => {
     const v = pesosEscritos(mvValor.value);
     const aviso = el('mvValorLeido');
-    if (aviso) aviso.textContent = v > 0 ? `Se guardará ${V.pesos(v)}` : '';
+    const devolucion = (document.querySelector('.mv-tipo:checked') || {}).value === 'DEVOLUCION';
+    if (aviso) {
+      aviso.textContent = v > 0
+        ? (devolucion ? `Se descontará ${V.pesos(v)}` : `Se guardará ${V.pesos(v)}`)
+        : '';
+    }
   });
 }
 
 window.__pesosEscritos = pesosEscritos;   // para poder probarlo
+
+// Al cambiar entre venta y devolucion, el aviso del valor tiene que seguir.
+document.querySelectorAll('.mv-tipo').forEach((r) => {
+  r.addEventListener('change', () => {
+    const campo = el('mvValor');
+    if (campo) campo.dispatchEvent(new Event('input'));
+  });
+});

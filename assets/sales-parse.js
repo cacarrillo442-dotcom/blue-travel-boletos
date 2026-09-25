@@ -272,10 +272,23 @@
       if (!fecha) return;
       const corte = corteDe(fecha);
       if (!mapa.has(corte)) {
-        mapa.set(corte, { corte, inicio: inicioDeCorte(corte), ventas: 0, bruto: 0, neto: 0 });
+        mapa.set(corte, {
+          corte, inicio: inicioDeCorte(corte),
+          ventas: 0, bruto: 0, neto: 0,
+          devoluciones: 0, devuelto: 0,
+        });
       }
       const s = mapa.get(corte);
-      s.ventas += 1;
+      // Una devolucion no es una venta. Sumarla al conteo hacia decir "3 ventas"
+      // cuando fueron dos ventas y una plata que salio.
+      if ((v.tipo || 'COMPRA') === 'DEVOLUCION') {
+        s.devoluciones += 1;
+        s.devuelto += Math.abs(v.neto);
+      } else {
+        s.ventas += 1;
+      }
+      // El dinero si se suma siempre: la devolucion viene en negativo y baja
+      // el neto, que es lo que se reparte.
       s.bruto += v.bruto;
       s.neto += v.neto;
     });
@@ -629,6 +642,9 @@
     lineas.push('');
     lineas.push(`🧾 Ventas de la semana: ${semana.ventas}`);
     lineas.push(`💵 Recaudado: ${pesos(semana.bruto)}`);
+    if (semana.devoluciones) {
+      lineas.push(`↩️ Devoluciones: ${semana.devoluciones} (−${pesos(semana.devuelto)})`);
+    }
     lineas.push(`✅ *Ganancia neta: ${pesos(semana.neto)}*`);
     lineas.push('');
     lineas.push('*Reparto*');

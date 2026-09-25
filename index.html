@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260918-192616" />
+<meta name="app-version" content="20260925-130150" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260918-192616" />
-<script src="assets/tema.js?v=20260918-192616"></script>
+<link rel="stylesheet" href="style.css?v=20260925-130150" />
+<script src="assets/tema.js?v=20260925-130150"></script>
 </head>
 <body>
 
@@ -1022,13 +1022,18 @@
   </section>
 
   <section class="card card-utilidad">
-    <h2>Agregar una venta que no pasó por Wompi</h2>
+    <h2>Registrar un movimiento que no pasó por Wompi</h2>
     <p class="hint">
-      Para lo que te pagan por fuera de la pasarela: efectivo, Zelle, transferencia. Entra al
-      cierre de la semana igual que las demás, contada por la fecha en que recibiste el dinero.
+      Para lo que entra o sale por fuera de la pasarela: efectivo, Zelle, transferencia. Cuenta en
+      el cierre de la semana igual que lo demás, por la fecha en que se movió el dinero.
     </p>
+    <div class="radio-row">
+      <span class="radio-title">Tipo de movimiento</span>
+      <label class="radio-label"><input type="radio" name="mvTipo" class="mv-tipo" value="VENTA" checked /> Entró dinero (venta)</label>
+      <label class="radio-label"><input type="radio" name="mvTipo" class="mv-tipo" value="DEVOLUCION" /> Salió dinero (devolución)</label>
+    </div>
     <div class="grid-3">
-      <label>Fecha en que recibiste el dinero
+      <label>Fecha del movimiento
         <input type="date" id="mvFecha" />
       </label>
       <label>Medio de pago
@@ -1040,7 +1045,7 @@
           <option value="OTRO">Otro</option>
         </select>
       </label>
-      <label>Valor recibido (COP)
+      <label>Valor (COP)
         <input type="text" inputmode="decimal" id="mvValor" placeholder="Ej. 250.000" />
         <span class="hint-inline" id="mvValorLeido"></span>
       </label>
@@ -1505,34 +1510,34 @@
 </template>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/nombres-archivo.js?v=20260918-192616"></script>
-<script src="assets/iconos.js?v=20260918-192616"></script>
-<script src="assets/version.js?v=20260918-192616"></script>
-<script src="assets/trm.js?v=20260918-192616"></script>
+<script src="assets/nombres-archivo.js?v=20260925-130150"></script>
+<script src="assets/iconos.js?v=20260925-130150"></script>
+<script src="assets/version.js?v=20260925-130150"></script>
+<script src="assets/trm.js?v=20260925-130150"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260918-192616"></script>
-<script src="assets/country-codes-data.js?v=20260918-192616"></script>
+<script src="assets/catalog-data.js?v=20260925-130150"></script>
+<script src="assets/country-codes-data.js?v=20260925-130150"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260918-192616"></script>
-<script src="assets/cupon-imagen.js?v=20260918-192616"></script>
-<script src="assets/publicidad-imagen.js?v=20260918-192616"></script>
-<script src="assets/precios-datos.js?v=20260918-192616"></script>
-<script src="app.js?v=20260918-192616"></script>
-<script src="assets/marca.js?v=20260918-192616"></script>
-<script src="assets/vuelos-bloque.js?v=20260918-192616"></script>
-<script src="assets/paquetes.js?v=20260918-192616"></script>
-<script src="assets/inicio.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260918-192616"></script>
-<script src="assets/clientes-autocompletar.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260918-192616"></script>
-<script src="assets/precios-ui.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-history.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260918-192616"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260918-192616"></script>
+<script src="assets/sales-parse.js?v=20260925-130150"></script>
+<script src="assets/cupon-imagen.js?v=20260925-130150"></script>
+<script src="assets/publicidad-imagen.js?v=20260925-130150"></script>
+<script src="assets/precios-datos.js?v=20260925-130150"></script>
+<script src="app.js?v=20260925-130150"></script>
+<script src="assets/marca.js?v=20260925-130150"></script>
+<script src="assets/vuelos-bloque.js?v=20260925-130150"></script>
+<script src="assets/paquetes.js?v=20260925-130150"></script>
+<script src="assets/inicio.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260925-130150"></script>
+<script src="assets/clientes-autocompletar.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260925-130150"></script>
+<script src="assets/precios-ui.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-history.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260925-130150"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260925-130150"></script>
 </body>
 </html>
