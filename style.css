@@ -353,11 +353,47 @@ body {
   }
 }
 
+/* El logo de la entrada, fijo o animado.
+   Es la ventana por la que se ve el video: el archivo es un cuadrado con mucho
+   margen blanco alrededor, y sin recortar el logo se veria diminuto. Las
+   medidas del recorte las pone assets/logo-animado.js, que las saca de donde
+   vive de verdad la animacion dentro del cuadro. */
+.app-gate-marca {
+  position: relative;
+  height: 48px;
+  width: fit-content;       /* lo marca el logo fijo: 112,8px a 48 de alto */
+  margin: 0 auto 4px;
+  overflow: hidden;         /* esta es la ventana del recorte */
+}
+
 .app-gate-logo {
   height: 48px;
   width: auto;
-  margin: 0 auto 4px;
+  display: block;
+  transition: opacity 0.4s ease;
 }
+
+/* El video va CUADRADO -alto en porcentaje, ancho automatico- y se recorta con
+   el overflow del padre. Si se le diera tambien el ancho en porcentaje del
+   contenedor, se estiraria: el contenedor es apaisado y el video no.
+   A 303% de 48px son 145px, dentro de los cuales el logo mide 110,5px de
+   ancho: el mismo tamaño que el fijo al que releva. */
+.app-gate-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: var(--zoom-alto, 100%);
+  width: auto;
+  transform: translate(-50%, -50%) translateY(var(--corrimiento, 0));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+/* Solo cuando el video ya tiene imagen se hace el relevo. Hasta entonces
+   manda el logo fijo. */
+.app-gate-marca.con-video .app-gate-video { opacity: 1; }
+.app-gate-marca.con-video .app-gate-logo { opacity: 0; }
 
 .app-gate-card h1 {
   margin: 0;
