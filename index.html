@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260929-162125" />
+<meta name="app-version" content="20260929-163800" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260929-162125" />
-<script src="assets/tema.js?v=20260929-162125"></script>
+<link rel="stylesheet" href="style.css?v=20260929-163800" />
+<script src="assets/tema.js?v=20260929-163800"></script>
 </head>
 <body>
 
@@ -961,6 +961,37 @@
       </div>
       <img id="qImagePreview" alt="Cotización" class="quote-image-preview" />
     </section>
+
+    <!-- El paso que faltaba entre cotizar y emitir: el cliente dijo que si y
+         hay que mandarle algo que confirme que su viaje quedo tomado. Va aqui
+         dentro y no en un modulo aparte porque se arma con los datos que ya
+         estan llenos arriba: en otra pantalla habria que redigitarlo todo. -->
+    <section class="card card-principal" id="qReservaCard">
+      <div class="card-header">
+        <h3><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-reserva"></use></svg>¿Ya te dijo que sí?</h3>
+      </div>
+      <p class="hint">Genera la confirmación de reserva con los mismos datos de arriba.</p>
+
+      <label>Nombres de los pasajeros <span class="hint-inline">(opcional)</span>
+        <textarea id="qReservaPasajeros" rows="3"
+          placeholder="Un nombre por línea, como aparece en el pasaporte&#10;MARIA FERNANDA GOMEZ RUIZ&#10;CARLOS ANDRES GOMEZ RUIZ"></textarea>
+      </label>
+      <p class="hint">Si los dejas vacíos, la reserva dirá cuántos viajan («2 adultos y 1 niño»).
+        Ponerlos deja que el cliente revise cómo quedó escrito su nombre antes de que emitas.</p>
+
+      <div class="inline-add-row">
+        <button type="button" class="btn-secondary" id="qReservaImagenBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-imagen"></use></svg>Reserva para WhatsApp</button>
+        <button type="button" class="btn-secondary" id="qReservaPdfBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Reserva en PDF</button>
+      </div>
+
+      <div class="hidden" id="qReservaSalida">
+        <div class="inline-add-row">
+          <button type="button" class="btn-add" id="qReservaCopiarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar imagen</button>
+          <button type="button" class="btn-add" id="qReservaDescargarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar</button>
+        </div>
+        <img id="qReservaPreview" alt="Reserva" class="quote-image-preview" />
+      </div>
+    </section>
   </form>
 </div>
 
@@ -1523,37 +1554,37 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/guardado-pendiente.js?v=20260929-162125"></script>
-<script src="assets/nombres-archivo.js?v=20260929-162125"></script>
-<script src="assets/iconos.js?v=20260929-162125"></script>
-<script src="assets/version.js?v=20260929-162125"></script>
-<script src="assets/trm.js?v=20260929-162125"></script>
+<script src="assets/guardado-pendiente.js?v=20260929-163800"></script>
+<script src="assets/nombres-archivo.js?v=20260929-163800"></script>
+<script src="assets/iconos.js?v=20260929-163800"></script>
+<script src="assets/version.js?v=20260929-163800"></script>
+<script src="assets/trm.js?v=20260929-163800"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260929-162125"></script>
-<script src="assets/country-codes-data.js?v=20260929-162125"></script>
+<script src="assets/catalog-data.js?v=20260929-163800"></script>
+<script src="assets/country-codes-data.js?v=20260929-163800"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/sales-parse.js?v=20260929-162125"></script>
-<script src="assets/cupon-imagen.js?v=20260929-162125"></script>
-<script src="assets/publicidad-imagen.js?v=20260929-162125"></script>
-<script src="assets/precios-datos.js?v=20260929-162125"></script>
-<script src="app.js?v=20260929-162125"></script>
-<script src="assets/marca.js?v=20260929-162125"></script>
-<script src="assets/vuelos-bloque.js?v=20260929-162125"></script>
-<script src="assets/paquetes.js?v=20260929-162125"></script>
-<script src="assets/inicio.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260929-162125"></script>
-<script src="assets/clientes-autocompletar.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260929-162125"></script>
-<script src="assets/precios-ui.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-history.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260929-162125"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260929-162125"></script>
+<script src="assets/sales-parse.js?v=20260929-163800"></script>
+<script src="assets/cupon-imagen.js?v=20260929-163800"></script>
+<script src="assets/publicidad-imagen.js?v=20260929-163800"></script>
+<script src="assets/precios-datos.js?v=20260929-163800"></script>
+<script src="app.js?v=20260929-163800"></script>
+<script src="assets/marca.js?v=20260929-163800"></script>
+<script src="assets/vuelos-bloque.js?v=20260929-163800"></script>
+<script src="assets/paquetes.js?v=20260929-163800"></script>
+<script src="assets/inicio.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260929-163800"></script>
+<script src="assets/clientes-autocompletar.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260929-163800"></script>
+<script src="assets/precios-ui.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-history.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260929-163800"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260929-163800"></script>
 </body>
 </html>

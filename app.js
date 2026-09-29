@@ -1877,6 +1877,359 @@ document.getElementById('qCopyImageBtn').addEventListener('click', async () => {
   setTimeout(() => { btn.innerHTML = original; }, 2000);
 });
 
+// ---------- Reserva confirmada ----------
+//
+// Entre cotizar y emitir el boleto no habia nada. El cliente decia que si y se
+// quedaba sin un papel que dijera que su viaje estaba tomado: la cotizacion ya
+// no servia -es una oferta con vigencia- y el boleto todavia no existia.
+//
+// Va sin codigo de reserva y sin fecha limite de pago a proposito: el codigo
+// llega despues, con el boleto, y el plazo se habla, no se imprime.
+//
+// Se arma con los datos de la cotizacion que ya estan en pantalla mas, si se
+// quieren, los nombres de quienes viajan.
+
+function leerPasajerosReserva() {
+  return document.getElementById('qReservaPasajeros').value
+    .split('\n')
+    .map((n) => n.trim())
+    .filter(Boolean);
+}
+
+// Quienes viajan, en palabras. Con los nombres escritos se listan; sin ellos
+// se dice cuantos son, que es lo unico que la cotizacion sabe.
+function quienesViajan(q, nombres) {
+  if (nombres.length) return nombres;
+  const conPax = q.tarifas.filas.filter((f) => f.cantidad > 0);
+  if (!conPax.length) return [];
+  const partes = conPax.map((f) => `${f.cantidad} ${f.cantidad === 1 ? f.uno : f.varios}`);
+  // "2 adultos, 1 niño y 1 infante" se lee mejor que con comas hasta el final.
+  const texto = partes.length > 1
+    ? `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}`
+    : partes[0];
+  return [texto];
+}
+
+function collectReservaFields() {
+  const q = collectQuoteFields();
+  return { ...q, pasajeros: leerPasajerosReserva() };
+}
+
+// El tramo de ida y el de regreso con la forma que espera `dibujarTramo` y
+// `drawFlightCard`. La cotizacion los guarda con otros nombres de campo, asi
+// que la traduccion vive aqui y no repartida por los dos dibujos.
+function tramosDeReserva(q) {
+  const tramos = [{
+    titulo: 'IDA',
+    airline: q.airline,
+    fechaSalida: q.departDate,
+    origin: q.origin || '---',
+    dest: q.dest || '---',
+    horaSalida: q.departTime,
+    horaLlegada: q.arriveTime,
+    tipo: q.tipoVuelo,
+    escalaLugar: q.escalaLugar,
+    escalaTiempo: q.escalaTiempo,
+  }];
+
+  if (q.returnDate) {
+    // En multidestino el regreso sale de otra ciudad, no necesariamente de
+    // donde aterrizo la ida.
+    const multi = q.returnMultidestino && (q.returnOrigin || q.returnDest);
+    tramos.push({
+      titulo: 'REGRESO',
+      airline: q.returnAirline || q.airline,
+      fechaSalida: q.returnDate,
+      origin: (multi ? q.returnOrigin : q.dest) || '---',
+      dest: (multi ? q.returnDest : q.origin) || '---',
+      horaSalida: q.returnDepartTime,
+      horaLlegada: q.returnArriveTime,
+      tipo: q.returnTipoVuelo,
+      escalaLugar: q.returnEscalaLugar,
+      escalaTiempo: q.returnEscalaTiempo,
+    });
+  }
+  return tramos;
+}
+
+// El aviso que de verdad importa en este momento del proceso. La ventana para
+// corregir un nombre es de 24 horas desde la emision, y los nombres los
+// digitamos nosotros: que el cliente los revise AHORA, antes de emitir, es mas
+// barato que corregirlos despues.
+const AVISO_NOMBRES = 'Revisa que los nombres estén escritos igual que en el '
+  + 'pasaporte. Si algo no coincide, avísanos antes de que emitamos los boletos.';
+
+function drawReservaImageCard(r) {
+  return new Promise((resolve) => {
+    const W = 1080;
+    const MAX = 2600;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = MAX;
+    const ctx = canvas.getContext('2d');
+
+    const build = (logoImg) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, MAX);
+
+      const finCabecera = cabeceraMarcaCanvas(ctx, {
+        ancho: W, titulo: 'RESERVA', subtitulo: 'CONFIRMADA', logo: logoImg,
+      });
+
+      let y = finCabecera + 75;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#033c69';
+      ctx.font = 'bold 42px Arial, sans-serif';
+      ctx.fillText(r.clientName ? `¡Listo, ${r.clientName}! 🎉` : '¡Listo! 🎉', 60, y);
+      y += 52;
+      ctx.font = '29px Arial, sans-serif';
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillText('Tu viaje quedó reservado. Estos son los datos:', 60, y);
+      y += 70;
+
+      const originAirport = findAirport(r.origin);
+      const destAirport = findAirport(r.dest);
+      ctx.fillStyle = '#126f99';
+      ctx.font = 'bold 62px Arial, sans-serif';
+      ctx.fillText(`${r.origin || '---'}  ✈️  ${r.dest || '---'}`, 60, y);
+      y += 48;
+      ctx.font = '27px Arial, sans-serif';
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillText(
+        `${originAirport ? originAirport.city + ', ' + originAirport.country : ''} → `
+        + `${destAirport ? destAirport.city + ', ' + destAirport.country : ''}`, 60, y);
+      y += 45;
+
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.moveTo(60, y);
+      ctx.lineTo(W - 60, y);
+      ctx.stroke();
+      y += 55;
+
+      tramosDeReserva(r).forEach((t) => {
+        y += dibujarTramo(ctx, W, y, {
+          titulo: t.titulo,
+          aerolinea: t.airline,
+          fecha: fechaEnPalabras(t.fechaSalida),
+          origen: t.origin,
+          destino: t.dest,
+          salida: t.horaSalida,
+          llegada: t.horaLlegada,
+          escala: t.tipo === 'ESCALA' ? textoEscalaCorta(t.escalaLugar, t.escalaTiempo) : '',
+        }) + 26;
+      });
+      y += 24;
+
+      // Quienes viajan y que equipaje llevan, con la misma retícula de la
+      // cotizacion: la columna del valor sale de medir las etiquetas.
+      const viajan = quienesViajan(r, r.pasajeros);
+      const filas = [];
+      viajan.forEach((quien, i) => filas.push([i === 0 ? 'Viajan' : '', quien]));
+      filas.push(['Equipaje', luggageSummary(r.luggage)]);
+      if (r.itineraryNotes) filas.push(['Incluye', r.itineraryNotes]);
+
+      ctx.font = 'bold 29px Arial, sans-serif';
+      const anchoEtiqueta = filas.reduce((max, [label]) =>
+        Math.max(max, ctx.measureText(label).width), 0);
+      const valorX = 60 + Math.ceil(anchoEtiqueta) + 40;
+
+      filas.forEach(([label, value]) => {
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 29px Arial, sans-serif';
+        ctx.fillStyle = '#126f99';
+        ctx.fillText(label, 60, y);
+        ctx.font = '29px Arial, sans-serif';
+        ctx.fillStyle = '#4a4a4a';
+        const lines = wrapCanvasText(ctx, value, W - 60 - valorX);
+        lines.forEach((line, i) => ctx.fillText(line, valorX, y + i * 36));
+        y += Math.max(36, lines.length * 36) + 18;
+      });
+      y += 15;
+
+      const boxH = 160;
+      ctx.fillStyle = '#033c69';
+      roundRectPath(ctx, 60, y, W - 120, boxH, 20);
+      ctx.fill();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#cfe3ee';
+      ctx.font = '28px Arial, sans-serif';
+      ctx.fillText('VALOR TOTAL', W / 2, y + 50);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 60px Arial, sans-serif';
+      ctx.fillText(formatMoney(r.price, r.currency), W / 2, y + 122);
+      y += boxH + 45;
+
+      // El aviso de los nombres solo tiene sentido si hay nombres escritos.
+      ctx.textAlign = 'left';
+      if (r.pasajeros.length) {
+        ctx.font = '26px Arial, sans-serif';
+        ctx.fillStyle = '#8a5a08';
+        const lineas = wrapCanvasText(ctx, `⚠️ ${AVISO_NOMBRES}`, W - 120);
+        lineas.forEach((linea, i) => ctx.fillText(linea, 60, y + i * 34));
+        y += lineas.length * 34;
+      }
+
+      const footerH = 110;
+      const H = Math.min(MAX, y + 50 + footerH);
+      const final = document.createElement('canvas');
+      final.width = W;
+      final.height = H;
+      const fx = final.getContext('2d');
+      fx.fillStyle = '#ffffff';
+      fx.fillRect(0, 0, W, H);
+      fx.drawImage(canvas, 0, 0, W, H - footerH, 0, 0, W, H - footerH);
+      pieMarcaCanvas(fx, { ancho: W, alto: H });
+      resolve(final);
+    };
+
+    const img = new Image();
+    img.onload = () => build(img);
+    img.onerror = () => build(null);
+    img.src = typeof LOGO_WHITE_BASE64 !== 'undefined' ? LOGO_WHITE_BASE64 : LOGO_BLUE_BASE64;
+  });
+}
+
+// El PDF usa el mismo pasabordo del boleto, no un diseño propio: quien recibe
+// primero la reserva y despues el boleto tiene que reconocer la misma casa.
+function generateReservaPDF(r) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  let y = cabeceraMarcaPDF(doc, {
+    titulo: 'RESERVA',
+    lineas: [
+      { texto: 'Confirmación de reserva', y: 17, tam: 9 },
+      { texto: fechaEnPalabras(hoyDDMMAAAA()) || '', y: 22, tam: 8 },
+    ],
+  });
+
+  function ensureSpace(needed) {
+    if (y + needed > PAGE_H - 20) { doc.addPage(); y = 20; }
+  }
+
+  ensureSpace(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...PRIMARY);
+  doc.text(r.clientName ? `¡Listo, ${r.clientName}!` : '¡Listo!', MARGIN, y);
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...GRAY);
+  doc.text('Tu viaje quedó reservado. Estos son los datos.', MARGIN, y);
+  y += 10;
+
+  tramosDeReserva(r).forEach((t) => {
+    y = drawFlightCard(doc, y, t.titulo, t, ensureSpace);
+  });
+
+  y += 2;
+  y = sectionTitle(doc, y, 'VIAJAN');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...TEXT);
+  quienesViajan(r, r.pasajeros).forEach((quien) => {
+    ensureSpace(7);
+    doc.text(quien, MARGIN, y);
+    y += 5.5;
+  });
+  y += 5;
+
+  ensureSpace(14);
+  y = sectionTitle(doc, y, 'EQUIPAJE');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...TEXT);
+  doc.text(luggageSummary(r.luggage), MARGIN, y);
+  y += 10;
+
+  if (r.itineraryNotes) {
+    ensureSpace(14);
+    y = sectionTitle(doc, y, 'INCLUYE');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...TEXT);
+    doc.splitTextToSize(r.itineraryNotes, PAGE_W - MARGIN * 2).forEach((linea) => {
+      ensureSpace(6);
+      doc.text(linea, MARGIN, y);
+      y += 5;
+    });
+    y += 5;
+  }
+
+  // El total, en la misma caja azul que cierra los otros documentos.
+  ensureSpace(24);
+  doc.setFillColor(...PRIMARY);
+  doc.roundedRect(MARGIN, y, PAGE_W - MARGIN * 2, 18, 2, 2, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(207, 227, 238);
+  doc.text('VALOR TOTAL', MARGIN + 6, y + 7, { charSpace: 0.3 });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(255, 255, 255);
+  doc.text(formatMoney(r.price, r.currency), PAGE_W - MARGIN - 6, y + 12, { align: 'right' });
+  y += 26;
+
+  if (r.pasajeros.length) {
+    ensureSpace(14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(138, 90, 8);
+    doc.splitTextToSize(AVISO_NOMBRES, PAGE_W - MARGIN * 2).forEach((linea) => {
+      doc.text(linea, MARGIN, y);
+      y += 4.5;
+    });
+  }
+
+  doc.save(nombreArchivo('reserva', [r.clientName, `${r.origin}-${r.dest}`], 'pdf'));
+}
+
+function hoyDDMMAAAA() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+let reservaUltimoCanvas = null;
+
+document.getElementById('qReservaImagenBtn').addEventListener('click', async () => {
+  const salida = document.getElementById('qReservaSalida');
+  reservaUltimoCanvas = await drawReservaImageCard(collectReservaFields());
+  document.getElementById('qReservaPreview').src = reservaUltimoCanvas.toDataURL('image/png');
+  salida.classList.remove('hidden');
+  salida.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('qReservaPdfBtn').addEventListener('click', () => {
+  generateReservaPDF(collectReservaFields());
+});
+
+document.getElementById('qReservaDescargarBtn').addEventListener('click', () => {
+  if (!reservaUltimoCanvas) return;
+  const a = document.createElement('a');
+  a.href = reservaUltimoCanvas.toDataURL('image/png');
+  a.download = nombreArchivo('reserva',
+    [document.getElementById('qClientName').value.trim()], 'png');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+document.getElementById('qReservaCopiarBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('qReservaCopiarBtn');
+  if (!reservaUltimoCanvas) return;
+  const original = btn.innerHTML;
+  try {
+    const blob = await new Promise((res) => reservaUltimoCanvas.toBlob(res, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    btn.innerHTML = window.icono('check', 'ic-izq') + 'Copiada';
+  } catch (e) {
+    btn.innerHTML = window.icono('alerta', 'ic-izq') + 'Usa Descargar';
+  }
+  setTimeout(() => { btn.innerHTML = original; }, 2000);
+});
+
 // ---------- Navegación ----------
 
 (function () {
