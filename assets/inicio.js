@@ -27,11 +27,19 @@
     }[m]));
   }
 
-  function saludo() {
+  // El saludo y el color del cielo salen del mismo reloj: si dice "buenas
+  // noches" sobre un azul de mediodia, el color no significa nada.
+  function momentoDelDia() {
     const h = new Date().getHours();
-    if (h < 12) return 'Buenos días';
-    if (h < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (h < 12) return 'manana';
+    if (h < 19) return 'tarde';
+    return 'noche';
+  }
+
+  const SALUDOS = { manana: 'Buenos días', tarde: 'Buenas tardes', noche: 'Buenas noches' };
+
+  function saludo() {
+    return SALUDOS[momentoDelDia()];
   }
 
   function fechaLarga() {
@@ -291,30 +299,136 @@
 
   // ---------- Resumen del negocio ----------
 
+  // Las cifras del saludo tienen que mover a hacer algo. "86 clientes" no:
+  // es un acumulado que solo sube, nunca baja y nunca pide una decision.
+  // Ocupaba un tercio del sitio mas visible de la app.
+  //
+  // "Clientes nuevos" habria sido buen reemplazo, pero no se puede calcular:
+  // ninguno de los clientes guardados tiene fecha de creacion.
+  //
+  // Quedan tres que si se mueven mes a mes, con la ganancia de primera porque
+  // es la que manda: si viene abajo, hay que vender hoy.
   function pintarResumen() {
     const destino = el('inicioResumen');
     if (!destino) return;
 
     const boletos = window.obtenerBoletos ? window.obtenerBoletos() : [];
-    const clientes = window.obtenerClientes ? window.obtenerClientes() : [];
-    const cupones = window.obtenerCupones ? window.obtenerCupones() : [];
-    const estado = window.estadoDeCupon;
+    const V = window.Ventas;
+    const ventas = window.obtenerVentas ? window.obtenerVentas() : [];
 
     // "Este mes" por fecha de salida del vuelo, que es lo que se vendio para
     // volar ahora, no cuando se guardo el registro.
     const ahora = new Date();
     const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
     const boletosDelMes = boletos.filter((b) => b.ida && String(b.ida.fechaSalida || '').startsWith(mes)).length;
-    const vigentes = estado ? cupones.filter((c) => estado(c) === 'vigente').length : 0;
 
-    const dato = (valor, etiqueta) => `<div class="hero-dato">
-        <span class="cifras">${valor}</span>
+    const meses = V && ventas.length ? V.agruparPorMes(ventas) : [];
+    const esteMes = meses.find((m) => m.ym === mes);
+    const previo = meses.find((m) => m.ym === V.mesAnterior(mes));
+
+    // El mes va corriendo: compararlo entero contra el anterior entero diria
+    // que siempre vamos mal hasta el dia 30. Se compara contra el MISMO tramo
+    // del mes pasado -del 1 al dia de hoy-, que es lo unico comparable.
+    const diaDeHoy = ahora.getDate();
+    const netoPrevioAlCorte = previo
+      ? ventas
+        .filter((v) => {
+          const f = V.fechaIngreso(v);
+          return f.startsWith(previo.ym) && Number(f.slice(8, 10)) <= diaDeHoy;
+        })
+        .reduce((suma, v) => suma + v.neto, 0)
+      : 0;
+
+    // `nombreMes` los devuelve con mayuscula porque encabeza graficas. Aqui van
+    // dentro de una frase -"ganancia de septiembre"- y en español el mes va en
+    // minuscula. Se baja solo aqui, no en el modulo, que lo usan otros.
+    const soloMes = (ym) => {
+      const n = V.nombreMes(ym).split(' ')[0];
+      return n.charAt(0).toLowerCase() + n.slice(1);
+    };
+
+    let nota = '';
+    if (esteMes && netoPrevioAlCorte > 0) {
+      const pct = Math.round((esteMes.neto / netoPrevioAlCorte - 1) * 100);
+      if (Math.abs(pct) >= 1) {
+        nota = `<span class="hero-var ${pct >= 0 ? 'arriba' : 'abajo'}">`
+          + `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct)}% vs ${soloMes(previo.ym)}</span>`;
+      }
+    }
+
+    // `data-hasta` lo lee la animacion de conteo; el texto ya va escrito por si
+    // la animacion no corre (movimiento reducido, o un navegador viejo).
+    const dato = (valor, etiqueta, extra) => `<div class="hero-dato${extra ? ' hero-dato-fuerte' : ''}">
+        <span class="cifras" data-hasta="${valor.numero}" data-formato="${valor.formato}">${valor.texto}</span>
         <span>${etiqueta}</span>
+        ${extra || ''}
       </div>`;
 
-    destino.innerHTML = dato(boletosDelMes, boletosDelMes === 1 ? 'vuelo este mes' : 'vuelos este mes')
-      + dato(clientes.length, clientes.length === 1 ? 'cliente' : 'clientes')
-      + dato(vigentes, vigentes === 1 ? 'cupón activo' : 'cupones activos');
+    const plata = { numero: esteMes ? esteMes.neto : 0, formato: 'pesos', texto: esteMes ? V.pesos(esteMes.neto) : '—' };
+    const nVentas = { numero: esteMes ? esteMes.ventas : 0, formato: 'entero', texto: esteMes ? String(esteMes.ventas) : '—' };
+    const nVuelos = { numero: boletosDelMes, formato: 'entero', texto: String(boletosDelMes) };
+    const nombreDelMes = V ? soloMes(mes) : 'este mes';
+
+    // Solo el primer rotulo nombra el mes; los otros dos se entienden dentro
+    // del mismo periodo. Con "ventas este mes" y "vuelos este mes" se repetia
+    // "este mes" tres veces, y en el celular cada etiqueta caia en tres
+    // renglones de una palabra: "ventas / este / mes".
+    destino.innerHTML = dato(plata, `ganancia de ${nombreDelMes}`, nota)
+      + dato(nVentas, nVentas.numero === 1 ? 'venta' : 'ventas')
+      + dato(nVuelos, nVuelos.numero === 1 ? 'vuelo que sale' : 'vuelos que salen');
+
+    animarCifras(destino);
+  }
+
+  // ---------- Conteo animado ----------
+  //
+  // Las cifras suben desde cero al abrir Inicio. Es el unico movimiento de la
+  // pantalla que ademas informa: se ve de reojo cual es la grande.
+  //
+  // Solo toca textContent, asi que no hay nada que el navegador tenga que
+  // recalcular de la pagina.
+  function animarCifras(destino) {
+    const V = window.Ventas;
+    const quieto = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Con la pestana en segundo plano el navegador no corre requestAnimationFrame.
+    // Si se arrancara igual, la cifra se quedaria congelada en el cero del primer
+    // fotograma: Inicio mostraria "$0 de ganancia" habiendo ocho millones. Mentir
+    // es mucho peor que no animar, asi que oculta simplemente no se anima.
+    if (quieto || document.hidden) return;
+
+    destino.querySelectorAll('.cifras[data-hasta]').forEach((span) => {
+      const hasta = Number(span.dataset.hasta);
+      if (!Number.isFinite(hasta) || hasta <= 0) return;   // sin dato queda la raya
+
+      const formatear = span.dataset.formato === 'pesos'
+        ? (n) => (V ? V.pesos(n) : '$' + Math.round(n).toLocaleString('es-CO'))
+        : (n) => String(Math.round(n));
+
+      const DURACION = 900;
+      const final = formatear(hasta);
+      const arranque = performance.now();
+
+      // Pase lo que pase con la animacion -que el navegador la pause, que el
+      // equipo se duerma a mitad- la cifra correcta queda escrita.
+      const seguro = setTimeout(() => { span.textContent = final; }, DURACION + 400);
+
+      function paso(ahora) {
+        // Se acota por ABAJO tambien: requestAnimationFrame entrega la hora en
+        // que empezo el fotograma, que puede ser anterior al performance.now()
+        // de aqui arriba. Ese avance negativo, pasado por la curva, hacia que
+        // la primera imagen fuera "-$460.623".
+        const t = Math.min(1, Math.max(0, (ahora - arranque) / DURACION));
+        // Desacelera al final: llega y se asienta, en vez de frenar en seco.
+        const suave = 1 - Math.pow(1 - t, 3);
+        span.textContent = t < 1 ? formatear(hasta * suave) : final;
+        if (t < 1) requestAnimationFrame(paso);
+        else clearTimeout(seguro);
+      }
+      span.textContent = formatear(0);
+      requestAnimationFrame(paso);
+    });
   }
 
   // ---------- El dólar ----------
@@ -627,6 +741,9 @@
   window.pintarInicio = function pintarInicio() {
     const saludoEl = el('inicioSaludo');
     if (saludoEl) saludoEl.textContent = `${saludo()}`;
+    // El CSS elige la paleta del cielo a partir de esto.
+    const hero = document.querySelector('.hero');
+    if (hero) hero.dataset.momento = momentoDelDia();
     const fechaEl = el('inicioFecha');
     if (fechaEl) fechaEl.textContent = fechaLarga();
     pintarSemana();

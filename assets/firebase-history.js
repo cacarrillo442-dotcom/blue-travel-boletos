@@ -90,20 +90,42 @@ window.mensajeDeConfirmacion = function mensajeDeConfirmacion(b) {
   return l.join('\n');
 };
 
+// El guardado pasa por `guardarConRespaldo`: si Firestore no responde, el
+// documento queda en cola en el navegador y se avisa en pantalla, en vez de
+// perderse sin que nadie lo note. Ver assets/guardado-pendiente.js.
+//
+// `serverTimestamp()` y `alertaEnviada` se ponen aqui y no en quien llama,
+// porque lo que se encola tiene que ser JSON plano: un serverTimestamp no
+// sobrevive a localStorage. Al reintentar se vuelve a pasar por aqui y la
+// marca de tiempo se crea de nuevo, que es lo correcto -es la hora en que
+// quedo guardado de verdad-.
+window.registrarGuardador('boletos', (boleto) => addDoc(boletosCol, {
+  ...boleto, alertaEnviada: false, creado: serverTimestamp(),
+}));
+
+window.registrarGuardador('facturas', (factura) => addDoc(facturasCol, {
+  ...factura, creado: serverTimestamp(),
+}));
+
 window.saveBoletoToCloud = function saveBoletoToCloud(boleto) {
-  addDoc(boletosCol, { ...boleto, alertaEnviada: false, creado: serverTimestamp() })
-    .catch(() => { /* si falla no interrumpe la generacion del PDF */ });
+  const quien = (boleto.passengers && boleto.passengers[0]) || boleto.bookingRef || '';
+  return window.guardarConRespaldo('boletos',
+    `el boleto${quien ? ' de ' + quien : ''}`, boleto);
 };
 
 window.saveFacturaToCloud = function saveFacturaToCloud(factura) {
-  addDoc(facturasCol, { ...factura, creado: serverTimestamp() })
-    .catch(() => { /* idem */ });
+  return window.guardarConRespaldo('facturas',
+    `la factura${factura.numero ? ' ' + factura.numero : ''}`, factura);
 };
 
 // ---------- Suscripcion ----------
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
+    // Con la sesion ya confirmada es cuando tiene sentido reintentar lo que
+    // quedo sin guardar en una sesion anterior.
+    if (window.reintentarPendientesAlEntrar) window.reintentarPendientesAlEntrar();
+
     unsubBoletos = onSnapshot(query(boletosCol, orderBy('creado', 'desc')), (snap) => {
       boletos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();

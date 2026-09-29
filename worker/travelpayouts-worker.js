@@ -91,7 +91,13 @@ export default {
     if (peticion.method !== 'GET') {
       return json({ error: 'Solo se aceptan consultas GET.' }, 405, origen);
     }
-    if (origen && !ORIGENES_PERMITIDOS.includes(origen)) {
+    // Se exige el Origin, no solo que sea valido si viene. Antes la condicion
+    // era `if (origen && !permitido)`, asi que una peticion SIN cabecera Origin
+    // -o sea cualquier script fuera de un navegador- pasaba de largo y gastaba
+    // la cuota de Travelpayouts. El navegador siempre manda Origin en una
+    // peticion entre dominios como la que hace la app, asi que exigirlo no
+    // rompe nada y cierra la puerta.
+    if (!ORIGENES_PERMITIDOS.includes(origen)) {
       return json({ error: 'Origen no autorizado.' }, 403, origen);
     }
     if (!env.TRAVELPAYOUTS_TOKEN) {

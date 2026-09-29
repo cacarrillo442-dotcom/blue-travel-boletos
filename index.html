@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20260925-130150" />
+<meta name="app-version" content="20260929-162125" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20260925-130150" />
-<script src="assets/tema.js?v=20260925-130150"></script>
+<link rel="stylesheet" href="style.css?v=20260929-162125" />
+<script src="assets/tema.js?v=20260929-162125"></script>
 </head>
 <body>
 
@@ -110,6 +110,11 @@
 <div id="conexionAviso" class="conexion-aviso hidden">
   <span id="conexionTexto">Se perdió la conexión con la base de datos.</span>
   <button type="button" id="conexionRecargar">Recargar</button>
+</div>
+
+<div id="pendienteAviso" class="conexion-aviso hidden">
+  <span id="pendienteTexto">Hay documentos sin guardar.</span>
+  <button type="button" id="pendienteReintentar">Reintentar</button>
 </div>
 
 <div id="appShell" class="hidden">
@@ -213,7 +218,7 @@
   <!-- Dos columnas en pantalla ancha. Lo que manda va arriba a la izquierda,
        que es donde primero cae la vista; el dolar al lado, mas compacto. -->
   <div class="inicio-cols">
-    <section class="card">
+    <section class="card card-semana">
       <div class="card-header">
         <h2 id="inicioSemanaTitulo">La semana</h2>
         <button type="button" class="btn-secondary btn-compact inicio-accion" data-ir="salesPanel">Ver ventas</button>
@@ -221,7 +226,7 @@
       <div id="inicioSemana"></div>
     </section>
 
-    <section class="card">
+    <section class="card card-dolar">
       <div class="card-header">
         <h2>El dólar hoy</h2>
       </div>
@@ -271,7 +276,7 @@
     <div id="inicioPendientes" class="promo-list"></div>
   </section>
 
-  <section class="card">
+  <section class="card card-atajos">
     <h2>¿Qué vas a hacer?</h2>
     <div class="inicio-atajos">
       <button type="button" class="atajo inicio-accion" data-ir="ticketsPanel">
@@ -1509,35 +1514,46 @@
   </div>
 </template>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="assets/nombres-archivo.js?v=20260925-130150"></script>
-<script src="assets/iconos.js?v=20260925-130150"></script>
-<script src="assets/version.js?v=20260925-130150"></script>
-<script src="assets/trm.js?v=20260925-130150"></script>
+<!-- Las librerias de terceros van con `integrity`: el navegador verifica el
+     hash antes de ejecutarlas, asi que si el CDN se compromete el archivo
+     alterado no corre -se bloquea- en vez de correr con la sesion de Firebase
+     abierta. `crossorigin` es obligatorio para que la verificacion aplique.
+     Los hashes salen del catalogo oficial de cdnjs; para cambiar de version hay
+     que cambiarlos tambien o el script deja de cargar. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="assets/guardado-pendiente.js?v=20260929-162125"></script>
+<script src="assets/nombres-archivo.js?v=20260929-162125"></script>
+<script src="assets/iconos.js?v=20260929-162125"></script>
+<script src="assets/version.js?v=20260929-162125"></script>
+<script src="assets/trm.js?v=20260929-162125"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20260925-130150"></script>
-<script src="assets/country-codes-data.js?v=20260925-130150"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="assets/sales-parse.js?v=20260925-130150"></script>
-<script src="assets/cupon-imagen.js?v=20260925-130150"></script>
-<script src="assets/publicidad-imagen.js?v=20260925-130150"></script>
-<script src="assets/precios-datos.js?v=20260925-130150"></script>
-<script src="app.js?v=20260925-130150"></script>
-<script src="assets/marca.js?v=20260925-130150"></script>
-<script src="assets/vuelos-bloque.js?v=20260925-130150"></script>
-<script src="assets/paquetes.js?v=20260925-130150"></script>
-<script src="assets/inicio.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-clients.js?v=20260925-130150"></script>
-<script src="assets/clientes-autocompletar.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20260925-130150"></script>
-<script src="assets/precios-ui.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-history.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-sales.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-trips.js?v=20260925-130150"></script>
-<script type="module" src="assets/firebase-gate.js?v=20260925-130150"></script>
+<script src="assets/catalog-data.js?v=20260929-162125"></script>
+<script src="assets/country-codes-data.js?v=20260929-162125"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="assets/sales-parse.js?v=20260929-162125"></script>
+<script src="assets/cupon-imagen.js?v=20260929-162125"></script>
+<script src="assets/publicidad-imagen.js?v=20260929-162125"></script>
+<script src="assets/precios-datos.js?v=20260929-162125"></script>
+<script src="app.js?v=20260929-162125"></script>
+<script src="assets/marca.js?v=20260929-162125"></script>
+<script src="assets/vuelos-bloque.js?v=20260929-162125"></script>
+<script src="assets/paquetes.js?v=20260929-162125"></script>
+<script src="assets/inicio.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-clients.js?v=20260929-162125"></script>
+<script src="assets/clientes-autocompletar.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20260929-162125"></script>
+<script src="assets/precios-ui.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-history.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-sales.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-trips.js?v=20260929-162125"></script>
+<script type="module" src="assets/firebase-gate.js?v=20260929-162125"></script>
 </body>
 </html>

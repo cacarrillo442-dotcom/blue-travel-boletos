@@ -1311,6 +1311,39 @@ textarea {
   box-shadow: var(--shadow);
 }
 
+/* ---------- El cielo cambia con la hora ----------
+   El saludo ya decia "buenos dias" o "buenas noches", pero el fondo era el
+   mismo azul de mediodia a cualquier hora, asi que el color no aportaba nada.
+   Ahora los dos salen del mismo reloj (ver momentoDelDia en inicio.js).
+
+   Los tres degradados arrancan del mismo azul de marca y solo cambian a donde
+   van: asi la pantalla sigue siendo Blue Travel a toda hora, y el color entra
+   por el borde en vez de repintarlo todo.
+
+   El texto encima es blanco y #e2edf5. Cada paleta esta medida contra su punto
+   MAS claro, que es donde peor se leen. */
+.hero[data-momento="manana"] {
+  /* Amanecer: el azul se abre a un coral tostado en el ultimo tramo. El calor
+     entra por la esquina, no repinta media tarjeta: con el corte al 55% el
+     rosa se comia la mitad y se veia turbio. */
+  background: linear-gradient(150deg, var(--color-primary) 0%, #1b5c86 64%, #944a45 100%);
+}
+
+.hero[data-momento="tarde"] {
+  /* El de siempre: es la hora en que mas se trabaja */
+  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+}
+
+.hero[data-momento="noche"] {
+  /* Anochecer: se cierra hacia el indigo y el cielo se oscurece */
+  background: linear-gradient(160deg, #06263f 0%, #0b2f57 60%, #24224d 100%);
+}
+
+/* De noche las estelas se ven mas, como pasa de verdad */
+.hero[data-momento="noche"] .estela {
+  stroke: rgba(255, 255, 255, 0.3);
+}
+
 /* Un brillo suave arriba a la derecha para que el azul no quede plano */
 .hero::after {
   content: '';
@@ -2370,6 +2403,88 @@ select:focus {
   color: #e2edf5;
 }
 
+/* La ganancia manda sobre las otras dos: es la que hace tomar una decision */
+.hero-dato-fuerte .cifras {
+  font-size: 1.95rem;
+}
+
+/* Como viene el mes contra el mismo tramo del mes pasado. Verde y rojo solos
+   no bastan -hay quien no los distingue-, por eso va tambien la flecha. */
+.hero-var {
+  margin-top: 3px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+/* Medidos contra el punto mas claro de las TRES paletas del cielo, que es
+   donde peor se leen. Los tonos obvios no pasaban: #8ff0c4 daba 4,10 sobre el
+   amanecer y #ffc9c9 daba 3,84, con 4,5 de minimo. Estos dan 4,63 y 4,65. */
+.hero-var.arriba { color: #b9f7dd; }
+.hero-var.abajo { color: #ffe4e4; }
+
+/* ---------- Entrada escalonada de Inicio ----------
+   Las tarjetas aparecen una detras de otra al abrir la pantalla. Da sensacion
+   de que la app responde, y de paso guia el ojo de arriba hacia abajo en el
+   orden en que conviene leerlas.
+
+   Solo transform y opacity: son las dos cosas que el navegador puede animar
+   sin volver a calcular la pagina, asi que no cuesta fluidez. */
+@keyframes entra-tarjeta {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* `backwards` y no `both` a proposito. Con `both`, el estado en que se queda
+   una tarjeta cuya animacion no llego a correr es el de partida: opacidad 0,
+   o sea Inicio en blanco. Con `backwards` el estado natural es visible y la
+   entrada es solo un adorno encima: si no corre, no se pierde nada. */
+#homePanel:not(.hidden) > .hero,
+#homePanel:not(.hidden) > .inicio-cols > .card,
+#homePanel:not(.hidden) > .card {
+  animation: entra-tarjeta .45s cubic-bezier(.22, .61, .36, 1) backwards;
+}
+
+#homePanel:not(.hidden) > .hero { animation-delay: 0s; }
+#homePanel:not(.hidden) > .inicio-cols > .card:nth-child(1) { animation-delay: .06s; }
+#homePanel:not(.hidden) > .inicio-cols > .card:nth-child(2) { animation-delay: .12s; }
+#homePanel:not(.hidden) > .card:nth-of-type(1) { animation-delay: .18s; }
+#homePanel:not(.hidden) > .card:nth-of-type(2) { animation-delay: .24s; }
+
+/* ---------- Un color por tarjeta ----------
+   Todas las tarjetas eran blancas con titulo azul, asi que la pantalla no
+   tenia jerarquia de color: habia que leer para saber que era cada una.
+   Un filete arriba le da identidad a cada bloque sin meter ruido.
+
+   El filete es decorativo: lo que dice ya esta escrito en el titulo, asi que
+   quien no distinga los colores no se pierde nada. */
+#homePanel .card {
+  position: relative;
+  overflow: hidden;
+}
+
+#homePanel .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--acento-tarjeta, var(--color-primary-2));
+}
+
+#homePanel .card-principal { --acento-tarjeta: #ffc300; }
+#homePanel .card-semana { --acento-tarjeta: var(--color-primary-2); }
+#homePanel .card-dolar { --acento-tarjeta: #2aa77b; }
+#homePanel .card-atajos { --acento-tarjeta: #7a5cc4; }
+
+@media (prefers-reduced-motion: reduce) {
+  #homePanel:not(.hidden) > .hero,
+  #homePanel:not(.hidden) > .inicio-cols > .card,
+  #homePanel:not(.hidden) > .card {
+    animation: none;
+  }
+}
+
 /* En pantalla angosta van debajo del saludo, separadas por una linea */
 @media (max-width: 720px) {
   .hero-cifras {
@@ -3016,6 +3131,20 @@ select:focus {
     border-color: var(--tinte-ambar-tinta);
   }
 
+  /* El boton se quedaba con el ambar oscuro del modo claro (#8a5a08) sobre la
+     superficie oscura: medido daba 2.75, debajo del minimo de 4.5. Se veia
+     apagado justo en el boton del que depende recuperar una factura que no
+     alcanzo a guardarse. */
+  :root:not([data-tema="claro"]) .conexion-aviso button {
+    background: transparent;
+    color: var(--tinte-ambar-tinta);
+    border-color: var(--tinte-ambar-tinta);
+  }
+
+  :root:not([data-tema="claro"]) .conexion-aviso button:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
   :root:not([data-tema="claro"]) .trip-badge.soon {
     background: var(--tinte-ambar-bg);
     color: var(--tinte-ambar-tinta);
@@ -3135,6 +3264,17 @@ select:focus {
   background: var(--tinte-ambar-bg);
   color: var(--tinte-ambar-tinta);
   border-color: var(--tinte-ambar-tinta);
+}
+
+/* Ver la nota del bloque de arriba: el boton medía 2.75 de contraste. */
+:root[data-tema="oscuro"] .conexion-aviso button {
+  background: transparent;
+  color: var(--tinte-ambar-tinta);
+  border-color: var(--tinte-ambar-tinta);
+}
+
+:root[data-tema="oscuro"] .conexion-aviso button:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 :root[data-tema="oscuro"] .trip-badge.soon {
