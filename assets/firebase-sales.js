@@ -620,9 +620,13 @@ salesFile.addEventListener('change', async () => {
       return;
     }
 
+    // Se coteja por `claveDe`, no por el id del documento: el id quedo escrito
+    // con lo que se leyo el dia que entro, y el codigo de autorizacion no
+    // siempre se leyo igual -"002114" un dia, 2114 otro-. Comparando por id,
+    // volver a subir un reporte solapado metia la misma venta dos veces.
     const { ventas: unicas, repetidas } = V.dedupe(leidas);
-    const yaGuardadas = new Set(ventas.map((v) => v.id));
-    const nuevas = unicas.filter((v) => !yaGuardadas.has(v.id));
+    const yaGuardadas = new Set(ventas.map((v) => V.claveDe(v)));
+    const nuevas = unicas.filter((v) => !yaGuardadas.has(V.claveDe(v)));
     const existentes = unicas.length - nuevas.length;
 
     // Cruce entre formatos: la misma transaccion pudo entrar antes desde el

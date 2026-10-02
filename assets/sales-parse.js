@@ -211,13 +211,53 @@
     return { formato, ventas, ignoradas };
   }
 
+  // La identidad con la que se reconoce una venta ya registrada.
+  //
+  // NO es el `id`. El id es el nombre del documento guardado, y quedo escrito
+  // con lo que se leyo el dia que entro; esta clave se calcula al vuelo sobre
+  // los dos lados que se comparan, asi que arregla el pasado sin tocarlo.
+  //
+  // Hacia falta porque el codigo de autorizacion no siempre se leyo igual. Los
+  // reportes de Wompi a veces traen la celda como numero y a veces como texto:
+  // "002114" entro un dia como 2114 y otro dia como "002114". Para la app eran
+  // dos ventas distintas, y volver a subir un reporte que se solapara metia la
+  // misma transaccion dos veces -en el archivo del 24/09 al 02/10, una venta de
+  // $941.603 en una semana ya cerrada y ya pagada-. De 44 ventas con codigo
+  // guardado, 11 lo tenian recortado.
+  //
+  // La clave incluye el codigo a proposito. Cotejar solo por fecha y valor
+  // seria peor que el problema: en la base hay 15 combinaciones de fecha+valor
+  // que corresponden a ventas DISTINTAS -el 22/09 hay dos de $199.334 con
+  // autorizaciones 568388 y 674148-, y descartarlas por iguales borraria plata
+  // de verdad. Eso se queda como aviso, no como regla.
+  function claveDe(v) {
+    const limpio = (s) => String(s || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+    const autorizacion = limpio(v.autorizacion);
+    if (autorizacion) {
+      // Los ceros de la izquierda no distinguen nada: los codigos de Wompi son
+      // de largo fijo, asi que dos que solo se diferencian en ellos son el
+      // mismo. "002114" y "2114" caen en la misma clave.
+      const nucleo = autorizacion.replace(/^0+/, '') || '0';
+      return `w|${nucleo}|${limpio(v.fecha)}|${Math.round(v.bruto)}`;
+    }
+
+    // Del Excel de la agencia, donde no hay codigo: manda su consecutivo.
+    const numero = limpio(v.numero);
+    if (numero) return `a|${numero}`;
+
+    // Movimientos cargados a mano: su id ya nace unico, no hay nada que cruzar.
+    return `id|${v.id || ''}`;
+  }
+
   // Quita repetidas dentro del mismo lote (varios reportes que se solapan).
   function dedupe(ventas) {
     const vistas = new Map();
     let repetidas = 0;
     ventas.forEach((v) => {
-      if (vistas.has(v.id)) { repetidas++; return; }
-      vistas.set(v.id, v);
+      const clave = claveDe(v);
+      if (vistas.has(clave)) { repetidas++; return; }
+      vistas.set(clave, v);
     });
     return { ventas: [...vistas.values()], repetidas };
   }
@@ -670,6 +710,7 @@
     normalizarHoja,
     dedupe,
     idDe,
+    claveDe,
     corteDe,
     inicioDeCorte,
     fechaIngreso,
