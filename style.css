@@ -807,6 +807,23 @@ body {
   margin-top: 16px;
 }
 
+/* El bloque de escalas dejo de ser una rejilla suelta: ahora contiene dos -la
+   primera escala y la segunda- con su casilla en medio. Al no ser `.grid-2` ya
+   no entraba en las reglas de separacion de arriba, y quedaba pegado a la fila
+   de fechas, sin un pixel de aire. Se le da la misma separacion. */
+.escala-bloque > .grid-2 + .checkbox-label,
+.escala-bloque > .grid-3 + .checkbox-label,
+.escala-bloque > .checkbox-label + .grid-2,
+.escala-bloque > .checkbox-label + .grid-3,
+.grid-2 + .escala-bloque,
+.grid-3 + .escala-bloque,
+.escala-bloque + .grid-2,
+.escala-bloque + .grid-3,
+.escala-bloque + label,
+label + .escala-bloque {
+  margin-top: 16px;
+}
+
 .card > label + label,
 .grid-2 + label,
 .grid-3 + label,

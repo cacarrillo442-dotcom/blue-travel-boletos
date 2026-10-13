@@ -166,10 +166,25 @@ function buildFlightBlock(container) {
     });
   });
 
-  const escalaTiempo = container.querySelector('.fl-escala-tiempo');
-  escalaTiempo.addEventListener('input', () => {
-    const digits = escalaTiempo.value.replace(/\D/g, '').slice(0, 4);
-    escalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+  // La segunda escala se revela con su casilla. Al desmarcarla se limpian sus
+  // campos: si no, un lugar que quedo escrito antes seguiria saliendo en el
+  // documento aunque el bloque este oculto.
+  const escala2On = container.querySelector('.fl-escala2-on');
+  const escala2Fields = container.querySelector('.fl-escala2-fields');
+  escala2On.addEventListener('change', () => {
+    escala2Fields.classList.toggle('hidden', !escala2On.checked);
+    if (!escala2On.checked) {
+      container.querySelector('.fl-escala2-tiempo').value = '';
+      container.querySelector('.fl-escala2-lugar').value = '';
+    }
+  });
+
+  // Los dos campos de duracion se formatean igual mientras se escribe.
+  container.querySelectorAll('.fl-escala-tiempo, .fl-escala2-tiempo').forEach((campo) => {
+    campo.addEventListener('input', () => {
+      const digits = campo.value.replace(/\D/g, '').slice(0, 4);
+      campo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+    });
   });
 }
 
@@ -186,6 +201,8 @@ populateAirportSelect(document.getElementById('qOrigin'));
 populateAirportSelect(document.getElementById('qDest'));
 populateAirportSelect(document.getElementById('qEscalaLugar'));
 populateAirportSelect(document.getElementById('qReturnEscalaLugar'));
+populateAirportSelect(document.getElementById('qEscala2Lugar'));
+populateAirportSelect(document.getElementById('qReturnEscala2Lugar'));
 populateAirportSelect(document.getElementById('qReturnOrigin'));
 populateAirportSelect(document.getElementById('qReturnDest'));
 populateCountryCodeSelect(document.getElementById('qClientCountryCode'), '+57');
@@ -239,17 +256,35 @@ document.querySelectorAll('.q-return-tipo').forEach(radio => {
   });
 });
 
-const qReturnEscalaTiempo = document.getElementById('qReturnEscalaTiempo');
-qReturnEscalaTiempo.addEventListener('input', () => {
-  const digits = qReturnEscalaTiempo.value.replace(/\D/g, '').slice(0, 4);
-  qReturnEscalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+// Los cuatro campos de duracion de la cotizacion -dos por tramo- se formatean
+// igual mientras se escribe.
+['qEscalaTiempo', 'qEscala2Tiempo', 'qReturnEscalaTiempo', 'qReturnEscala2Tiempo'].forEach((id) => {
+  const campo = document.getElementById(id);
+  if (!campo) return;
+  campo.addEventListener('input', () => {
+    const digits = campo.value.replace(/\D/g, '').slice(0, 4);
+    campo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+  });
 });
 
-const qEscalaTiempo = document.getElementById('qEscalaTiempo');
-qEscalaTiempo.addEventListener('input', () => {
-  const digits = qEscalaTiempo.value.replace(/\D/g, '').slice(0, 4);
-  qEscalaTiempo.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+// Cada tramo revela su segunda escala con una casilla. Al desmarcarla se limpia,
+// para que un lugar escrito antes no siga saliendo en el documento.
+[['qEscala2On', 'q-escala2-fields', 'qEscala2Tiempo', 'qEscala2Lugar'],
+ ['qReturnEscala2On', 'q-return-escala2-fields', 'qReturnEscala2Tiempo', 'qReturnEscala2Lugar']
+].forEach(([casillaId, clase, tiempoId, lugarId]) => {
+  const casilla = document.getElementById(casillaId);
+  const campos = document.querySelector(`.${clase}`);
+  if (!casilla || !campos) return;
+  casilla.addEventListener('change', () => {
+    campos.classList.toggle('hidden', !casilla.checked);
+    if (!casilla.checked) {
+      document.getElementById(tiempoId).value = '';
+      document.getElementById(lugarId).value = '';
+    }
+  });
 });
+
+
 
 // Prefill terms
 document.getElementById('terms').value = DEFAULT_TERMS;
@@ -273,6 +308,30 @@ function formatTime(value) {
 
 // Lee el vuelo en crudo: los valores tal cual estan en el formulario. Asi se
 // pueden guardar en el historial y volver a cargarlos despues sin perder nada.
+// Las escalas escritas en un bloque de vuelo, en orden. Vacio si es directo.
+//
+// Se guarda ADEMAS `escalaLugar`/`escalaTiempo` con la primera: son los campos
+// que tienen los boletos ya emitidos, y dejarlos escritos hace que un navegador
+// con el JavaScript viejo en cache siga mostrando algo razonable en vez de nada.
+function leerEscalasDeBloque(container) {
+  const escalas = [
+    {
+      lugar: container.querySelector('.fl-escala-lugar').value,
+      tiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
+    },
+    {
+      lugar: container.querySelector('.fl-escala2-lugar').value,
+      tiempo: container.querySelector('.fl-escala2-tiempo').value.trim(),
+    },
+  ].filter((e) => e.lugar || e.tiempo);
+
+  return {
+    escalas,
+    escalaLugar: escalas[0] ? escalas[0].lugar : '',
+    escalaTiempo: escalas[0] ? escalas[0].tiempo : '',
+  };
+}
+
 function readFlightRaw(container) {
   const tipoRadio = container.querySelector('.fl-tipo:checked');
   return {
@@ -281,8 +340,7 @@ function readFlightRaw(container) {
     origin: container.querySelector('.fl-origin').value,
     dest: container.querySelector('.fl-dest').value,
     tipo: tipoRadio ? tipoRadio.value : 'DIRECTO',
-    escalaTiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
-    escalaLugar: container.querySelector('.fl-escala-lugar').value,
+    ...leerEscalasDeBloque(container),
     fechaSalida: container.querySelector('.fl-fecha-salida').value,
     horaSalida: container.querySelector('.fl-hora-salida').value,
     fechaLlegada: container.querySelector('.fl-fecha-llegada').value,
@@ -297,6 +355,9 @@ function flightFromRaw(f) {
     origin: f.origin,
     dest: f.dest,
     tipo: f.tipo,
+    // La lista entera, no solo la primera: este conversor copia campo por campo
+    // y sin esta linea el PDF se quedaba con una sola escala aunque hubiera dos.
+    escalas: f.escalas,
     escalaTiempo: f.escalaTiempo,
     escalaLugar: f.escalaLugar,
     fechaSalida: formatDate(f.fechaSalida),
@@ -320,8 +381,7 @@ function readFlightBlock(container) {
     origin: container.querySelector('.fl-origin').value,
     dest: container.querySelector('.fl-dest').value,
     tipo,
-    escalaTiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
-    escalaLugar: container.querySelector('.fl-escala-lugar').value,
+    ...leerEscalasDeBloque(container),
     fechaSalida: formatDate(container.querySelector('.fl-fecha-salida').value),
     horaSalida: formatTime(container.querySelector('.fl-hora-salida').value),
     fechaLlegada: formatDate(container.querySelector('.fl-fecha-llegada').value),
@@ -400,9 +460,7 @@ function sectionTitle(doc, y, label) {
 function flightSummaryLines(f) {
   const originAirport = findAirport(f.origin);
   const destAirport = findAirport(f.dest);
-  const tipoLine = f.tipo === 'ESCALA'
-    ? `Con escala en ${f.escalaLugar ? airportLabel(findAirport(f.escalaLugar) || { code: f.escalaLugar, city: '', country: '' }) : '-'}${f.escalaTiempo ? ' · ' + f.escalaTiempo + ' hrs' : ''}`
-    : 'Vuelo directo';
+  const tipoLine = f.tipo === 'ESCALA' ? textoEscalasLargo(f) : 'Vuelo directo';
   return { originAirport, destAirport, tipoLine };
 }
 
@@ -410,18 +468,7 @@ function flightSummaryLines(f) {
 // 01:30 hrs" entre las dos horas: basta la ciudad y la duracion en lenguaje
 // normal.
 function escalaCortaPDF(f) {
-  if (f.tipo !== 'ESCALA') return 'Vuelo directo';
-  const a = findAirport(f.escalaLugar);
-  const donde = a ? a.city : (f.escalaLugar || '');
-  const m = /^(\d{1,2}):?(\d{2})$/.exec(f.escalaTiempo || '');
-  let cuanto = '';
-  if (m) {
-    const h = Number(m[1]);
-    const min = Number(m[2]);
-    cuanto = (h ? `${h}h` : '') + (min ? `${h ? ' ' : ''}${min}m` : '');
-  }
-  if (!donde) return cuanto ? `Escala de ${cuanto}` : 'Con escala';
-  return `Escala en ${donde}${cuanto ? ` · ${cuanto}` : ''}`;
+  return textoEscalasCorto(f);
 }
 
 // Cuantos dias despues aterriza. Un vuelo que sale de noche y llega al dia
@@ -1049,8 +1096,18 @@ function fillFlightBlock(container, f) {
   const tipo = f.tipo || 'DIRECTO';
   const radio = container.querySelector(`.fl-tipo[value="${tipo}"]`);
   if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
-  container.querySelector('.fl-escala-tiempo').value = f.escalaTiempo || '';
-  container.querySelector('.fl-escala-lugar').value = f.escalaLugar || '';
+  // `escalasDe` entiende tanto los boletos nuevos -con su lista- como los ya
+  // emitidos, que traen los dos campos sueltos. Por eso no hay que migrar nada.
+  const escalas = escalasDe(f);
+  container.querySelector('.fl-escala-tiempo').value = escalas[0] ? escalas[0].tiempo : '';
+  container.querySelector('.fl-escala-lugar').value = escalas[0] ? escalas[0].lugar : '';
+
+  const hayDos = escalas.length > 1;
+  const escala2On = container.querySelector('.fl-escala2-on');
+  escala2On.checked = hayDos;
+  container.querySelector('.fl-escala2-fields').classList.toggle('hidden', !hayDos);
+  container.querySelector('.fl-escala2-tiempo').value = hayDos ? escalas[1].tiempo : '';
+  container.querySelector('.fl-escala2-lugar').value = hayDos ? escalas[1].lugar : '';
   container.querySelector('.fl-fecha-salida').value = f.fechaSalida || '';
   container.querySelector('.fl-hora-salida').value = f.horaSalida || '';
   container.querySelector('.fl-fecha-llegada').value = f.fechaLlegada || '';
@@ -1303,6 +1360,19 @@ window.fillInvoiceForm = function fillInvoiceForm(raw) {
 
 // ---------- Cotización (texto para WhatsApp) ----------
 
+// Las escalas de un tramo de la cotizacion. `prefijo` es "q" o "qReturn".
+function leerEscalasPorId(prefijo) {
+  const val = (id) => {
+    const e = document.getElementById(id);
+    return e ? String(e.value).trim() : '';
+  };
+  const escalas = [
+    { lugar: val(`${prefijo}EscalaLugar`), tiempo: val(`${prefijo}EscalaTiempo`) },
+    { lugar: val(`${prefijo}Escala2Lugar`), tiempo: val(`${prefijo}Escala2Tiempo`) },
+  ].filter((e) => e.lugar || e.tiempo);
+  return escalas;
+}
+
 function collectQuoteFields() {
   return {
     clientName: document.getElementById('qClientName').value.trim(),
@@ -1329,9 +1399,11 @@ function collectQuoteFields() {
     returnOrigin: qReturnMultidestino.checked ? document.getElementById('qReturnOrigin').value : '',
     returnDest: qReturnMultidestino.checked ? document.getElementById('qReturnDest').value : '',
     tipoVuelo: (document.querySelector('.q-tipo:checked') || {}).value || 'DIRECTO',
+    escalas: leerEscalasPorId('q'),
     escalaTiempo: document.getElementById('qEscalaTiempo').value.trim(),
     escalaLugar: document.getElementById('qEscalaLugar').value,
     returnTipoVuelo: (document.querySelector('.q-return-tipo:checked') || {}).value || 'DIRECTO',
+    returnEscalas: leerEscalasPorId('qReturn'),
     returnEscalaTiempo: document.getElementById('qReturnEscalaTiempo').value.trim(),
     returnEscalaLugar: document.getElementById('qReturnEscalaLugar').value,
     luggage: {
@@ -1408,12 +1480,11 @@ CATEGORIAS.forEach((c) => {
 document.getElementById('qCurrency').addEventListener('change', pintarTarifas);
 pintarTarifas();
 
-function textoTipoVuelo(tipo, lugar, tiempo) {
-  if (tipo !== 'ESCALA') return 'Directo';
-  const aeropuerto = lugar
-    ? airportLabel(findAirport(lugar) || { code: lugar, city: '', country: '' })
-    : '-';
-  return `Con escala en ${aeropuerto}${tiempo ? ' · ' + tiempo + ' hrs' : ''}`;
+// Recibe el tramo entero -no los campos sueltos- porque con dos escalas ya no
+// son dos datos sino una lista. `tramosDeVuelo` arma esa forma a partir del
+// formulario.
+function textoTipoVuelo(tramo) {
+  return textoEscalasLargo(tramo);
 }
 
 function buildQuoteText(q) {
@@ -1432,7 +1503,10 @@ function buildQuoteText(q) {
   lines.push('');
   if (originLabel || destLabel) lines.push(`✈️ Ruta: ${originLabel || '-'} → ${destLabel || '-'}`);
   if (q.airline) lines.push(`🛫 Aerolínea: ${q.airline}`);
-  lines.push(`🔁 Tipo de vuelo: ${textoTipoVuelo(q.tipoVuelo, q.escalaLugar, q.escalaTiempo)}`);
+  // Los tramos salen de `tramosDeVuelo`, que es quien sabe traducir los campos
+  // del formulario -y su lista de escalas- a la forma del vuelo.
+  const tramosQ = tramosDeVuelo(q);
+  lines.push(`🔁 Tipo de vuelo: ${textoTipoVuelo(tramosQ[0])}`);
   lines.push(`📅 Fecha de ida: ${q.departDate || '-'}`);
   if (q.departTime || q.arriveTime) {
     lines.push(`🕐 Salida: ${q.departTime || '-'}   Llegada: ${q.arriveTime || '-'}`);
@@ -1450,7 +1524,7 @@ function buildQuoteText(q) {
     if (q.returnDepartTime || q.returnArriveTime) {
       lines.push(`🕐 Salida: ${q.returnDepartTime || '-'}   Llegada: ${q.returnArriveTime || '-'}`);
     }
-    lines.push(`🔁 Tipo de vuelo (regreso): ${textoTipoVuelo(q.returnTipoVuelo, q.returnEscalaLugar, q.returnEscalaTiempo)}`);
+    if (tramosQ[1]) lines.push(`🔁 Tipo de vuelo (regreso): ${textoTipoVuelo(tramosQ[1])}`);
   }
   const conPasajeros = q.tarifas.filas.filter((f) => f.cantidad > 0);
   if (conPasajeros.length === 1 && conPasajeros[0].clave === 'adultos') {
@@ -1551,21 +1625,91 @@ function fechaEnPalabras(texto) {
   return `${DIAS_LARGOS[f.getDay()]} ${dia} de ${MESES_LARGOS[mes - 1]}`;
 }
 
+// ---------- Escalas ----------
+//
+// Un vuelo puede tener ninguna, una o dos escalas. Antes solo cabia una, en dos
+// campos sueltos -`escalaLugar` y `escalaTiempo`- repetidos por tramo. Un
+// IAD→SAL via Panama y San Jose no se podia cotizar completo.
+//
+// La forma buena es una lista, y `escalasDe` es el unico sitio que la arma.
+// Entiende las dos: los boletos ya guardados traen los campos sueltos y no hay
+// que migrarlos, porque aqui se convierten al vuelo.
+//
+// `tipo` sigue siendo DIRECTO/ESCALA a proposito: cuantas escalas hay lo dice
+// la lista, no el tipo. Asi las comprobaciones de `tipo === 'ESCALA'` que ya
+// estaban repartidas por el codigo siguen siendo ciertas con una o con dos.
+function escalasDe(f) {
+  if (!f) return [];
+  if (f.tipo !== 'ESCALA') return [];
+
+  const lista = Array.isArray(f.escalas) ? f.escalas : [
+    { lugar: f.escalaLugar, tiempo: f.escalaTiempo },
+  ];
+
+  return lista
+    .map((e) => ({ lugar: (e && e.lugar) || '', tiempo: (e && e.tiempo) || '' }))
+    .filter((e) => e.lugar || e.tiempo);
+}
+
+// "1h 30m" a partir de "01:30". Vacio si no hay hora que leer.
+function duracionEscala(tiempo) {
+  const m = /^(\d{1,2}):?(\d{2})$/.exec(tiempo || '');
+  if (!m) return '';
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return (h ? `${h}h` : '') + (min ? `${h ? ' ' : ''}${min}m` : '');
+}
+
+function ciudadDeEscala(lugar) {
+  const a = findAirport(lugar);
+  return a ? a.city : (lugar || '');
+}
+
 // La escala, dicha corto. En el mensaje escrito cabe "BOG - Bogotá, Colombia ·
 // 01:30 hrs", pero en la imagen ese texto va apretado entre las dos horas y las
 // toca. Aqui basta la ciudad y la duracion en lenguaje normal.
+//
+// Con dos escalas se nombran las dos: cual es la segunda ciudad es justo lo que
+// el pasajero necesita saber para no perderse en el aeropuerto.
 function textoEscalaCorta(lugar, tiempo) {
-  const a = findAirport(lugar);
-  const donde = a ? a.city : (lugar || '');
-  const m = /^(\d{1,2}):?(\d{2})$/.exec(tiempo || '');
-  let cuanto = '';
-  if (m) {
-    const h = Number(m[1]);
-    const min = Number(m[2]);
-    cuanto = (h ? `${h}h` : '') + (min ? `${h ? ' ' : ''}${min}m` : '');
-  }
+  const donde = ciudadDeEscala(lugar);
+  const cuanto = duracionEscala(tiempo);
   if (!donde) return cuanto ? `Escala de ${cuanto}` : 'Con escala';
   return `Escala en ${donde}${cuanto ? ` · ${cuanto}` : ''}`;
+}
+
+// El texto corto de un tramo completo, ya con una o dos escalas.
+function textoEscalasCorto(f) {
+  const escalas = escalasDe(f);
+  if (!escalas.length) return 'Vuelo directo';
+  if (escalas.length === 1) return textoEscalaCorta(escalas[0].lugar, escalas[0].tiempo);
+
+  // Dos: "Escalas en Panamá y San José". Las duraciones se dejan fuera porque
+  // el renglon va entre las dos horas del pasabordo y no caben; van completas
+  // en el mensaje escrito y en el detalle del documento.
+  const ciudades = escalas.map((e) => ciudadDeEscala(e.lugar)).filter(Boolean);
+  if (ciudades.length < 2) return `${escalas.length} escalas`;
+  return `Escalas en ${ciudades.join(' y ')}`;
+}
+
+// El texto largo, para donde si hay sitio: mensaje de WhatsApp y detalle.
+//
+// Con UNA escala dice exactamente lo mismo de siempre, palabra por palabra. Es
+// el texto que ya se le manda a los clientes y no habia razon para moverlo: lo
+// que faltaba era el caso de dos, no una redaccion nueva.
+function textoEscalasLargo(f) {
+  const escalas = escalasDe(f);
+  if (!escalas.length) return 'Directo';
+
+  const describir = (e) => {
+    const aeropuerto = e.lugar
+      ? airportLabel(findAirport(e.lugar) || { code: e.lugar, city: '', country: '' })
+      : '-';
+    return `${aeropuerto}${e.tiempo ? ' · ' + e.tiempo + ' hrs' : ''}`;
+  };
+
+  if (escalas.length === 1) return `Con escala en ${describir(escalas[0])}`;
+  return `Con ${escalas.length} escalas: ${escalas.map(describir).join(' y luego ')}`;
 }
 
 // Un tramo del viaje dibujado como un pasabordo: los dos codigos grandes con su
@@ -1706,36 +1850,22 @@ function drawQuoteImageCard(q) {
       // El itinerario, un bloque por tramo. Antes eran seis renglones sueltos
       // -fecha, horario y tipo de vuelo de cada trayecto, intercalados- y no se
       // entendia cual dato era de la ida y cual del regreso.
-      y += dibujarTramo(ctx, W, y, {
-        titulo: 'IDA',
-        aerolinea: q.airline,
-        fecha: fechaEnPalabras(q.departDate),
-        origen: originCode,
-        destino: destCode,
-        salida: q.departTime,
-        llegada: q.arriveTime,
-        escala: q.tipoVuelo === 'ESCALA'
-          ? textoEscalaCorta(q.escalaLugar, q.escalaTiempo)
-          : '',
-      }) + 26;
-
-      if (q.returnDate) {
-        // En multidestino el regreso sale de otra ciudad; el bloque lo muestra
-        // solo, sin necesitar una fila aparte de "ruta de regreso".
-        const multi = q.returnMultidestino && (q.returnOrigin || q.returnDest);
+      //
+      // Los tramos los arma `tramosDeVuelo`, el mismo que usa la reserva: antes
+      // esta traduccion estaba escrita aqui tambien -con su propia copia de la
+      // regla de multidestino- y las dos imagenes podian separarse.
+      tramosDeVuelo(q).forEach((t) => {
         y += dibujarTramo(ctx, W, y, {
-          titulo: 'REGRESO',
-          aerolinea: q.returnAirline || q.airline,
-          fecha: fechaEnPalabras(q.returnDate),
-          origen: (multi ? q.returnOrigin : destCode) || '---',
-          destino: (multi ? q.returnDest : originCode) || '---',
-          salida: q.returnDepartTime,
-          llegada: q.returnArriveTime,
-          escala: q.returnTipoVuelo === 'ESCALA'
-            ? textoEscalaCorta(q.returnEscalaLugar, q.returnEscalaTiempo)
-            : '',
+          titulo: t.titulo,
+          aerolinea: t.airline,
+          fecha: fechaEnPalabras(t.fechaSalida),
+          origen: t.origin,
+          destino: t.dest,
+          salida: t.horaSalida,
+          llegada: t.horaLlegada,
+          escala: t.tipo === 'ESCALA' ? textoEscalasCorto(t) : '',
         }) + 26;
-      }
+      });
       y += 24;
 
       // La columna del valor se calcula midiendo las etiquetas que de verdad se
@@ -1915,10 +2045,14 @@ function collectReservaFields() {
   return { ...q, pasajeros: leerPasajerosReserva() };
 }
 
-// El tramo de ida y el de regreso con la forma que espera `dibujarTramo` y
-// `drawFlightCard`. La cotizacion los guarda con otros nombres de campo, asi
-// que la traduccion vive aqui y no repartida por los dos dibujos.
-function tramosDeReserva(q) {
+// El tramo de ida y el de regreso con la forma que esperan `dibujarTramo`,
+// `drawFlightCard` y los textos de escalas. El formulario los guarda con otros
+// nombres -`tipoVuelo`, `returnEscalaLugar`- asi que la traduccion vive aqui y
+// no repartida por cada dibujo.
+//
+// Lo usan la reserva, el texto de la cotizacion y el de paquetes: es el unico
+// sitio donde se sabe que "returnEscalaLugar" es la escala del regreso.
+function tramosDeVuelo(q) {
   const tramos = [{
     titulo: 'IDA',
     airline: q.airline,
@@ -1928,6 +2062,7 @@ function tramosDeReserva(q) {
     horaSalida: q.departTime,
     horaLlegada: q.arriveTime,
     tipo: q.tipoVuelo,
+    escalas: q.escalas,
     escalaLugar: q.escalaLugar,
     escalaTiempo: q.escalaTiempo,
   }];
@@ -1945,6 +2080,7 @@ function tramosDeReserva(q) {
       horaSalida: q.returnDepartTime,
       horaLlegada: q.returnArriveTime,
       tipo: q.returnTipoVuelo,
+      escalas: q.returnEscalas,
       escalaLugar: q.returnEscalaLugar,
       escalaTiempo: q.returnEscalaTiempo,
     });
@@ -2007,7 +2143,7 @@ function drawReservaImageCard(r) {
       ctx.stroke();
       y += 55;
 
-      tramosDeReserva(r).forEach((t) => {
+      tramosDeVuelo(r).forEach((t) => {
         y += dibujarTramo(ctx, W, y, {
           titulo: t.titulo,
           aerolinea: t.airline,
@@ -2016,7 +2152,7 @@ function drawReservaImageCard(r) {
           destino: t.dest,
           salida: t.horaSalida,
           llegada: t.horaLlegada,
-          escala: t.tipo === 'ESCALA' ? textoEscalaCorta(t.escalaLugar, t.escalaTiempo) : '',
+          escala: t.tipo === 'ESCALA' ? textoEscalasCorto(t) : '',
         }) + 26;
       });
       y += 24;
@@ -2120,7 +2256,7 @@ function generateReservaPDF(r) {
   doc.text('Tu viaje quedó reservado. Estos son los datos.', MARGIN, y);
   y += 10;
 
-  tramosDeReserva(r).forEach((t) => {
+  tramosDeVuelo(r).forEach((t) => {
     y = drawFlightCard(doc, y, t.titulo, t, ensureSpace);
   });
 

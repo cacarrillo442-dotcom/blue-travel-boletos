@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261002-154309" />
+<meta name="app-version" content="20261013-180416" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261002-154309" />
-<script src="assets/tema.js?v=20261002-154309"></script>
+<link rel="stylesheet" href="style.css?v=20261013-180416" />
+<script src="assets/tema.js?v=20261013-180416"></script>
 </head>
 <body>
 
@@ -810,13 +810,27 @@
         <label class="radio-label"><input type="radio" name="qTipoVuelo" class="q-tipo" value="DIRECTO" checked /> Directo</label>
         <label class="radio-label"><input type="radio" name="qTipoVuelo" class="q-tipo" value="ESCALA" /> Con escala</label>
       </div>
-      <div class="grid-2 q-escala-fields hidden">
-        <label>Tiempo de escala (hh:mm)
-          <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="qEscalaTiempo" />
+      <div class="escala-bloque q-escala-fields hidden">
+        <div class="grid-2">
+          <label>Tiempo de escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="qEscalaTiempo" />
+          </label>
+          <label>Lugar de escala
+            <select id="qEscalaLugar" class="airport-select"></select>
+          </label>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="qEscala2On" />
+          El vuelo hace una segunda escala
         </label>
-        <label>Lugar de escala
-          <select id="qEscalaLugar" class="airport-select"></select>
-        </label>
+        <div class="grid-2 q-escala2-fields hidden">
+          <label>Tiempo de la 2ª escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 02:00" id="qEscala2Tiempo" />
+          </label>
+          <label>Lugar de la 2ª escala
+            <select id="qEscala2Lugar" class="airport-select"></select>
+          </label>
+        </div>
       </div>
 
       <h3>Vuelo de regreso</h3>
@@ -857,13 +871,27 @@
         <label class="radio-label"><input type="radio" name="qReturnTipoVuelo" class="q-return-tipo" value="DIRECTO" checked /> Directo</label>
         <label class="radio-label"><input type="radio" name="qReturnTipoVuelo" class="q-return-tipo" value="ESCALA" /> Con escala</label>
       </div>
-      <div class="grid-2 q-return-escala-fields hidden">
-        <label>Tiempo de escala (hh:mm)
-          <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="qReturnEscalaTiempo" />
+      <div class="escala-bloque q-return-escala-fields hidden">
+        <div class="grid-2">
+          <label>Tiempo de escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="qReturnEscalaTiempo" />
+          </label>
+          <label>Lugar de escala
+            <select id="qReturnEscalaLugar" class="airport-select"></select>
+          </label>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="qReturnEscala2On" />
+          El vuelo hace una segunda escala
         </label>
-        <label>Lugar de escala
-          <select id="qReturnEscalaLugar" class="airport-select"></select>
-        </label>
+        <div class="grid-2 q-return-escala2-fields hidden">
+          <label>Tiempo de la 2ª escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 02:00" id="qReturnEscala2Tiempo" />
+          </label>
+          <label>Lugar de la 2ª escala
+            <select id="qReturnEscala2Lugar" class="airport-select"></select>
+          </label>
+        </div>
       </div>
 
       <h3>Equipaje</h3>
@@ -1525,13 +1553,30 @@
     <label class="radio-label"><input type="radio" name="tipoVuelo" class="fl-tipo" value="ESCALA" /> Con escala</label>
   </div>
 
-  <div class="grid-3 fl-escala-fields hidden">
-    <label>Tiempo de escala (hh:mm)
-      <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" class="fl-escala-tiempo" />
+  <div class="escala-bloque fl-escala-fields hidden">
+    <div class="grid-3">
+      <label>Tiempo de escala (hh:mm)
+        <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" class="fl-escala-tiempo" />
+      </label>
+      <label>Lugar de escala
+        <select class="fl-escala-lugar airport-select"></select>
+      </label>
+    </div>
+    <!-- Dos escalas es lo normal en un IAD→Centroamérica con conexión doble.
+         Va detrás de una casilla para que el caso de una sola -el habitual- no
+         cargue con dos campos vacíos. -->
+    <label class="checkbox-label">
+      <input type="checkbox" class="fl-escala2-on" />
+      El vuelo hace una segunda escala
     </label>
-    <label>Lugar de escala
-      <select class="fl-escala-lugar airport-select"></select>
-    </label>
+    <div class="grid-3 fl-escala2-fields hidden">
+      <label>Tiempo de la 2ª escala (hh:mm)
+        <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 02:00" class="fl-escala2-tiempo" />
+      </label>
+      <label>Lugar de la 2ª escala
+        <select class="fl-escala2-lugar airport-select"></select>
+      </label>
+    </div>
   </div>
 
   <div class="grid-3">
@@ -1559,38 +1604,38 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261002-154309"></script>
-<script src="assets/guardado-pendiente.js?v=20261002-154309"></script>
-<script src="assets/nombres-archivo.js?v=20261002-154309"></script>
-<script src="assets/iconos.js?v=20261002-154309"></script>
-<script src="assets/version.js?v=20261002-154309"></script>
-<script src="assets/trm.js?v=20261002-154309"></script>
+<script src="assets/logo-animado.js?v=20261013-180416"></script>
+<script src="assets/guardado-pendiente.js?v=20261013-180416"></script>
+<script src="assets/nombres-archivo.js?v=20261013-180416"></script>
+<script src="assets/iconos.js?v=20261013-180416"></script>
+<script src="assets/version.js?v=20261013-180416"></script>
+<script src="assets/trm.js?v=20261013-180416"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261002-154309"></script>
-<script src="assets/country-codes-data.js?v=20261002-154309"></script>
+<script src="assets/catalog-data.js?v=20261013-180416"></script>
+<script src="assets/country-codes-data.js?v=20261013-180416"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/sales-parse.js?v=20261002-154309"></script>
-<script src="assets/cupon-imagen.js?v=20261002-154309"></script>
-<script src="assets/publicidad-imagen.js?v=20261002-154309"></script>
-<script src="assets/precios-datos.js?v=20261002-154309"></script>
-<script src="app.js?v=20261002-154309"></script>
-<script src="assets/marca.js?v=20261002-154309"></script>
-<script src="assets/vuelos-bloque.js?v=20261002-154309"></script>
-<script src="assets/paquetes.js?v=20261002-154309"></script>
-<script src="assets/inicio.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261002-154309"></script>
-<script src="assets/clientes-autocompletar.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261002-154309"></script>
-<script src="assets/precios-ui.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-history.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261002-154309"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261002-154309"></script>
+<script src="assets/sales-parse.js?v=20261013-180416"></script>
+<script src="assets/cupon-imagen.js?v=20261013-180416"></script>
+<script src="assets/publicidad-imagen.js?v=20261013-180416"></script>
+<script src="assets/precios-datos.js?v=20261013-180416"></script>
+<script src="app.js?v=20261013-180416"></script>
+<script src="assets/marca.js?v=20261013-180416"></script>
+<script src="assets/vuelos-bloque.js?v=20261013-180416"></script>
+<script src="assets/paquetes.js?v=20261013-180416"></script>
+<script src="assets/inicio.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261013-180416"></script>
+<script src="assets/clientes-autocompletar.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261013-180416"></script>
+<script src="assets/precios-ui.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-history.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261013-180416"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261013-180416"></script>
 </body>
 </html>

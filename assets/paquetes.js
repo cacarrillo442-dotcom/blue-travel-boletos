@@ -343,7 +343,11 @@
       if (v.departTime || v.arriveTime) {
         L.push(`🕐 Salida ${formatTime(v.departTime) || '-'}   Llegada ${formatTime(v.arriveTime) || '-'}`);
       }
-      L.push(`🔁 ${textoTipoVuelo(v.tipoVuelo, v.escalaLugar, v.escalaTiempo)}`);
+      // Los tramos los arma `tramosDeVuelo` (app.js), que sabe traducir los
+      // campos del bloque de vuelos -incluida la lista de escalas- a la forma
+      // que entienden los textos.
+      const tramosV = window.tramosDeVuelo ? window.tramosDeVuelo(v) : [];
+      if (tramosV[0]) L.push(`🔁 ${textoTipoVuelo(tramosV[0])}`);
 
       // Regreso. En multidestino sale de otra ciudad y puede ir con otra
       // aerolinea; si no, es el mismo trayecto al reves.
@@ -357,7 +361,7 @@
         if (v.returnDepartTime || v.returnArriveTime) {
           L.push(`🕐 Salida ${formatTime(v.returnDepartTime) || '-'}   Llegada ${formatTime(v.returnArriveTime) || '-'}`);
         }
-        L.push(`🔁 ${textoTipoVuelo(v.returnTipoVuelo, v.returnEscalaLugar, v.returnEscalaTiempo)}`);
+        if (tramosV[1]) L.push(`🔁 ${textoTipoVuelo(tramosV[1])}`);
       }
     }
 
@@ -444,8 +448,16 @@
   el('pkLimpiarBtn').addEventListener('click', () => {
     if (!window.confirm('¿Limpiar el formulario del paquete?')) return;
     panel.querySelectorAll('input, textarea').forEach((c) => {
-      if (c.type === 'checkbox') c.checked = false;
-      else if (c.id !== 'pkOperador') c.value = '';
+      if (c.type === 'checkbox') {
+        c.checked = false;
+        // Avisar del cambio, no solo desmarcar. Varias casillas abren un bloque
+        // de campos -multidestino, la segunda escala-, y ese bloque se oculta
+        // en su `change`. Desmarcando a secas, la casilla quedaba apagada y los
+        // campos abiertos: un estado que no se puede llegar a mano.
+        c.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (c.id !== 'pkOperador') {
+        c.value = '';
+      }
     });
     ponerValoresPorDefecto();
     // El aviso del archivo se quedaba diciendo lo que se cargo, con el

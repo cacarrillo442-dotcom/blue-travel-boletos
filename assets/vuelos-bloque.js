@@ -29,11 +29,23 @@
         <label class="radio-label"><input type="radio" name="${nombreRadio}" class="${p}${c}-tipo" value="DIRECTO" checked /> Directo</label>
         <label class="radio-label"><input type="radio" name="${nombreRadio}" class="${p}${c}-tipo" value="ESCALA" /> Con escala</label>
       </div>
-      <div class="grid-2 ${p}${c}-escala-fields hidden">
-        <label>Tiempo de escala (hh:mm)
-          <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="${p}${n}EscalaTiempo" />
+      <div class="escala-bloque ${p}${c}-escala-fields hidden">
+        <div class="grid-2">
+          <label>Tiempo de escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="${p}${n}EscalaTiempo" />
+          </label>
+          ${campoSelect(`${p}${n}EscalaLugar`, 'airport-select', 'Lugar de escala')}
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="${p}${n}Escala2On" />
+          El vuelo hace una segunda escala
         </label>
-        ${campoSelect(`${p}${n}EscalaLugar`, 'airport-select', 'Lugar de escala')}
+        <div class="grid-2 ${p}${c}-escala2-fields hidden">
+          <label>Tiempo de la 2ª escala (hh:mm)
+            <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 02:00" id="${p}${n}Escala2Tiempo" />
+          </label>
+          ${campoSelect(`${p}${n}Escala2Lugar`, 'airport-select', 'Lugar de la 2ª escala')}
+        </div>
       </div>`;
 
     if (!regreso) {
@@ -85,7 +97,9 @@
     contenedor.querySelectorAll('.airline-select').forEach(populateAirlineSelect);
     contenedor.querySelectorAll('.airport-select').forEach(populateAirportSelect);
 
-    // Escala: los campos solo aparecen si se eligio "con escala".
+    // Escala: los campos solo aparecen si se eligio "con escala", y la segunda
+    // escala detras de su casilla. Al desmarcarla se limpia, para que un lugar
+    // escrito antes no siga saliendo en la cotizacion.
     [['', ''], ['Return', '-return']].forEach(([n, c]) => {
       const campos = contenedor.querySelector(`.${p}${c}-escala-fields`);
       contenedor.querySelectorAll(`.${p}${c}-tipo`).forEach((radio) => {
@@ -93,6 +107,18 @@
           campos.classList.toggle('hidden', radio.value !== 'ESCALA' || !radio.checked);
         });
       });
+
+      const casilla = el(`${p}${n}Escala2On`);
+      const campos2 = contenedor.querySelector(`.${p}${c}-escala2-fields`);
+      if (casilla && campos2) {
+        casilla.addEventListener('change', () => {
+          campos2.classList.toggle('hidden', !casilla.checked);
+          if (!casilla.checked) {
+            el(`${p}${n}Escala2Tiempo`).value = '';
+            el(`${p}${n}Escala2Lugar`).value = '';
+          }
+        });
+      }
     });
 
     // Multidestino: aerolinea y aeropuertos propios para la vuelta.
@@ -126,6 +152,13 @@
       (val(campo) === 'OTRA' ? val(otro).trim() : val(campo));
 
     const multi = el(`${p}ReturnMultidestino`) && el(`${p}ReturnMultidestino`).checked;
+    // Las escalas de un tramo, en orden. `n` es '' para la ida y 'Return' para
+    // la vuelta.
+    const escalasDe = (n) => [
+      { lugar: val(`${p}${n}EscalaLugar`), tiempo: val(`${p}${n}EscalaTiempo`).trim() },
+      { lugar: val(`${p}${n}Escala2Lugar`), tiempo: val(`${p}${n}Escala2Tiempo`).trim() },
+    ].filter((e) => e.lugar || e.tiempo);
+
     return {
       airline: aerolinea(`${p}Airline`, `${p}AirlineOther`),
       origin: val(`${p}Origin`),
@@ -134,6 +167,7 @@
       departTime: val(`${p}DepartTime`),
       arriveTime: val(`${p}ArriveTime`),
       tipoVuelo: marcado(`${p}-tipo`),
+      escalas: escalasDe(''),
       escalaTiempo: val(`${p}EscalaTiempo`).trim(),
       escalaLugar: val(`${p}EscalaLugar`),
       returnDate: val(`${p}ReturnDate`),
@@ -144,6 +178,7 @@
       returnOrigin: multi ? val(`${p}ReturnOrigin`) : '',
       returnDest: multi ? val(`${p}ReturnDest`) : '',
       returnTipoVuelo: marcado(`${p}-return-tipo`),
+      returnEscalas: escalasDe('Return'),
       returnEscalaTiempo: val(`${p}ReturnEscalaTiempo`).trim(),
       returnEscalaLugar: val(`${p}ReturnEscalaLugar`),
     };
