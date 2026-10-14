@@ -15,10 +15,17 @@ function populateAirportSelect(select) {
 }
 
 function populateAirlineSelect(select) {
+  // Las aerolineas de una escala son un caso aparte: vacio no es "falta
+  // elegir" sino "sigue con la misma del tramo", que es lo normal. Y no llevan
+  // "Otra (especificar)" porque no tienen campo de texto al lado: si la
+  // aerolinea no esta, se agrega arriba en el catalogo y aparece aqui sola
+  // -refreshAllSelects vuelve a llenar todos los `.airline-select`-.
+  const deEscala = select.classList.contains('aerolinea-escala');
+
   select.innerHTML = '';
   const blank = document.createElement('option');
   blank.value = '';
-  blank.textContent = '-- Selecciona --';
+  blank.textContent = deEscala ? '-- La misma --' : '-- Selecciona --';
   select.appendChild(blank);
   AIRLINES.forEach(name => {
     const opt = document.createElement('option');
@@ -26,6 +33,7 @@ function populateAirlineSelect(select) {
     opt.textContent = name;
     select.appendChild(opt);
   });
+  if (deEscala) return;
   const other = document.createElement('option');
   other.value = 'OTRA';
   other.textContent = 'Otra (especificar)';
@@ -155,6 +163,7 @@ function buildFlightBlock(container) {
   });
 
   container.querySelectorAll('.airport-select').forEach(populateAirportSelect);
+  container.querySelectorAll('.aerolinea-escala').forEach(populateAirlineSelect);
 
   const escalaFields = container.querySelector('.fl-escala-fields');
   container.querySelectorAll('.fl-tipo').forEach(radio => {
@@ -176,6 +185,7 @@ function buildFlightBlock(container) {
     if (!escala2On.checked) {
       container.querySelector('.fl-escala2-tiempo').value = '';
       container.querySelector('.fl-escala2-lugar').value = '';
+      container.querySelector('.fl-escala2-aerolinea').value = '';
     }
   });
 
@@ -233,6 +243,7 @@ const qReturnMultiFields = document.querySelector('.q-return-multi-fields');
 const qReturnAirlineSelect = document.getElementById('qReturnAirline');
 const qReturnAirlineOtherWrap = document.querySelector('.q-return-airline-other-wrap');
 populateAirlineSelect(qReturnAirlineSelect);
+document.querySelectorAll('.aerolinea-escala').forEach(populateAirlineSelect);
 qReturnMultidestino.addEventListener('change', () => {
   qReturnMultiFields.classList.toggle('hidden', !qReturnMultidestino.checked);
 });
@@ -280,6 +291,8 @@ document.querySelectorAll('.q-return-tipo').forEach(radio => {
     if (!casilla.checked) {
       document.getElementById(tiempoId).value = '';
       document.getElementById(lugarId).value = '';
+      const aero = document.getElementById(lugarId.replace('Lugar', 'Aerolinea'));
+      if (aero) aero.value = '';
     }
   });
 });
@@ -318,10 +331,12 @@ function leerEscalasDeBloque(container) {
     {
       lugar: container.querySelector('.fl-escala-lugar').value,
       tiempo: container.querySelector('.fl-escala-tiempo').value.trim(),
+      aerolinea: container.querySelector('.fl-escala-aerolinea').value,
     },
     {
       lugar: container.querySelector('.fl-escala2-lugar').value,
       tiempo: container.querySelector('.fl-escala2-tiempo').value.trim(),
+      aerolinea: container.querySelector('.fl-escala2-aerolinea').value,
     },
   ].filter((e) => e.lugar || e.tiempo);
 
@@ -509,8 +524,28 @@ function drawFlightCard(doc, y, title, f, ensureSpace) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(...PRIMARY_2);
-  doc.text(f.airline || 'Aerolínea', izq, y + 8);
+  // Cuando la aerolinea cambia en una escala van las dos, unidas: mostrar solo
+  // la primera seria decir que todo el trayecto es de ella.
+  //
+  // La fecha va al otro extremo del mismo renglon, asi que el texto se recorta
+  // contra el sitio que de verdad queda libre. Sin esto, "AVIANCA + COPA
+  // AIRLINES" se metia debajo de "viernes 18 de diciembre".
   const fecha = fechaEnPalabras(f.fechaSalida) || f.fechaSalida || '';
+  let lineaAerolineas = aerolineasDe(f).join(' + ') || 'Aerolínea';
+  if (fecha) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    const anchoFecha = doc.getTextWidth(fecha);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    const libre = (der - anchoFecha - 3) - izq;
+    while (lineaAerolineas.length > 3 && doc.getTextWidth(lineaAerolineas) > libre) {
+      lineaAerolineas = lineaAerolineas.slice(0, -1);
+    }
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(lineaAerolineas, izq, y + 8);
   if (fecha) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
@@ -1101,6 +1136,7 @@ function fillFlightBlock(container, f) {
   const escalas = escalasDe(f);
   container.querySelector('.fl-escala-tiempo').value = escalas[0] ? escalas[0].tiempo : '';
   container.querySelector('.fl-escala-lugar').value = escalas[0] ? escalas[0].lugar : '';
+  container.querySelector('.fl-escala-aerolinea').value = escalas[0] ? escalas[0].aerolinea : '';
 
   const hayDos = escalas.length > 1;
   const escala2On = container.querySelector('.fl-escala2-on');
@@ -1108,6 +1144,7 @@ function fillFlightBlock(container, f) {
   container.querySelector('.fl-escala2-fields').classList.toggle('hidden', !hayDos);
   container.querySelector('.fl-escala2-tiempo').value = hayDos ? escalas[1].tiempo : '';
   container.querySelector('.fl-escala2-lugar').value = hayDos ? escalas[1].lugar : '';
+  container.querySelector('.fl-escala2-aerolinea').value = hayDos ? escalas[1].aerolinea : '';
   container.querySelector('.fl-fecha-salida').value = f.fechaSalida || '';
   container.querySelector('.fl-hora-salida').value = f.horaSalida || '';
   container.querySelector('.fl-fecha-llegada').value = f.fechaLlegada || '';
@@ -1367,8 +1404,10 @@ function leerEscalasPorId(prefijo) {
     return e ? String(e.value).trim() : '';
   };
   const escalas = [
-    { lugar: val(`${prefijo}EscalaLugar`), tiempo: val(`${prefijo}EscalaTiempo`) },
-    { lugar: val(`${prefijo}Escala2Lugar`), tiempo: val(`${prefijo}Escala2Tiempo`) },
+    { lugar: val(`${prefijo}EscalaLugar`), tiempo: val(`${prefijo}EscalaTiempo`),
+      aerolinea: val(`${prefijo}EscalaAerolinea`) },
+    { lugar: val(`${prefijo}Escala2Lugar`), tiempo: val(`${prefijo}Escala2Tiempo`),
+      aerolinea: val(`${prefijo}Escala2Aerolinea`) },
   ].filter((e) => e.lugar || e.tiempo);
   return escalas;
 }
@@ -1647,8 +1686,29 @@ function escalasDe(f) {
   ];
 
   return lista
-    .map((e) => ({ lugar: (e && e.lugar) || '', tiempo: (e && e.tiempo) || '' }))
+    .map((e) => ({
+      lugar: (e && e.lugar) || '',
+      tiempo: (e && e.tiempo) || '',
+      // Con que aerolinea SIGUE el viaje desde esta escala. Un vuelo con dos
+      // escalas son tres tramos, y la aerolinea puede cambiar en cualquiera:
+      // vacio significa que continua con la misma del tramo.
+      aerolinea: (e && e.aerolinea) || '',
+    }))
     .filter((e) => e.lugar || e.tiempo);
+}
+
+// Las aerolineas que intervienen en un tramo, en orden y sin repetir seguidas.
+// Con "AVIANCA" de base y un cambio a "COPA" en la segunda escala devuelve
+// ['AVIANCA', 'COPA']: es lo que hay que mostrar donde antes cabia una sola.
+function aerolineasDe(f) {
+  const cadena = [];
+  const añadir = (nombre) => {
+    const limpio = String(nombre || '').trim();
+    if (limpio && limpio !== cadena[cadena.length - 1]) cadena.push(limpio);
+  };
+  añadir(f && f.airline);
+  escalasDe(f).forEach((e) => añadir(e.aerolinea));
+  return cadena;
 }
 
 // "1h 30m" a partir de "01:30". Vacio si no hay hora que leer.
@@ -1705,7 +1765,10 @@ function textoEscalasLargo(f) {
     const aeropuerto = e.lugar
       ? airportLabel(findAirport(e.lugar) || { code: e.lugar, city: '', country: '' })
       : '-';
-    return `${aeropuerto}${e.tiempo ? ' · ' + e.tiempo + ' hrs' : ''}`;
+    // El cambio de aerolinea se dice aqui, pegado a la escala donde ocurre: es
+    // el dato que el pasajero necesita para saber en que mostrador presentarse.
+    const sigue = e.aerolinea ? `, y desde ahí con ${e.aerolinea}` : '';
+    return `${aeropuerto}${e.tiempo ? ' · ' + e.tiempo + ' hrs' : ''}${sigue}`;
   };
 
   if (escalas.length === 1) return `Con escala en ${describir(escalas[0])}`;
@@ -1732,14 +1795,36 @@ function dibujarTramo(ctx, W, y, datos) {
   ctx.fill();
 
   // Encabezado del tramo: IDA · AVIANCA  ...  miércoles 15 de octubre
-  ctx.textAlign = 'left';
-  ctx.font = 'bold 25px Arial, sans-serif';
-  ctx.fillStyle = '#126f99';
-  ctx.fillText(datos.titulo + (datos.aerolinea ? ` · ${datos.aerolinea}` : ''), izq, y + 48);
+  //
+  // La fecha va al otro extremo del mismo renglon. Con una sola aerolinea
+  // sobraba sitio, pero "IDA · AVIANCA + COPA AIRLINES" se le montaba encima,
+  // asi que se mide contra lo que la fecha deja libre y se recorta si hace falta.
   ctx.textAlign = 'right';
   ctx.font = '25px Arial, sans-serif';
   ctx.fillStyle = '#5b6b78';
   ctx.fillText(datos.fecha, der, y + 48);
+  const anchoFecha = ctx.measureText(datos.fecha || '').width;
+
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 25px Arial, sans-serif';
+  ctx.fillStyle = '#126f99';
+  let encabezado = datos.titulo + (datos.aerolinea ? ` · ${datos.aerolinea}` : '');
+  const libre = (der - anchoFecha - 24) - izq;
+
+  // Primero se baja un punto la letra y solo despues se corta, que es lo mismo
+  // que hace la linea de escalas. De las 756 parejas posibles del catalogo, 18
+  // no caben a 25px y TODAS caben a 21: bajando el tamaño no se pierde el
+  // nombre de la segunda aerolinea, que es justo el dato nuevo.
+  if (ctx.measureText(encabezado).width > libre) {
+    ctx.font = 'bold 21px Arial, sans-serif';
+    while (encabezado.length > 4 && ctx.measureText(`${encabezado}…`).width > libre) {
+      encabezado = encabezado.slice(0, -1);
+    }
+    if (encabezado !== datos.titulo + (datos.aerolinea ? ` · ${datos.aerolinea}` : '')) {
+      encabezado += '…';
+    }
+  }
+  ctx.fillText(encabezado, izq, y + 48);
 
   // Los codigos de aeropuerto, que es el dato que el viajero busca primero.
   ctx.font = 'bold 52px Arial, sans-serif';
@@ -1857,7 +1942,7 @@ function drawQuoteImageCard(q) {
       tramosDeVuelo(q).forEach((t) => {
         y += dibujarTramo(ctx, W, y, {
           titulo: t.titulo,
-          aerolinea: t.airline,
+          aerolinea: aerolineasDe(t).join(' + ') || t.airline,
           fecha: fechaEnPalabras(t.fechaSalida),
           origen: t.origin,
           destino: t.dest,
@@ -2146,7 +2231,7 @@ function drawReservaImageCard(r) {
       tramosDeVuelo(r).forEach((t) => {
         y += dibujarTramo(ctx, W, y, {
           titulo: t.titulo,
-          aerolinea: t.airline,
+          aerolinea: aerolineasDe(t).join(' + ') || t.airline,
           fecha: fechaEnPalabras(t.fechaSalida),
           origen: t.origin,
           destino: t.dest,

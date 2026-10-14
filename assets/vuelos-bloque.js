@@ -30,21 +30,23 @@
         <label class="radio-label"><input type="radio" name="${nombreRadio}" class="${p}${c}-tipo" value="ESCALA" /> Con escala</label>
       </div>
       <div class="escala-bloque ${p}${c}-escala-fields hidden">
-        <div class="grid-2">
+        <div class="grid-3">
           <label>Tiempo de escala (hh:mm)
             <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 01:30" id="${p}${n}EscalaTiempo" />
           </label>
           ${campoSelect(`${p}${n}EscalaLugar`, 'airport-select', 'Lugar de escala')}
+          ${campoSelect(`${p}${n}EscalaAerolinea`, 'airline-select aerolinea-escala', 'Sigue con la aerolínea')}
         </div>
         <label class="checkbox-label">
           <input type="checkbox" id="${p}${n}Escala2On" />
           El vuelo hace una segunda escala
         </label>
-        <div class="grid-2 ${p}${c}-escala2-fields hidden">
+        <div class="grid-3 ${p}${c}-escala2-fields hidden">
           <label>Tiempo de la 2ª escala (hh:mm)
             <input type="text" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" placeholder="Ej. 02:00" id="${p}${n}Escala2Tiempo" />
           </label>
           ${campoSelect(`${p}${n}Escala2Lugar`, 'airport-select', 'Lugar de la 2ª escala')}
+          ${campoSelect(`${p}${n}Escala2Aerolinea`, 'airline-select aerolinea-escala', 'Sigue con la aerolínea')}
         </div>
       </div>`;
 
@@ -116,6 +118,7 @@
           if (!casilla.checked) {
             el(`${p}${n}Escala2Tiempo`).value = '';
             el(`${p}${n}Escala2Lugar`).value = '';
+            el(`${p}${n}Escala2Aerolinea`).value = '';
           }
         });
       }
@@ -155,8 +158,10 @@
     // Las escalas de un tramo, en orden. `n` es '' para la ida y 'Return' para
     // la vuelta.
     const escalasDe = (n) => [
-      { lugar: val(`${p}${n}EscalaLugar`), tiempo: val(`${p}${n}EscalaTiempo`).trim() },
-      { lugar: val(`${p}${n}Escala2Lugar`), tiempo: val(`${p}${n}Escala2Tiempo`).trim() },
+      { lugar: val(`${p}${n}EscalaLugar`), tiempo: val(`${p}${n}EscalaTiempo`).trim(),
+        aerolinea: val(`${p}${n}EscalaAerolinea`) },
+      { lugar: val(`${p}${n}Escala2Lugar`), tiempo: val(`${p}${n}Escala2Tiempo`).trim(),
+        aerolinea: val(`${p}${n}Escala2Aerolinea`) },
     ].filter((e) => e.lugar || e.tiempo);
 
     return {
