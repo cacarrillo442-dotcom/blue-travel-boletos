@@ -1,0 +1,46 @@
+// Reglas de seguridad de Firestore.
+//
+// Se guardan aqui, en el repositorio, aunque Firebase las lea de su consola:
+// son la unica defensa de los datos y hasta ahora no habia copia de como
+// debian estar. Si alguien las cambia o se reinician, este archivo dice cual
+// era el estado bueno.
+//
+// OJO: tener el archivo aqui NO las aplica. Hay que pegarlas en
+// console.firebase.google.com -> Firestore Database -> Reglas -> Publicar.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Solo las cuentas de la agencia. Aunque alguien logre crear una cuenta,
+    // si su UID no está en esta lista no ve absolutamente nada.
+    function esDelEquipo() {
+      return request.auth != null && request.auth.uid in [
+        'RyaBUnYGi3aHDLyGMLUCBld6dV82'
+      ];
+    }
+
+    // Datos del negocio: nada visible sin ser del equipo.
+    match /clientes/{docId} { allow read, write: if esDelEquipo(); }
+    match /boletos/{docId}  { allow read, write: if esDelEquipo(); }
+    match /facturas/{docId} { allow read, write: if esDelEquipo(); }
+    match /ventas/{docId}   { allow read, write: if esDelEquipo(); }
+    match /cupones/{docId}  { allow read, write: if esDelEquipo(); }
+    match /config/{docId}   { allow read, write: if esDelEquipo(); }
+    match /viajes/{docId}   { allow read, write: if esDelEquipo(); }
+
+    // Qué obligación quedó cumplida en qué periodo. El calendario en sí vive
+    // en el código: aquí solo se guarda la constancia.
+    match /obligaciones_cumplidas/{docId} { allow read, write: if esDelEquipo(); }
+
+    // Catálogos: no tienen datos personales, pero solo el equipo los modifica.
+    match /aerolineas_catalogo/{docId} {
+      allow read: if true;
+      allow write: if esDelEquipo();
+    }
+    match /aeropuertos_catalogo/{docId} {
+      allow read: if true;
+      allow write: if esDelEquipo();
+    }
+  }
+}
