@@ -208,10 +208,13 @@
     const viajes = viajesUrgentes();
     const cupones = cuponesPorVencer();
     const confirmar = confirmacionesPendientes();
-    const total = viajes.length + cupones.length + confirmar.length;
+    const obligaciones = window.obtenerObligacionesQueAvisan
+      ? window.obtenerObligacionesQueAvisan() : [];
+    const total = viajes.length + cupones.length + confirmar.length + obligaciones.length;
 
     marcarEnLaBarra('navConteoViajes', viajes.length);
     marcarEnLaBarra('navConteoCupones', cupones.length);
+    marcarEnLaBarra('navConteoObligaciones', obligaciones.length);
 
     // El saludo dice de una vez como esta el dia, para no tener que bajar
     // a contar las tarjetas.
@@ -236,6 +239,25 @@
         + 'a punto de vencerse.', true);
       return;
     }
+
+    // Las obligaciones van de primeras: un RNT sin renovar deja la agencia sin
+    // poder operar, que pesa mas que un check-in de pasado mañana.
+    obligaciones.forEach(({ ob, estado, fecha, dias, estimada }) => {
+      const vencida = estado === 'vencida';
+      const cuando = vencida
+        ? (dias === -1 ? 'Venció ayer' : `Venció hace ${Math.abs(dias)} días`)
+        : (dias === 0 ? 'Hoy' : dias === 1 ? 'Mañana' : `${dias} días`);
+
+      destino.appendChild(filaPendiente({
+        tono: vencida ? 'urgent' : dias <= 15 ? 'soon' : 'later',
+        cuando,
+        titulo: `${escapeHtml(ob.nombre)} <span class="trip-leg">${escapeHtml(ob.entidad)}</span>`,
+        detalle: `${window.icono('calendario')} `
+          + (fecha ? `Vence el ${fechaCorta(fecha)}${estimada ? ' (estimada)' : ''}` : 'Sin fecha')
+          + (vencida ? ` · ${escapeHtml(ob.consecuencia)}` : ''),
+        acciones: [{ icono: 'calendario', texto: 'Ver', alPulsar: () => irA('obligacionesPanel') }],
+      }));
+    });
 
     // Van primero: son las que tienen el plazo más corto de todas.
     const LIMITE = window.HORAS_LIMITE_CONFIRMACION || 24;

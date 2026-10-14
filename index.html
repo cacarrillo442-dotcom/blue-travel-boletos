@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261014-161611" />
+<meta name="app-version" content="20261014-173432" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261014-161611" />
-<script src="assets/tema.js?v=20261014-161611"></script>
+<link rel="stylesheet" href="style.css?v=20261014-173432" />
+<script src="assets/tema.js?v=20261014-173432"></script>
 </head>
 <body>
 
@@ -168,6 +168,8 @@
       data-desc="Todo lo que has generado, listo para volver a usar."><svg class="ic" aria-hidden="true"><use href="#ic-historial"></use></svg><span>Historial</span></button>
     <button type="button" class="tab-btn" data-tab="salesPanel"
       data-desc="Ingresos, reparto semanal y cierre por mes."><svg class="ic" aria-hidden="true"><use href="#ic-ventas"></use></svg><span>Ventas</span></button>
+    <button type="button" class="tab-btn" data-tab="obligacionesPanel"
+      data-desc="Qué hay que renovar y cuándo, para que no se pase un plazo."><svg class="ic" aria-hidden="true"><use href="#ic-calendario"></use></svg><span>Obligaciones</span><span class="nav-conteo" id="navConteoObligaciones"></span></button>
     <button type="button" class="tab-btn" data-tab="backupPanel"
       data-desc="Guarda una copia de todo, por si algo pasa."><svg class="ic" aria-hidden="true"><use href="#ic-respaldo"></use></svg><span>Respaldo</span></button>
   </nav>
@@ -1342,6 +1344,37 @@
   </section>
 </div>
 
+<div id="obligacionesPanel" class="tab-panel hidden">
+
+  <section class="card card-principal">
+    <div class="card-header">
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-calendario"></use></svg>Qué hay que renovar <span id="obligacionesCuenta" class="conteo-pill hidden"></span></h2>
+    </div>
+    <p class="hint">
+      Las obligaciones de una agencia de viajes en Colombia, con su fecha y su fuente.
+      Marca cada una cuando la cumplas y la app te avisa en <strong>Inicio</strong> antes
+      de que se venza la siguiente.
+    </p>
+    <div id="obligacionesLista" class="promo-list"></div>
+  </section>
+
+  <section class="card card-utilidad">
+    <h3>Antes de confiar en estas fechas</h3>
+    <p class="hint">
+      Las fechas anuales están tomadas de fuentes oficiales y se repiten cada año, pero
+      las normas cambian. Las que aparecen marcadas como <strong>«por confirmar»</strong>
+      no las pude verificar del todo: revísalas con tu contador o con la entidad antes de
+      usarlas como plazo definitivo.
+    </p>
+    <p class="hint">
+      La fecha de la contribución parafiscal es una <strong>estimación</strong>: se calcula
+      en días hábiles sin descontar festivos, así que cae <em>antes</em> que la real. Sirve
+      para avisarte con tiempo, no como fecha oficial.
+    </p>
+  </section>
+
+</div>
+
 <div id="backupPanel" class="tab-panel hidden">
   <section class="card">
     <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-respaldo"></use></svg>Descargar respaldo</h2>
@@ -1622,38 +1655,41 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261014-161611"></script>
-<script src="assets/guardado-pendiente.js?v=20261014-161611"></script>
-<script src="assets/nombres-archivo.js?v=20261014-161611"></script>
-<script src="assets/iconos.js?v=20261014-161611"></script>
-<script src="assets/version.js?v=20261014-161611"></script>
-<script src="assets/trm.js?v=20261014-161611"></script>
+<script src="assets/logo-animado.js?v=20261014-173432"></script>
+<script src="assets/guardado-pendiente.js?v=20261014-173432"></script>
+<script src="assets/nombres-archivo.js?v=20261014-173432"></script>
+<script src="assets/iconos.js?v=20261014-173432"></script>
+<script src="assets/version.js?v=20261014-173432"></script>
+<script src="assets/trm.js?v=20261014-173432"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261014-161611"></script>
-<script src="assets/country-codes-data.js?v=20261014-161611"></script>
+<script src="assets/catalog-data.js?v=20261014-173432"></script>
+<script src="assets/country-codes-data.js?v=20261014-173432"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/sales-parse.js?v=20261014-161611"></script>
-<script src="assets/cupon-imagen.js?v=20261014-161611"></script>
-<script src="assets/publicidad-imagen.js?v=20261014-161611"></script>
-<script src="assets/precios-datos.js?v=20261014-161611"></script>
-<script src="app.js?v=20261014-161611"></script>
-<script src="assets/marca.js?v=20261014-161611"></script>
-<script src="assets/vuelos-bloque.js?v=20261014-161611"></script>
-<script src="assets/paquetes.js?v=20261014-161611"></script>
-<script src="assets/inicio.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261014-161611"></script>
-<script src="assets/clientes-autocompletar.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261014-161611"></script>
-<script src="assets/precios-ui.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-history.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261014-161611"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261014-161611"></script>
+<script src="assets/obligaciones-datos.js?v=20261014-173432"></script>
+<script src="assets/obligaciones.js?v=20261014-173432"></script>
+<script src="assets/sales-parse.js?v=20261014-173432"></script>
+<script src="assets/cupon-imagen.js?v=20261014-173432"></script>
+<script src="assets/publicidad-imagen.js?v=20261014-173432"></script>
+<script src="assets/precios-datos.js?v=20261014-173432"></script>
+<script src="app.js?v=20261014-173432"></script>
+<script src="assets/marca.js?v=20261014-173432"></script>
+<script src="assets/vuelos-bloque.js?v=20261014-173432"></script>
+<script src="assets/paquetes.js?v=20261014-173432"></script>
+<script src="assets/inicio.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261014-173432"></script>
+<script src="assets/clientes-autocompletar.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261014-173432"></script>
+<script src="assets/precios-ui.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-history.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261014-173432"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261014-173432"></script>
 </body>
 </html>
