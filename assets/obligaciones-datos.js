@@ -18,6 +18,13 @@
 // Revisado en octubre de 2026.
 
 (function (global) {
+  // Cuando se revisaron estas fechas contra sus fuentes.
+  //
+  // Va aqui y no en un comentario porque el usuario tiene que VERLA: una fecha
+  // que rueda sola cada año parece siempre fresca, aunque la norma haya
+  // cambiado hace tres. La pantalla la muestra y la marca cuando envejece.
+  const REVISADO_EN = '2026-10-14';
+
   // `mesDia` es la fecha limite dentro del año, en formato MM-DD.
   // `avisoDias` es con cuanta anticipacion vale la pena que salga en Inicio.
   const OBLIGACIONES = [
@@ -128,6 +135,25 @@
       confirmar: false,
     },
     {
+      id: 'revision',
+      nombre: 'Revisar que estas fechas sigan vigentes',
+      entidad: 'Blue Travel · recordatorio interno',
+      periodicidad: 'anual',
+      // A mediados de diciembre: antes del cierre de año y con tiempo de
+      // sobra para llegar al 1 de enero, que es cuando se abre la ventana del
+      // RNT y de la matricula mercantil.
+      mesDia: '12-15',
+      avisoDias: 45,
+      consecuencia: 'Ninguna legal. El riesgo es otro: que la app siga '
+        + 'avisando con una fecha que la norma ya cambió, y lo haga con total '
+        + 'seguridad.',
+      nota: 'Esta no la exige nadie: es para que el calendario no envejezca '
+        + 'en silencio. El año rueda solo, pero nada comprueba que la norma '
+        + 'siga diciendo lo mismo. Cada tarjeta tiene su enlace a la fuente.',
+      base: 'Decisión propia, no una norma',
+      confirmar: false,
+    },
+    {
       id: 'tributarias',
       nombre: 'Declaraciones tributarias',
       entidad: 'DIAN · Alcaldía',
@@ -146,4 +172,5 @@
   ];
 
   global.OBLIGACIONES = OBLIGACIONES;
+  global.OBLIGACIONES_REVISADO_EN = REVISADO_EN;
 })(window);

@@ -149,6 +149,33 @@ function tarjeta(ob) {
   return div;
 }
 
+// Cuando se revisaron estas fechas contra sus fuentes, a la vista.
+//
+// Sin esto el calendario parece siempre fresco: el año rueda solo, asi que una
+// fecha de 2026 se muestra como "31 de marzo de 2029" sin que nada avise de
+// que nadie ha comprobado si la norma sigue diciendo eso.
+const DIAS_PARA_ENVEJECER = 365;
+
+function pintarSello() {
+  const sello = el('obligacionesSello');
+  if (!sello) return;
+
+  const revisado = window.OBLIGACIONES_REVISADO_EN;
+  if (!revisado) { sello.textContent = ''; return; }
+
+  const dias = -O.diasHasta(revisado);
+  const viejo = dias > DIAS_PARA_ENVEJECER;
+
+  const cola = viejo
+    ? ' — hace más de un año. Conviene comprobarlas de nuevo: el año rueda solo, '
+      + 'pero la norma pudo cambiar.'
+    : '.';
+
+  sello.classList.toggle('vieja', viejo);
+  sello.innerHTML = (viejo ? window.icono('alerta') : window.icono('check'))
+    + ` Fechas revisadas contra sus fuentes el ${fechaLarga(revisado)}${cola}`;
+}
+
 function pintar() {
   const lista = el('obligacionesLista');
   if (!lista) return;
@@ -161,6 +188,8 @@ function pintar() {
     .sort((a, b) => (orden[a.info.estado] - orden[b.info.estado])
       || ((a.info.dias ?? 9999) - (b.info.dias ?? 9999)))
     .forEach(({ ob }) => lista.appendChild(tarjeta(ob)));
+
+  pintarSello();
 
   const avisan = O.obligacionesQueAvisan(window.OBLIGACIONES, cumplidas);
   const cuenta = el('obligacionesCuenta');

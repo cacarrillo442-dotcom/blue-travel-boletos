@@ -1320,6 +1320,22 @@ textarea {
   color: var(--ink-soft);
 }
 
+/* El sello de cuando se revisaron las fechas. En verde mientras es reciente;
+   cuando pasa el año se vuelve ambar, que es el color con el que esta app
+   pide atencion. */
+.sello-revision {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-neutral);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.sello-revision.vieja {
+  color: #8a5a08;
+  font-weight: 500;
+}
+
 /* Lo que NO pude verificar. Se dice con el mismo ambar de los avisos, porque
    es exactamente eso: algo que el usuario tiene que ir a comprobar. */
 .obligacion-confirmar {
@@ -3248,6 +3264,7 @@ select:focus {
      la consecuencia quedaban apagados justo donde hay que leerlos. */
   :root:not([data-tema="claro"]) .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
+  :root:not([data-tema="claro"]) .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
 
   :root:not([data-tema="claro"]) .conexion-aviso {
     background: var(--tinte-ambar-bg);
@@ -3387,6 +3404,7 @@ select:focus {
 /* Ver la nota del bloque de arriba: 2,75 y 2,99 de contraste. */
 :root[data-tema="oscuro"] .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
+:root[data-tema="oscuro"] .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
 
 :root[data-tema="oscuro"] .conexion-aviso {
   background: var(--tinte-ambar-bg);
