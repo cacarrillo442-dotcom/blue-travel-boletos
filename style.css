@@ -1320,6 +1320,25 @@ textarea {
   color: var(--ink-soft);
 }
 
+/* Aviso propio de la pantalla de obligaciones, para no sacar la franja de
+   "perdiste la sesion" encima de toda la app por algo que solo afecta aqui. */
+.aviso-permiso {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: #fff4e0;
+  border: 1px solid #f0d9ac;
+  color: #8a5a08;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.aviso-permiso code {
+  background: rgba(138, 90, 8, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
 /* El sello de cuando se revisaron las fechas. En verde mientras es reciente;
    cuando pasa el año se vuelve ambar, que es el color con el que esta app
    pide atencion. */
@@ -3265,6 +3284,11 @@ select:focus {
   :root:not([data-tema="claro"]) .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
   :root:not([data-tema="claro"]) .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
+  :root:not([data-tema="claro"]) .aviso-permiso {
+    background: var(--tinte-ambar-bg);
+    color: var(--tinte-ambar-tinta);
+    border-color: var(--tinte-ambar-tinta);
+  }
 
   :root:not([data-tema="claro"]) .conexion-aviso {
     background: var(--tinte-ambar-bg);
@@ -3405,6 +3429,11 @@ select:focus {
 :root[data-tema="oscuro"] .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
+:root[data-tema="oscuro"] .aviso-permiso {
+  background: var(--tinte-ambar-bg);
+  color: var(--tinte-ambar-tinta);
+  border-color: var(--tinte-ambar-tinta);
+}
 
 :root[data-tema="oscuro"] .conexion-aviso {
   background: var(--tinte-ambar-bg);

@@ -34,6 +34,10 @@ const el = (id) => document.getElementById(id);
 
 let cumplidas = {};
 let unsub = null;
+// Las reglas de Firestore no cubren todavia la coleccion de esta pantalla.
+// El calendario sigue sirviendo -es informacion fija, no depende de la nube-;
+// lo unico que no se puede es dejar constancia de lo cumplido.
+let sinPermiso = false;
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
@@ -129,7 +133,7 @@ function tarjeta(ob) {
 
   // Las variables no se marcan: no es la app quien las lleva, y una marca ahi
   // daria una tranquilidad que no corresponde.
-  if (ob.periodicidad !== 'variable') {
+  if (ob.periodicidad !== 'variable' && !sinPermiso) {
     const periodo = info.periodo || 'siempre';
     const hecha = info.estado === 'cumplida';
     const btn = document.createElement('button');
@@ -189,6 +193,18 @@ function pintar() {
       || ((a.info.dias ?? 9999) - (b.info.dias ?? 9999)))
     .forEach(({ ob }) => lista.appendChild(tarjeta(ob)));
 
+  const aviso = el('obligacionesPermiso');
+  if (aviso) {
+    aviso.classList.toggle('hidden', !sinPermiso);
+    if (sinPermiso) {
+      aviso.innerHTML = window.icono('alerta')
+        + ' <strong>No puedo guardar lo que marques.</strong> Las reglas de Firestore '
+        + 'todavía no incluyen la colección <code>obligaciones_cumplidas</code>, que es '
+        + 'nueva. El calendario funciona igual: lo único que falta es poder dejar '
+        + 'constancia de lo que ya cumpliste. No es tu sesión y volver a entrar no lo arregla.';
+    }
+  }
+
   pintarSello();
 
   const avisan = O.obligacionesQueAvisan(window.OBLIGACIONES, cumplidas);
@@ -218,9 +234,24 @@ onAuthStateChanged(auth, (user) => {
         const v = d.data();
         cumplidas[O.llaveDe(v.obligacion, v.periodo)] = v;
       });
+      sinPermiso = false;
       pintar();
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('obligaciones');
     }, (err) => {
+      // Un "permission-denied" AQUI no significa lo mismo que en el resto de
+      // la app. En boletos o ventas quiere decir que la sesion perdio acceso y
+      // todo esta roto; aqui quiere decir que las reglas de Firestore todavia
+      // no cubren esta coleccion, que es nueva.
+      //
+      // Reportarlo al aviso general sacaba la franja de "tu sesion ya no tiene
+      // permiso... vuelve a iniciar sesion" encima de TODA la app, cuando lo
+      // unico que no funciona es poder marcar una obligacion como hecha. Y
+      // volver a entrar no arregla nada, asi que el consejo era falso.
+      if (err && err.code === 'permission-denied') {
+        sinPermiso = true;
+        pintar();
+        return;
+      }
       if (window.reportarFalloConexion) window.reportarFalloConexion('obligaciones', err);
     });
   } else {
