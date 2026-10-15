@@ -515,18 +515,64 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
 
+/* El titulo de grupo paso de ser un rotulo a un boton que pliega. Conserva
+   el mismo aspecto -no debe competir con los modulos- pero ahora responde. */
 .nav-grupo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   margin: 16px 0 6px;
-  padding-left: 12px;
+  padding: 2px 10px 2px 12px;
+  background: none;
+  border: 0;
+  font-family: inherit;
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #7d99ad;
+  text-align: left;
+  cursor: pointer;
 }
 
-.nav-grupo:first-child {
+.nav-grupo:hover {
+  color: #a8c4d8;
+}
+
+.nav-grupo-bloque:first-of-type .nav-grupo {
   margin-top: 4px;
+}
+
+/* La flecha, el mismo gesto que el de los desplegables del resto de la app. */
+.nav-grupo::after {
+  content: '';
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.18s ease;
+}
+
+.nav-grupo-bloque.cerrado .nav-grupo::after {
+  transform: rotate(-45deg);
+}
+
+.nav-grupo-bloque.cerrado .nav-grupo-items {
+  display: none;
+}
+
+/* La suma de pendientes del grupo. Solo tiene sentido con el grupo cerrado:
+   abierto, cada modulo ya muestra el suyo y verlo dos veces confunde. */
+.nav-grupo-conteo {
+  margin-left: 0;
+}
+
+.nav-grupo-conteo:empty,
+.nav-grupo-bloque:not(.cerrado) .nav-grupo-conteo {
+  display: none;
 }
 
 .sidebar-nav .tab-btn {
@@ -2509,6 +2555,7 @@ select:focus {
 
 @media (prefers-reduced-motion: reduce) {
   .plegable summary::after { transition: none; }
+  .nav-grupo::after { transition: none; }
 }
 
 /* ---------- Cifras dentro del saludo ----------
@@ -3166,6 +3213,13 @@ select:focus {
 
   body.barra-plegada .sidebar-nav {
     padding: 4px 8px 14px;
+  }
+
+  /* Plegada la barra, las cabeceras de grupo no se ven: si ademas se respetara
+     el plegado, los modulos de un grupo cerrado quedarian ocultos sin ninguna
+     forma de sacarlos. En modo icono se muestran todos. */
+  body.barra-plegada .nav-grupo-bloque.cerrado .nav-grupo-items {
+    display: block;
   }
 
   body.barra-plegada .sidebar-pie {

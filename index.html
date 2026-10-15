@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261014-183605" />
+<meta name="app-version" content="20261015-175214" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261014-183605" />
-<script src="assets/tema.js?v=20261014-183605"></script>
+<link rel="stylesheet" href="style.css?v=20261015-175214" />
+<script src="assets/tema.js?v=20261015-175214"></script>
 </head>
 <body>
 
@@ -143,35 +143,66 @@
     <button type="button" class="tab-btn active" data-tab="homePanel" aria-current="page"
       data-desc="Cómo va la semana y qué quedó pendiente."><svg class="ic" aria-hidden="true"><use href="#ic-inicio"></use></svg><span>Inicio</span></button>
 
-    <p class="nav-grupo">Generar</p>
-    <button type="button" class="tab-btn" data-tab="ticketsPanel"
+    <div class="nav-grupo-bloque" data-grupo="generar">
+      <button type="button" class="nav-grupo" aria-expanded="true" aria-controls="grupo-generar">
+        <span>Generar</span>
+        <span class="nav-conteo nav-grupo-conteo" aria-hidden="true"></span>
+      </button>
+      <div class="nav-grupo-items" id="grupo-generar">
+        <button type="button" class="tab-btn" data-tab="ticketsPanel"
       data-desc="Arma el boleto del pasajero y descárgalo en PDF."><svg class="ic" aria-hidden="true"><use href="#ic-boleto"></use></svg><span>Boletos</span></button>
-    <button type="button" class="tab-btn" data-tab="quotesPanel"
+        <button type="button" class="tab-btn" data-tab="quotesPanel"
       data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
-    <button type="button" class="tab-btn" data-tab="packagesPanel"
+        <button type="button" class="tab-btn" data-tab="packagesPanel"
       data-desc="Cotiza un circuito de varios días, con su itinerario."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes</span></button>
-    <button type="button" class="tab-btn" data-tab="invoicePanel"
+        <button type="button" class="tab-btn" data-tab="invoicePanel"
       data-desc="Emite la factura cuando el cliente la pide."><svg class="ic" aria-hidden="true"><use href="#ic-factura"></use></svg><span>Facturas</span></button>
+      </div>
+    </div>
 
-    <p class="nav-grupo">Clientes</p>
-    <button type="button" class="tab-btn" data-tab="clientsPanel"
+    <div class="nav-grupo-bloque" data-grupo="seguimiento">
+      <button type="button" class="nav-grupo" aria-expanded="true" aria-controls="grupo-seguimiento">
+        <span>Seguimiento</span>
+        <span class="nav-conteo nav-grupo-conteo" aria-hidden="true"></span>
+      </button>
+      <div class="nav-grupo-items" id="grupo-seguimiento">
+        <button type="button" class="tab-btn" data-tab="clientsPanel"
       data-desc="Tu base de contactos y las listas para campañas."><svg class="ic" aria-hidden="true"><use href="#ic-clientes"></use></svg><span>Clientes</span></button>
-    <button type="button" class="tab-btn" data-tab="tripsPanel"
+        <button type="button" class="tab-btn" data-tab="tripsPanel"
       data-desc="A quién le toca recordarle el check-in."><svg class="ic" aria-hidden="true"><use href="#ic-viajes"></use></svg><span>Próximos viajes</span><span class="nav-conteo" id="navConteoViajes"></span></button>
-    <button type="button" class="tab-btn" data-tab="couponsPanel"
+        <button type="button" class="tab-btn" data-tab="couponsPanel"
       data-desc="Genera cupones y lleva el control de los que ya se usaron."><svg class="ic" aria-hidden="true"><use href="#ic-cupon"></use></svg><span>Cupones</span><span class="nav-conteo" id="navConteoCupones"></span></button>
-    <button type="button" class="tab-btn" data-tab="pricesPanel"
-      data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
+      </div>
+    </div>
 
-    <p class="nav-grupo">Consulta</p>
-    <button type="button" class="tab-btn" data-tab="historyPanel"
-      data-desc="Todo lo que has generado, listo para volver a usar."><svg class="ic" aria-hidden="true"><use href="#ic-historial"></use></svg><span>Historial</span></button>
-    <button type="button" class="tab-btn" data-tab="salesPanel"
+    <div class="nav-grupo-bloque" data-grupo="negocio">
+      <button type="button" class="nav-grupo" aria-expanded="true" aria-controls="grupo-negocio">
+        <span>El negocio</span>
+        <span class="nav-conteo nav-grupo-conteo" aria-hidden="true"></span>
+      </button>
+      <div class="nav-grupo-items" id="grupo-negocio">
+        <button type="button" class="tab-btn" data-tab="salesPanel"
       data-desc="Ingresos, reparto semanal y cierre por mes."><svg class="ic" aria-hidden="true"><use href="#ic-ventas"></use></svg><span>Ventas</span></button>
-    <button type="button" class="tab-btn" data-tab="obligacionesPanel"
+        <button type="button" class="tab-btn" data-tab="pricesPanel"
+      data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
+        <button type="button" class="tab-btn" data-tab="historyPanel"
+      data-desc="Todo lo que has generado, listo para volver a usar."><svg class="ic" aria-hidden="true"><use href="#ic-historial"></use></svg><span>Historial</span></button>
+      </div>
+    </div>
+
+    <div class="nav-grupo-bloque" data-grupo="admin">
+      <button type="button" class="nav-grupo" aria-expanded="false" aria-controls="grupo-admin">
+        <span>Administración</span>
+        <span class="nav-conteo nav-grupo-conteo" aria-hidden="true"></span>
+      </button>
+      <div class="nav-grupo-items" id="grupo-admin">
+        <button type="button" class="tab-btn" data-tab="obligacionesPanel"
       data-desc="Qué hay que renovar y cuándo, para que no se pase un plazo."><svg class="ic" aria-hidden="true"><use href="#ic-calendario"></use></svg><span>Obligaciones</span><span class="nav-conteo" id="navConteoObligaciones"></span></button>
-    <button type="button" class="tab-btn" data-tab="backupPanel"
+        <button type="button" class="tab-btn" data-tab="backupPanel"
       data-desc="Guarda una copia de todo, por si algo pasa."><svg class="ic" aria-hidden="true"><use href="#ic-respaldo"></use></svg><span>Respaldo</span></button>
+      </div>
+    </div>
+
   </nav>
 
   <div class="sidebar-pie">
@@ -1657,41 +1688,42 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261014-183605"></script>
-<script src="assets/guardado-pendiente.js?v=20261014-183605"></script>
-<script src="assets/nombres-archivo.js?v=20261014-183605"></script>
-<script src="assets/iconos.js?v=20261014-183605"></script>
-<script src="assets/version.js?v=20261014-183605"></script>
-<script src="assets/trm.js?v=20261014-183605"></script>
+<script src="assets/logo-animado.js?v=20261015-175214"></script>
+<script src="assets/guardado-pendiente.js?v=20261015-175214"></script>
+<script src="assets/nombres-archivo.js?v=20261015-175214"></script>
+<script src="assets/iconos.js?v=20261015-175214"></script>
+<script src="assets/version.js?v=20261015-175214"></script>
+<script src="assets/trm.js?v=20261015-175214"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261014-183605"></script>
-<script src="assets/country-codes-data.js?v=20261014-183605"></script>
+<script src="assets/catalog-data.js?v=20261015-175214"></script>
+<script src="assets/country-codes-data.js?v=20261015-175214"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261014-183605"></script>
-<script src="assets/obligaciones.js?v=20261014-183605"></script>
-<script src="assets/sales-parse.js?v=20261014-183605"></script>
-<script src="assets/cupon-imagen.js?v=20261014-183605"></script>
-<script src="assets/publicidad-imagen.js?v=20261014-183605"></script>
-<script src="assets/precios-datos.js?v=20261014-183605"></script>
-<script src="app.js?v=20261014-183605"></script>
-<script src="assets/marca.js?v=20261014-183605"></script>
-<script src="assets/vuelos-bloque.js?v=20261014-183605"></script>
-<script src="assets/paquetes.js?v=20261014-183605"></script>
-<script src="assets/inicio.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261014-183605"></script>
-<script src="assets/clientes-autocompletar.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261014-183605"></script>
-<script src="assets/precios-ui.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-history.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261014-183605"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261014-183605"></script>
+<script src="assets/obligaciones-datos.js?v=20261015-175214"></script>
+<script src="assets/obligaciones.js?v=20261015-175214"></script>
+<script src="assets/sales-parse.js?v=20261015-175214"></script>
+<script src="assets/cupon-imagen.js?v=20261015-175214"></script>
+<script src="assets/publicidad-imagen.js?v=20261015-175214"></script>
+<script src="assets/precios-datos.js?v=20261015-175214"></script>
+<script src="app.js?v=20261015-175214"></script>
+<script src="assets/nav-grupos.js?v=20261015-175214"></script>
+<script src="assets/marca.js?v=20261015-175214"></script>
+<script src="assets/vuelos-bloque.js?v=20261015-175214"></script>
+<script src="assets/paquetes.js?v=20261015-175214"></script>
+<script src="assets/inicio.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261015-175214"></script>
+<script src="assets/clientes-autocompletar.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261015-175214"></script>
+<script src="assets/precios-ui.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-history.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261015-175214"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261015-175214"></script>
 </body>
 </html>
