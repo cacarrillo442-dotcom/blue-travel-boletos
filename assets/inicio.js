@@ -325,8 +325,12 @@
   // es un acumulado que solo sube, nunca baja y nunca pide una decision.
   // Ocupaba un tercio del sitio mas visible de la app.
   //
-  // "Clientes nuevos" habria sido buen reemplazo, pero no se puede calcular:
-  // ninguno de los clientes guardados tiene fecha de creacion.
+  // "Clientes nuevos" se descarto, pero no por la razon que decia antes este
+  // comentario: los clientes SI tienen fecha de alta -el campo `fecha`-; se
+  // busco por error uno llamado `creado`. La razon real es otra: los 86 se
+  // guardaron en agosto y septiembre de 2026, cuando se empezo a usar el
+  // modulo, asi que la cifra mediria cuando se cargaron y no cuando llegaron.
+  // Vale la pena volver a mirarla cuando haya un año de altas reales.
   //
   // Quedan tres que si se mueven mes a mes, con la ganancia de primera porque
   // es la que manda: si viene abajo, hay que vender hoy.

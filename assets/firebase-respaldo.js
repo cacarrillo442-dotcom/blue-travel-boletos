@@ -18,8 +18,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Todo lo que vive en Firestore. Si algun dia se agrega una coleccion, va aqui.
+// Toda coleccion que exista tiene que estar aqui. Faltaban dos: los cupones
+// -promesas de plata a clientes, con su numero consecutivo y su vencimiento- y
+// las obligaciones cumplidas. Ninguna de las dos entraba en el respaldo, asi
+// que restaurar despues de un problema las habria dado por perdidas.
 const COLECCIONES = [
-  'clientes', 'boletos', 'facturas', 'ventas', 'viajes',
+  'clientes', 'boletos', 'facturas', 'ventas', 'viajes', 'cupones',
+  'obligaciones_cumplidas',
   'config', 'aerolineas_catalogo', 'aeropuertos_catalogo',
 ];
 
@@ -74,10 +79,24 @@ el('respaldoBajarBtn').addEventListener('click', async () => {
 
   try {
     const datos = {};
+    // Cada coleccion se lee por separado. Antes iban todas en el mismo intento,
+    // y si UNA fallaba -por ejemplo por permisos, al agregar una coleccion nueva
+    // antes de actualizar las reglas de Firestore- no se descargaba nada. Un
+    // respaldo al que le falta una coleccion sirve; uno que no existe, no.
+    const saltadas = [];
     for (const nombre of COLECCIONES) {
-      const snap = await getDocs(collection(db, nombre));
-      datos[nombre] = snap.docs.map((d) => ({ __id: d.id, ...serializar(d.data()) }));
+      try {
+        const snap = await getDocs(collection(db, nombre));
+        datos[nombre] = snap.docs.map((d) => ({ __id: d.id, ...serializar(d.data()) }));
+      } catch (err) {
+        saltadas.push(nombre);
+      }
       estado().textContent = `Leyendo… ${resumen(datos)}`;
+    }
+    // Si no se pudo leer ninguna, no es un problema de una coleccion: es la
+    // sesion o la red, y un archivo vacio solo confundiria.
+    if (saltadas.length === COLECCIONES.length) {
+      throw new Error('No se pudo leer ninguna colección.');
     }
 
     const respaldo = {
@@ -98,7 +117,12 @@ el('respaldoBajarBtn').addEventListener('click', async () => {
     URL.revokeObjectURL(url);
 
     const kb = Math.round(blob.size / 1024);
-    estado().textContent = `✅ Respaldo descargado (${kb} KB): ${resumen(datos)}.`;
+    // Si alguna coleccion se salto, se dice: un respaldo incompleto que parece
+    // completo es justo lo que no se quiere descubrir el dia que hace falta.
+    estado().textContent = `✅ Respaldo descargado (${kb} KB): ${resumen(datos)}.`
+      + (saltadas.length
+        ? ` ⚠️ No se pudo leer: ${saltadas.join(', ')}. Revisa que las reglas de Firestore las incluyan.`
+        : '');
   } catch (e) {
     estado().textContent = `No se pudo generar el respaldo: ${e.message}`;
   }
