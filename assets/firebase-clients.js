@@ -52,6 +52,73 @@ function setStatus(msg, ok) {
   setTimeout(() => { saveClientStatus.textContent = ''; }, 3500);
 }
 
+// ---------- Autorizacion verificable ----------
+//
+// La Ley 1581 no se conforma con que el cliente haya dicho que si: hay que
+// poder demostrarlo. Una casilla marcada sola no demuestra nada -ni cuando ni
+// como-, y de hecho los 84 "si" que habia hasta octubre de 2026 no tenian
+// ninguna evidencia detras.
+//
+// Ahora cada autorizacion lleva fecha y medio. Solo con los dos cuenta como
+// verificable, que es lo que mide el objetivo O4 del plan de marketing. Los
+// valores son los de `catalogos.autorizacion_medio` del plan.
+const MEDIOS_AUTORIZACION = [
+  { valor: 'whatsapp', etiqueta: 'Por WhatsApp (queda el mensaje)' },
+  { valor: 'formulario', etiqueta: 'En un formulario' },
+  { valor: 'correo', etiqueta: 'Por correo' },
+  { valor: 'verbal_registrado', etiqueta: 'De palabra, y lo anoté' },
+];
+
+function etiquetaMedio(valor) {
+  const m = MEDIOS_AUTORIZACION.find((x) => x.valor === valor);
+  return m ? m.etiqueta.replace(/\s*\(.*\)$/, '') : valor;
+}
+
+function hoyISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fechaCorta(iso) {
+  if (!iso) return '';
+  const [a, m, d] = iso.split('-').map(Number);
+  return new Date(a, m - 1, d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Verificable = dijo que si, y quedo registrado cuando y como.
+function autorizacionVerificable(c) {
+  return !!(c && c.autorizaPromos && c.autorizacionFecha && c.autorizacionMedio);
+}
+window.autorizacionVerificable = autorizacionVerificable;
+
+function opcionesMedio(seleccionado) {
+  return '<option value="">-- Elige cómo --</option>'
+    + MEDIOS_AUTORIZACION.map((m) => `<option value="${m.valor}"${m.valor === seleccionado ? ' selected' : ''}>${escapeHtml(m.etiqueta)}</option>`).join('');
+}
+
+// En la cotizacion el selector solo aparece si se marca la casilla: no hay
+// medio que preguntar para un "no".
+(function () {
+  const casilla = document.getElementById('qClientPromoConsent');
+  const envoltura = document.getElementById('qClientConsentMedioWrap');
+  const selector = document.getElementById('qClientConsentMedio');
+  if (!casilla || !envoltura || !selector) return;
+  selector.innerHTML = opcionesMedio('');
+  casilla.addEventListener('change', () => {
+    envoltura.classList.toggle('hidden', !casilla.checked);
+    if (!casilla.checked) selector.value = '';
+  });
+})();
+
+// Lo que se ve en la columna "Promos" de la lista.
+function celdaAutorizacion(c) {
+  if (!c.autorizaPromos) return 'No';
+  if (autorizacionVerificable(c)) {
+    return `Sí <span class="autorizacion-evidencia">· ${escapeHtml(etiquetaMedio(c.autorizacionMedio))}, ${escapeHtml(fechaCorta(c.autorizacionFecha))}</span>`;
+  }
+  return 'Sí <span class="autorizacion-sin-evidencia">· sin evidencia</span>';
+}
+
 loginBtn.addEventListener('click', async () => {
   loginError.textContent = '';
   const email = loginEmail.value.trim();
@@ -126,9 +193,19 @@ function renderClients() {
         <td data-label="Correo"><input type="text" class="edit-correo" value="${escapeHtml(c.correo || '')}" /></td>
         <td data-label="Teléfono"><input type="text" class="edit-telefono" value="${escapeHtml(c.telefono || '')}" /></td>
         <td data-label="Ruta"><input type="text" class="edit-ruta" value="${escapeHtml(c.ruta || '')}" /></td>
-        <td data-label="Promos"><input type="checkbox" class="edit-promos" ${c.autorizaPromos ? 'checked' : ''} /></td>
+        <td data-label="Promos">
+          <label class="checkbox-label"><input type="checkbox" class="edit-promos" ${c.autorizaPromos ? 'checked' : ''} /> Autoriza</label>
+          <div class="edit-autorizacion ${c.autorizaPromos ? '' : 'hidden'}">
+            <select class="edit-medio autorizacion-medio">${opcionesMedio(c.autorizacionMedio || '')}</select>
+            <input type="date" class="edit-autorizacion-fecha" value="${escapeHtml(c.autorizacionFecha || hoyISO())}" />
+          </div>
+        </td>
         <td></td>
       `;
+      const casillaEd = tr.querySelector('.edit-promos');
+      casillaEd.addEventListener('change', () => {
+        tr.querySelector('.edit-autorizacion').classList.toggle('hidden', !casillaEd.checked);
+      });
       const saveBtn = document.createElement('button');
       saveBtn.type = 'button';
       saveBtn.className = 'btn-add';
@@ -139,12 +216,29 @@ function renderClients() {
       cancelBtn.innerHTML = window.icono('eliminar');
       cancelBtn.title = 'Cancelar';
       saveBtn.addEventListener('click', async () => {
+        const autoriza = tr.querySelector('.edit-promos').checked;
+        const medio = tr.querySelector('.edit-medio').value;
+        const fechaAut = tr.querySelector('.edit-autorizacion-fecha').value;
+
+        // Marcar "si" de aqui en adelante exige decir como se obtuvo. Lo que
+        // ya estaba marcado sin evidencia se puede dejar como esta: no se
+        // obliga a inventar un medio para guardar otro cambio del cliente.
+        const yaEstaba = c.autorizaPromos && !autorizacionVerificable(c) && !medio;
+        if (autoriza && !medio && !yaEstaba) {
+          alert('Elige cómo autorizó el cliente. Sin eso la autorización no se puede demostrar.');
+          return;
+        }
+
         const updated = {
           nombre: tr.querySelector('.edit-nombre').value.trim(),
           correo: tr.querySelector('.edit-correo').value.trim(),
           telefono: tr.querySelector('.edit-telefono').value.trim(),
           ruta: tr.querySelector('.edit-ruta').value.trim(),
-          autorizaPromos: tr.querySelector('.edit-promos').checked,
+          autorizaPromos: autoriza,
+          // Si deja de autorizar se borra la evidencia: la del "si" anterior
+          // ya no describe lo que el cliente quiere hoy.
+          autorizacionMedio: autoriza ? medio : '',
+          autorizacionFecha: autoriza && medio ? (fechaAut || hoyISO()) : '',
         };
         try {
           await updateDoc(doc(db, 'clientes', c.id), updated);
@@ -165,7 +259,7 @@ function renderClients() {
         + `<td data-label="Correo">${escapeHtml(c.correo || '')}</td>`
         + `<td data-label="Teléfono">${escapeHtml(c.telefono || '')}</td>`
         + `<td data-label="Ruta">${escapeHtml(c.ruta || '')}</td>`
-        + `<td data-label="Promos">${c.autorizaPromos ? 'Sí' : 'No'}</td><td></td>`;
+        + `<td data-label="Promos">${celdaAutorizacion(c)}</td><td></td>`;
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'btn-add';
@@ -305,9 +399,15 @@ function pintarResumenCampanas() {
       : 'Todavía ningún cliente ha autorizado recibir promociones.';
     return;
   }
+  // Cuantos de los que dicen "si" lo pueden demostrar. Es el numero que mide
+  // O4, y el que conviene mirar antes de un envio masivo: los demas habria
+  // que volver a preguntarles.
+  const verificables = currentClients.filter(autorizacionVerificable).length;
   aviso.textContent = `${listos} contacto(s) listos para exportar`
     + (sinCorreo > 0 ? ` · ${sinCorreo} autorizan pero no tienen correo válido` : '')
-    + ` · de ${currentClients.length} clientes en total.`;
+    + ` · de ${currentClients.length} clientes en total.`
+    + ` Autorizaciones verificables: ${verificables} de ${autorizan}`
+    + (autorizan > verificables ? ` (${autorizan - verificables} sin evidencia: conviene volver a pedírsela).` : '.');
 }
 
 const campanasBtn = document.getElementById('clientsCampaignCsvBtn');
@@ -440,11 +540,19 @@ saveClientBtn.addEventListener('click', async () => {
   const dest = document.getElementById('qDest').value;
   const ruta = origin && dest ? `${origin} - ${dest}` : '';
   const autorizaPromos = document.getElementById('qClientPromoConsent').checked;
+  const autorizacionMedio = autorizaPromos
+    ? document.getElementById('qClientConsentMedio').value : '';
+  if (autorizaPromos && !autorizacionMedio) {
+    setStatus('⚠️ Elige cómo autorizó el cliente las promociones.', false);
+    return;
+  }
 
   saveClientBtn.disabled = true;
   try {
     await addDoc(collection(db, 'clientes'), {
       nombre, correo, telefono, ruta, autorizaPromos,
+      autorizacionMedio,
+      autorizacionFecha: autorizaPromos ? hoyISO() : '',
       fecha: serverTimestamp(),
     });
     setStatus('✅ Cliente guardado.', true);

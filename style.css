@@ -1311,6 +1311,26 @@ textarea {
   color: var(--acento);
 }
 
+/* ---------- Autorizacion de publicidad ----------
+   Al lado del "Si" va la evidencia, o la falta de ella. Lo sin evidencia va en
+   ambar: no es un error del cliente, es algo pendiente de pedir. */
+.autorizacion-evidencia {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.autorizacion-sin-evidencia {
+  font-size: 0.8rem;
+  color: #8a5a08;
+}
+
+.edit-autorizacion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* ---------- Calendario de obligaciones ----------
 
    Estas tarjetas llevan mucho mas texto que las de un viaje -la norma, la
@@ -3338,6 +3358,7 @@ select:focus {
   :root:not([data-tema="claro"]) .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
   :root:not([data-tema="claro"]) .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
+  :root:not([data-tema="claro"]) .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .aviso-permiso {
     background: var(--tinte-ambar-bg);
     color: var(--tinte-ambar-tinta);
@@ -3483,6 +3504,7 @@ select:focus {
 :root[data-tema="oscuro"] .obligacion-confirmar { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
+:root[data-tema="oscuro"] .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .aviso-permiso {
   background: var(--tinte-ambar-bg);
   color: var(--tinte-ambar-tinta);
