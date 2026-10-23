@@ -250,6 +250,94 @@
     return `id|${v.id || ''}`;
   }
 
+  // ---------- Cliente y origen de cada venta ----------
+  //
+  // El plan de marketing necesita saber de donde vino cada venta -un
+  // referido, redes, alguien que volvio- o no hay forma de saber que funciona.
+  // Pero las ventas entran en bloque con el reporte de Wompi, que trae el pago
+  // y nada mas: ni nombre ni origen. Por eso no se puede exigir al guardar
+  // -romperia la importacion- y se asigna despues, venta por venta.
+  //
+  // Solo desde el 1 de noviembre de 2026. Las anteriores no se tocan: no hay
+  // forma honesta de reconstruir de donde vinieron.
+  const ORIGEN_DESDE = '2026-11-01';
+
+  // Los valores de `catalogos.origen_venta` del plan.
+  const ORIGENES = [
+    { valor: 'recompra', etiqueta: 'Volvió a comprar' },
+    { valor: 'referido', etiqueta: 'Lo refirió alguien' },
+    { valor: 'redes_sociales', etiqueta: 'Redes sociales' },
+    { valor: 'pauta', etiqueta: 'Publicidad pagada' },
+    { valor: 'agencia_anterior', etiqueta: 'Contacto de la agencia anterior' },
+    { valor: 'otro', etiqueta: 'Otro' },
+  ];
+
+  function etiquetaOrigen(valor) {
+    const o = ORIGENES.find((x) => x.valor === valor);
+    return o ? o.etiqueta : (valor || 'Sin dato');
+  }
+
+  function nombreCliente(v) {
+    return String((v && v.cliente) || '').trim();
+  }
+
+  // Le falta algo a esta venta para que el plan la pueda contar.
+  function requiereAsignacion(v) {
+    if (!v || (v.tipo || 'COMPRA') !== 'COMPRA') return false;
+    if ((fechaIngreso(v) || '') < ORIGEN_DESDE) return false;
+    if (!nombreCliente(v) || !v.origen) return true;
+    // Un referido sin saber quien refirio no sirve: no hay a quien darle su
+    // cupon ni forma de medir quien trae clientes.
+    return v.origen === 'referido' && !String(v.referidoPor || '').trim();
+  }
+
+  // Quien pago antes con esta misma tarjeta, si ya se le habia asignado. Es la
+  // sugerencia mas util que hay: el que repite casi siempre paga con la misma.
+  //
+  // Solo con numeros de tarjeta reales. Hay ventas con el TIPO de tarjeta
+  // ("DEBITO INTERNACIONAL") guardado en ese campo por un fallo viejo del
+  // importador, y con ellas se sugeriria a un cliente cualquiera.
+  function sugerenciaPorTarjeta(v, ventas) {
+    const tarjeta = String((v && v.tarjeta) || '').trim();
+    if (!/\*+\d{4}$/.test(tarjeta)) return null;
+    const previas = (ventas || [])
+      .filter((x) => x !== v && x.id !== v.id
+        && String(x.tarjeta || '').trim() === tarjeta && nombreCliente(x))
+      .sort((a, b) => (fechaIngreso(b) < fechaIngreso(a) ? -1 : 1));
+    if (!previas.length) return null;
+    const p = previas[0];
+    return { cliente: nombreCliente(p), clienteId: p.clienteId || '', desde: fechaIngreso(p) };
+  }
+
+  // Cuantas de las ventas que cuentan ya estan asignadas. Es el objetivo O5.
+  function avanceAsignacion(ventas) {
+    const cuentan = (ventas || []).filter((v) => (v.tipo || 'COMPRA') === 'COMPRA'
+      && (fechaIngreso(v) || '') >= ORIGEN_DESDE);
+    const asignadas = cuentan.filter((v) => !requiereAsignacion(v)).length;
+    return {
+      total: cuentan.length,
+      asignadas,
+      pendientes: cuentan.length - asignadas,
+      porcentaje: cuentan.length ? Math.round((asignadas / cuentan.length) * 100) : null,
+    };
+  }
+
+  // A que documento va cada fila al guardar una importacion.
+  //
+  // Al que YA existe para esa venta, si existe; si no, al id recien generado.
+  // Con la casilla "actualizar" se reescriben tambien las ya guardadas, y
+  // usar siempre el id nuevo creaba duplicados: el codigo de autorizacion no
+  // siempre se lee igual ("002114" un dia, 2114 otro), asi que el id generado
+  // hoy no coincide con el guardado ayer. Es la misma trampa que `claveDe`
+  // resolvio para la importacion normal; este camino se la saltaba.
+  function destinosDeGuardado(lote, guardadas) {
+    const idPorClave = new Map((guardadas || []).map((v) => [claveDe(v), v.id]));
+    return (lote || []).map((v) => {
+      const { id, ...datos } = v;
+      return { destino: idPorClave.get(claveDe(v)) || id, datos };
+    });
+  }
+
   // Quita repetidas dentro del mismo lote (varios reportes que se solapan).
   function dedupe(ventas) {
     const vistas = new Map();
@@ -711,6 +799,13 @@
     dedupe,
     idDe,
     claveDe,
+    destinosDeGuardado,
+    ORIGEN_DESDE,
+    ORIGENES,
+    etiquetaOrigen,
+    requiereAsignacion,
+    sugerenciaPorTarjeta,
+    avanceAsignacion,
     corteDe,
     inicioDeCorte,
     fechaIngreso,

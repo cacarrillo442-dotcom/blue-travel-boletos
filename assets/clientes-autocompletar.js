@@ -118,6 +118,7 @@
     conectar('invBuyerName', {});
     // Venta manual: solo sugiere el nombre, no hay telefono ni correo que llenar.
     conectar('mvCliente', {});
+    conectar('mvReferidoPor', {});
     if (window.alCambiarClientes) window.alCambiarClientes(pintar);
   }
 

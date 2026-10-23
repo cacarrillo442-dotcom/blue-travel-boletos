@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, onSnapshot, writeBatch, setDoc, deleteDoc,
+  getFirestore, collection, doc, onSnapshot, writeBatch, setDoc, deleteDoc, updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -50,6 +50,8 @@ onAuthStateChanged(auth, (user) => {
       pintarSemana();
       pintarDashboard();
       pintarManuales();
+      pintarAsignaciones();
+      if (window.pintarInicio) window.pintarInicio();
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('ventas');
     }, (err) => {
       if (window.reportarFalloConexion) window.reportarFalloConexion('ventas', err);
@@ -679,12 +681,18 @@ el('importConfirmBtn').addEventListener('click', async () => {
   importStatus.textContent = `Guardando ${lote.length} ventas…`;
 
   try {
+    // Cada fila al documento que ya existe para esa venta: ver
+    // `destinosDeGuardado` en sales-parse.js.
+    const destinos = V.destinosDeGuardado(lote, ventas);
+
     // Firestore acepta hasta 500 operaciones por lote.
-    for (let i = 0; i < lote.length; i += 400) {
+    for (let i = 0; i < destinos.length; i += 400) {
       const batch = writeBatch(db);
-      lote.slice(i, i + 400).forEach((v) => {
-        const { id, ...datos } = v;
-        batch.set(doc(db, 'ventas', id), datos);
+      destinos.slice(i, i + 400).forEach(({ destino, datos }) => {
+        // `merge`: el reporte de Wompi trae los datos del pago, no el cliente
+        // ni el origen que se le asignan despues. Sin fusionar, "actualizar"
+        // borraba esa asignacion al reescribir la venta entera.
+        batch.set(doc(db, 'ventas', destino), datos, { merge: true });
       });
       await batch.commit();
     }
@@ -794,6 +802,163 @@ document.addEventListener('click', async (ev) => {
   }
 });
 
+// ---------- Asignar cliente y origen ----------
+//
+// Despues de importar el reporte de Wompi, cada venta nueva queda aqui hasta
+// que se diga quien compro y de donde vino. Ver `requiereAsignacion` en
+// sales-parse.js para la regla y por que no se exige al importar.
+
+function opcionesOrigen(seleccionado) {
+  return '<option value="">-- Elige --</option>'
+    + V.ORIGENES.map((o) => `<option value="${o.valor}"${o.valor === seleccionado ? ' selected' : ''}>${escapeHtml(o.etiqueta)}</option>`).join('');
+}
+
+document.querySelectorAll('.origen-venta').forEach((s) => { s.innerHTML = opcionesOrigen(''); });
+
+// El nombre escrito, contra la base de clientes. Si coincide se guarda tambien
+// su id, que es lo que permite contar despues cuantas veces compro alguien.
+function clienteDeLaBase(nombre) {
+  const buscado = String(nombre || '').trim().toLowerCase();
+  if (!buscado) return null;
+  const lista = window.obtenerClientes ? window.obtenerClientes() : [];
+  return lista.find((c) => (c.nombre || '').trim().toLowerCase() === buscado) || null;
+}
+
+function marcarPendientes(n) {
+  const pill = el('navConteoVentas');
+  if (pill) pill.textContent = n ? String(n) : '';
+}
+
+window.obtenerVentasPorAsignar = () => (ventas || []).filter(V.requiereAsignacion);
+
+function pintarAsignaciones() {
+  const card = el('asignarCard');
+  const lista = el('asignarLista');
+  if (!card || !lista) return;
+
+  const pendientes = (ventas || []).filter(V.requiereAsignacion)
+    .sort((a, b) => (V.fechaIngreso(a) < V.fechaIngreso(b) ? -1 : 1));
+  const avance = V.avanceAsignacion(ventas || []);
+  marcarPendientes(pendientes.length);
+
+  // Antes del 1 de noviembre no hay nada que asignar y la tarjeta no aporta.
+  card.classList.toggle('hidden', !avance.total);
+  if (!avance.total) return;
+
+  const cuenta = el('asignarCuenta');
+  if (cuenta) {
+    cuenta.textContent = pendientes.length ? String(pendientes.length) : '';
+    cuenta.classList.toggle('hidden', !pendientes.length);
+  }
+  el('asignarAvance').textContent = `Desde el ${V.fechaCorta(V.ORIGEN_DESDE)}: `
+    + `${avance.asignadas} de ${avance.total} ventas con cliente y origen (${avance.porcentaje}%). `
+    + (pendientes.length ? 'Las que faltan van abajo, de la más vieja a la más nueva.'
+      : 'Todas al día.');
+
+  lista.innerHTML = '';
+  if (!pendientes.length) {
+    lista.innerHTML = window.vacio('check', 'Nada por asignar',
+      'Cada venta tiene su cliente y su origen.', true);
+    return;
+  }
+
+  pendientes.forEach((v) => {
+    // Solo se sugiere si todavia no tiene cliente: no se pisa lo ya escrito.
+    const sug = !String(v.cliente || '').trim() ? V.sugerenciaPorTarjeta(v, ventas) : null;
+    const tarjeta = String(v.tarjeta || '').trim();
+    const fila = document.createElement('div');
+    fila.className = 'trip-card asignar-fila';
+    fila.innerHTML = `
+      <div class="trip-info">
+        <div class="trip-name">${V.pesos(v.neto)} <span class="trip-leg">${escapeHtml(V.fechaCorta(V.fechaIngreso(v)))}</span></div>
+        <div class="trip-route">${escapeHtml(v.franquicia || v.plataforma || '')}${/\d{4}$/.test(tarjeta) ? ' · tarjeta ' + escapeHtml(tarjeta.slice(-4)) : ''}</div>
+        <div class="asignar-campos">
+          <label>Cliente
+            <input type="text" class="asig-cliente" list="listaClientes" autocomplete="off"
+              value="${escapeHtml(v.cliente || (sug ? sug.cliente : ''))}" placeholder="Nombre de quien compró" />
+          </label>
+          <label>¿De dónde vino?
+            <select class="asig-origen">${opcionesOrigen(v.origen || (sug ? 'recompra' : ''))}</select>
+          </label>
+          <label class="asig-referido-wrap ${(v.origen || '') === 'referido' ? '' : 'hidden'}">¿Quién lo refirió?
+            <input type="text" class="asig-referido" list="listaClientes" autocomplete="off"
+              value="${escapeHtml(v.referidoPor || '')}" placeholder="Cliente que lo recomendó" />
+          </label>
+        </div>
+        ${sug ? `<p class="hint asignar-sugerencia">Sugerido: esta tarjeta ya la usó ${escapeHtml(sug.cliente)} el ${escapeHtml(V.fechaCorta(sug.desde))}.</p>` : ''}
+        <p class="hint asignar-estado"></p>
+      </div>
+      <div class="trip-actions"><button type="button" class="btn-add asig-guardar">${window.icono('guardar', 'ic-izq')}Guardar</button></div>`;
+
+    const origen = fila.querySelector('.asig-origen');
+    origen.addEventListener('change', () => {
+      fila.querySelector('.asig-referido-wrap').classList.toggle('hidden', origen.value !== 'referido');
+    });
+
+    // El aviso de lo que falta se borra apenas se toca algo: si no, quedaba
+    // diciendo "falta de donde vino" con el origen ya elegido.
+    fila.querySelectorAll('input, select').forEach((campo) => {
+      campo.addEventListener('input', () => { fila.querySelector('.asignar-estado').textContent = ''; });
+      campo.addEventListener('change', () => { fila.querySelector('.asignar-estado').textContent = ''; });
+    });
+
+    fila.querySelector('.asig-guardar').addEventListener('click', async (ev) => {
+      const btn = ev.currentTarget;
+      const estadoFila = fila.querySelector('.asignar-estado');
+      const nombre = fila.querySelector('.asig-cliente').value.trim();
+      const o = origen.value;
+      const referido = fila.querySelector('.asig-referido').value.trim();
+
+      if (!nombre) { estadoFila.textContent = 'Falta el cliente.'; return; }
+      if (!o) { estadoFila.textContent = 'Falta de dónde vino.'; return; }
+      if (o === 'referido' && !referido) { estadoFila.textContent = 'Falta quién lo refirió.'; return; }
+
+      const c = clienteDeLaBase(nombre);
+      const r = o === 'referido' ? clienteDeLaBase(referido) : null;
+
+      btn.disabled = true;
+      try {
+        await updateDoc(doc(db, 'ventas', v.id), {
+          cliente: c ? c.nombre : nombre,
+          clienteId: c ? c.id : '',
+          origen: o,
+          referidoPor: o === 'referido' ? (r ? r.nombre : referido) : '',
+          referidoPorId: o === 'referido' && r ? r.id : '',
+          asignadoEn: new Date().toISOString(),
+        });
+        // La fila desaparece sola con el siguiente pintado.
+      } catch (e) {
+        estadoFila.textContent = `No se pudo guardar: ${e.message}`;
+        btn.disabled = false;
+      }
+    });
+
+    lista.appendChild(fila);
+  });
+}
+
+// En el formulario manual el origen pasa a ser obligatorio para las ventas
+// desde el 1 de noviembre: de una venta registrada a mano siempre se sabe
+// quien compro, asi que no hay razon para dejarla pendiente.
+(function () {
+  const fecha = el('mvFecha');
+  const origen = el('mvOrigen');
+  if (!fecha || !origen) return;
+  const actualizar = () => {
+    const esVenta = (document.querySelector('.mv-tipo:checked') || {}).value !== 'DEVOLUCION';
+    const obligatorio = esVenta && (fecha.value || '') >= V.ORIGEN_DESDE;
+    el('mvClienteNota').textContent = obligatorio ? '(obligatorio)' : '(opcional)';
+    el('mvOrigenNota').textContent = obligatorio ? '(obligatorio)' : '(opcional)';
+    el('mvOrigenFila').classList.toggle('hidden', !esVenta);
+  };
+  fecha.addEventListener('change', actualizar);
+  document.querySelectorAll('.mv-tipo').forEach((r) => r.addEventListener('change', actualizar));
+  origen.addEventListener('change', () => {
+    el('mvReferidoWrap').classList.toggle('hidden', origen.value !== 'referido');
+  });
+  actualizar();
+})();
+
 const mvGuardar = el('mvGuardarBtn');
 if (mvGuardar) {
   mvGuardar.addEventListener('click', async () => {
@@ -805,9 +970,19 @@ if (mvGuardar) {
     const esDevolucion = (document.querySelector('.mv-tipo:checked') || {}).value === 'DEVOLUCION';
     const magnitud = pesosEscritos(el('mvValor').value);
 
+    const origenMv = esDevolucion ? '' : el('mvOrigen').value;
+    const referidoMv = origenMv === 'referido' ? el('mvReferidoPor').value.trim() : '';
+
     if (!auth.currentUser) { estado.textContent = 'Inicia sesión para guardar.'; return; }
     if (!fecha) { estado.textContent = 'Falta la fecha del movimiento.'; return; }
     if (!(magnitud > 0)) { estado.textContent = 'El valor debe ser mayor que cero.'; return; }
+    if (!esDevolucion && fecha >= V.ORIGEN_DESDE) {
+      if (!cliente) { estado.textContent = 'Falta el cliente: desde noviembre cada venta lo lleva.'; return; }
+      if (!origenMv) { estado.textContent = 'Falta de dónde vino la venta.'; return; }
+      if (origenMv === 'referido' && !referidoMv) { estado.textContent = 'Falta quién lo refirió.'; return; }
+    }
+    const cBase = clienteDeLaBase(cliente);
+    const rBase = referidoMv ? clienteDeLaBase(referidoMv) : null;
 
     // Se escribe siempre en positivo y el signo lo pone el tipo: pedir que
     // teclee "-250.000" seria una trampa facil de olvidar, y un signo perdido
@@ -834,7 +1009,12 @@ if (mvGuardar) {
         // las COMPRA. Una devolucion no es un cliente comprando.
         tipo: esDevolucion ? 'DEVOLUCION' : 'COMPRA',
         franquicia: medio, plataforma: medio,
-        cliente, tarjeta: '',
+        cliente: cBase ? cBase.nombre : cliente,
+        clienteId: cBase ? cBase.id : '',
+        origen: origenMv,
+        referidoPor: rBase ? rBase.nombre : referidoMv,
+        referidoPorId: rBase ? rBase.id : '',
+        tarjeta: '',
         comision: null, retefuente: null, reteica: null, reteiva: null,
         manual: true, nota,
         registrado: new Date().toISOString(),
@@ -843,6 +1023,8 @@ if (mvGuardar) {
         ? `✅ Devolución registrada: ${V.pesos(magnitud)} menos el ${V.fechaCorta(fecha)}.`
         : `✅ Agregada: ${V.pesos(valor)} el ${V.fechaCorta(fecha)}.`;
       el('mvValor').value = ''; el('mvCliente').value = ''; el('mvNota').value = '';
+      el('mvOrigen').value = ''; el('mvReferidoPor').value = '';
+      el('mvReferidoWrap').classList.add('hidden');
     } catch (e) {
       estado.textContent = `No se pudo guardar: ${e.message}`;
     }

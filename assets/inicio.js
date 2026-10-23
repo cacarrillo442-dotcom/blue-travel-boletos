@@ -210,7 +210,11 @@
     const confirmar = confirmacionesPendientes();
     const obligaciones = window.obtenerObligacionesQueAvisan
       ? window.obtenerObligacionesQueAvisan() : [];
-    const total = viajes.length + cupones.length + confirmar.length + obligaciones.length;
+    // Las ventas sin cliente ni origen cuentan como UNA tarea, no una por
+    // venta: son diez minutos de trabajo seguidos, no diez pendientes.
+    const porAsignar = window.obtenerVentasPorAsignar ? window.obtenerVentasPorAsignar() : [];
+    const total = viajes.length + cupones.length + confirmar.length + obligaciones.length
+      + (porAsignar.length ? 1 : 0);
 
     marcarEnLaBarra('navConteoViajes', viajes.length);
     marcarEnLaBarra('navConteoCupones', cupones.length);
@@ -238,6 +242,17 @@
         'Ningún dato por confirmar, ningún check-in por avisar y ningún cupón '
         + 'a punto de vencerse.', true);
       return;
+    }
+
+    if (porAsignar.length) {
+      const n = porAsignar.length;
+      destino.appendChild(filaPendiente({
+        tono: n >= 10 ? 'urgent' : 'soon',
+        cuando: `${n} ${n === 1 ? 'venta' : 'ventas'}`,
+        titulo: `Ventas sin cliente ni origen`,
+        detalle: `${window.icono('clientes')} El plan de marketing las necesita para saber qué canal está funcionando`,
+        acciones: [{ icono: 'clientes', texto: 'Asignar', alPulsar: () => irA('salesPanel') }],
+      }));
     }
 
     // Las obligaciones van de primeras: un RNT sin renovar deja la agencia sin

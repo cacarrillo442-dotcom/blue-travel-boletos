@@ -1,2 +1,16 @@
 .claude/
 .DS_Store
+
+# Datos reales del negocio: NUNCA van al repositorio.
+#
+# bin/publicar.sh hace `git add -A` y sube todo a GitHub Pages, que es publico.
+# Un respaldo o un reporte de Wompi olvidado en esta carpeta quedaria en
+# internet con los nombres, telefonos y pagos de los clientes. Estas lineas lo
+# impiden aunque alguien se equivoque.
+_*_tmp.*
+*_tmp.json
+*_tmp.xlsx
+*_tmp.csv
+blue-travel-respaldo*.json
+blue-travel-correccion*.json
+*Reporte_Conciliar*

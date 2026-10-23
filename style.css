@@ -1311,6 +1311,44 @@ textarea {
   color: var(--acento);
 }
 
+/* ---------- Asignar cliente y origen a cada venta ----------
+   Milena lo hace desde el celular, asi que los campos se apilan en pantalla
+   angosta y se reparten en columnas solo cuando hay sitio. */
+#asignarLista .asignar-fila {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+#asignarLista .trip-info {
+  min-width: min(320px, 100%);
+}
+
+#asignarLista .trip-actions {
+  margin-left: auto;
+}
+
+.asignar-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+
+.asignar-sugerencia {
+  margin: 8px 0 0;
+}
+
+.hint.asignar-estado:empty {
+  display: none;
+}
+
+/* Con las dos clases, para ganarle al gris de `.hint`, que se declara despues
+   y dejaba el aviso de lo que falta en gris. */
+.hint.asignar-estado {
+  margin: 6px 0 0;
+  color: #c0392b;
+}
+
 /* ---------- Autorizacion de publicidad ----------
    Al lado del "Si" va la evidencia, o la falta de ella. Lo sin evidencia va en
    ambar: no es un error del cliente, es algo pendiente de pedir. */
