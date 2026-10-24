@@ -51,6 +51,8 @@ onAuthStateChanged(auth, (user) => {
       pintarDashboard();
       pintarManuales();
       pintarAsignaciones();
+      // Una venta asignada como referido puede pedir un cupon nuevo.
+      if (window.pintarCuponesReferidos) window.pintarCuponesReferidos();
       if (window.pintarInicio) window.pintarInicio();
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('ventas');
     }, (err) => {

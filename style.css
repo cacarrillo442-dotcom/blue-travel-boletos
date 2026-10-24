@@ -1311,6 +1311,29 @@ textarea {
   color: var(--acento);
 }
 
+/* ---------- Canje de cupones ----------
+   El panel de canje se abre dentro de la tarjeta del cupon y ocupa el ancho
+   entero, debajo de los datos. */
+#cuponLista .trip-card {
+  flex-wrap: wrap;
+}
+
+.canje-panel {
+  flex-basis: 100%;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-neutral);
+}
+
+.hint.canje-tope {
+  margin: 8px 0 4px;
+}
+
+.hint.canje-tope.canje-excede {
+  color: #c0392b;
+  font-weight: 500;
+}
+
 /* ---------- Asignar cliente y origen a cada venta ----------
    Milena lo hace desde el celular, asi que los campos se apilan en pantalla
    angosta y se reparten en columnas solo cuando hay sitio. */
@@ -2225,6 +2248,10 @@ input[type="file"]:hover {
     width: 100%;
     justify-content: flex-end;
     margin-top: 8px;
+    /* Con tres botones de tamaño tactil no caben en una fila de telefono, y
+       al estar alineados a la derecha lo que sobraba se salia de la tarjeta
+       por la IZQUIERDA. Que bajen a otra linea. */
+    flex-wrap: wrap;
   }
 }
 
@@ -3397,6 +3424,9 @@ select:focus {
   :root:not([data-tema="claro"]) .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
   :root:not([data-tema="claro"]) .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
+  /* El rojo de modo claro (#c0392b) daba 2,99 sobre la tarjeta oscura. */
+  :root:not([data-tema="claro"]) .hint.canje-tope.canje-excede,
+  :root:not([data-tema="claro"]) .hint.asignar-estado { color: var(--tinte-rojo-tinta); }
   :root:not([data-tema="claro"]) .aviso-permiso {
     background: var(--tinte-ambar-bg);
     color: var(--tinte-ambar-tinta);
@@ -3543,6 +3573,8 @@ select:focus {
 :root[data-tema="oscuro"] .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
+:root[data-tema="oscuro"] .hint.canje-tope.canje-excede,
+:root[data-tema="oscuro"] .hint.asignar-estado { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .aviso-permiso {
   background: var(--tinte-ambar-bg);
   color: var(--tinte-ambar-tinta);
