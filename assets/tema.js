@@ -53,7 +53,7 @@
     // El boton ofrece el destino, no describe el estado: en oscuro dice "modo
     // dia", que es a donde lleva.
     const texto = oscuro ? 'Modo día' : 'Modo noche';
-    btn.innerHTML = window.icono(oscuro ? 'dia' : 'noche', 'ic-izq') + `<span>${texto}</span>`;
+    btn.innerHTML = window.icono(oscuro ? 'dia' : 'noche') + `<span>${texto}</span>`;
     btn.title = texto;
     btn.setAttribute('aria-pressed', String(oscuro));
   }

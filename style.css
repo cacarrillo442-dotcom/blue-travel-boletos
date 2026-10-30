@@ -681,29 +681,6 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-#temaBtn,
-#gateLogoutBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  color: #d6e3ed;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.83rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-#temaBtn:hover,
-#gateLogoutBtn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-}
-
 /* El velo y el boton de menu solo existen cuando la barra es cajon (movil) */
 .sidebar-velo {
   display: none;
@@ -741,6 +718,89 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   padding: 15px max(28px, calc((100% - 1280px) / 2 + 28px));
+}
+
+/* Actualizar, tema y salir. El texto solo se ve en Cerrar sesion: los otros dos
+   iconos se entienden solos, y salir es el unico que conviene no tocar sin
+   querer. Por eso va de ultimo y separado. */
+.topbar-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.topbar-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.topbar-accion:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-strong);
+}
+
+.topbar-accion:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.topbar-accion .ic {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+}
+
+.topbar-accion > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.topbar-salir {
+  margin-left: 8px;
+}
+
+.topbar-salir > span {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+/* En telefono no cabe el texto y el titulo necesita el espacio. */
+@media (max-width: 900px) {
+  .topbar-acciones { gap: 4px; }
+  .topbar-accion { padding: 0; }
+  .topbar-salir { margin-left: 4px; }
+  .topbar-salir > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .topbar-text { min-width: 0; }
 }
 
 .topbar-text h1 {
@@ -3191,29 +3251,10 @@ select:focus {
 .version-aviso button:disabled { opacity: 0.6; cursor: default; }
 
 /* El boton de la barra lateral comparte el aspecto de Cerrar sesion */
-#actualizarBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 9px 12px;
-  margin-bottom: 8px;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  color: #d6e3ed;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.83rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-#actualizarBtn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
-
 /* La version que se esta corriendo, discreta: sirve para saber que hay cuando
    algo se ve raro, no para leerla todos los dias. */
 .version-actual {
-  margin: 10px 0 0;
+  margin: 0;
   text-align: center;
   font-size: 0.68rem;
   color: #7d99ad;
@@ -3440,9 +3481,8 @@ select:focus {
   body.barra-plegada .sidebar-logo,
   body.barra-plegada .sidebar-marca-texto,
   body.barra-plegada .nav-grupo,
-  body.barra-plegada .version-actual,
   body.barra-plegada .sidebar-nav .tab-btn > span:not(.nav-conteo),
-  body.barra-plegada .sidebar-pie button > span {
+  body.barra-plegada .sidebar-pie {
     display: none;
   }
 
@@ -3457,12 +3497,7 @@ select:focus {
     display: block;
   }
 
-  body.barra-plegada .sidebar-pie {
-    padding: 12px 8px 14px;
-  }
-
-  body.barra-plegada .sidebar-nav .tab-btn,
-  body.barra-plegada .sidebar-pie button {
+  body.barra-plegada .sidebar-nav .tab-btn {
     justify-content: center;
     padding-left: 0;
     padding-right: 0;
@@ -3479,8 +3514,7 @@ select:focus {
     transform: scale(0.94);
   }
 
-  body.barra-plegada .sidebar-nav .tab-btn .ic,
-  body.barra-plegada .sidebar-pie .ic {
+  body.barra-plegada .sidebar-nav .tab-btn .ic {
     width: 1.35em;
     height: 1.35em;
     margin: 0;
@@ -3881,7 +3915,6 @@ select:focus {
 
 
 /* Los tres botones del pie de la barra, con aire entre ellos. */
-#temaBtn { margin-bottom: 8px; }
 
 /* El motivo de la anulacion lleva un rojo oscuro pensado para fondo claro. Con
    la tarjeta ya en rojo oscuro queda en 1,79 de contraste, y es justo el dato

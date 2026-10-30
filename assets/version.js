@@ -26,7 +26,9 @@
   async function actualizar(boton) {
     if (boton) {
       boton.disabled = true;
-      boton.textContent = 'Actualizando…';
+      // El del encabezado es solo un icono: un texto ahi lo haria saltar de tamano.
+      if (boton.id === 'actualizarBtn') boton.title = 'Actualizando…';
+      else boton.textContent = 'Actualizando…';
     }
     try {
       await fetch(location.href, { cache: 'reload' });
