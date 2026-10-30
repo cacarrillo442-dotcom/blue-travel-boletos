@@ -4121,3 +4121,28 @@ select:focus {
   .sidebar-nav .tab-btn.active .ic,
   .nav-conteo:not(:empty) { animation: none; }
 }
+
+/* Paquetes vendidos */
+.pv-abonos {
+  margin: 6px 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+}
+
+.pv-quitar {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pv-vencido {
+  color: var(--tinte-rojo-tinta);
+}
+
+#pvListaEstado:empty {
+  display: none;
+}

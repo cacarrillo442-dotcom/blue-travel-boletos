@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261030-113128" />
+<meta name="app-version" content="20261030-131102" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261030-113128" />
-<script src="assets/tema.js?v=20261030-113128"></script>
+<link rel="stylesheet" href="style.css?v=20261030-131102" />
+<script src="assets/tema.js?v=20261030-131102"></script>
 </head>
 <body>
 
@@ -155,6 +155,8 @@
       data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
         <button type="button" class="tab-btn" data-tab="packagesPanel"
       data-desc="Cotiza un circuito de varios días, con su itinerario."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes</span></button>
+        <button type="button" class="tab-btn" data-tab="paqVentaPanel"
+      data-desc="El resumen de compra de cada paquete vendido, con sus abonos."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes vendidos</span></button>
         <button type="button" class="tab-btn" data-tab="invoicePanel"
       data-desc="Emite la factura cuando el cliente la pide."><svg class="ic" aria-hidden="true"><use href="#ic-factura"></use></svg><span>Facturas</span></button>
       </div>
@@ -645,6 +647,175 @@
           <button type="button" class="btn-add" id="pkDownloadImageBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar imagen</button>
         </div>
       </div>
+    </section>
+  </form>
+</div>
+
+<div id="paqVentaPanel" class="tab-panel hidden">
+  <section class="card card-principal">
+    <div class="card-header">
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-paquete"></use></svg>Paquetes vendidos</h2>
+      <span class="hint" id="pvConteo"></span>
+    </div>
+    <p class="aviso-permiso" id="pvListaEstado" role="status"></p>
+    <div id="pvLista"></div>
+  </section>
+
+  <form id="paqVentaForm" novalidate>
+    <section class="card">
+      <h2>Resumen de compra</h2>
+      <p class="hint">Es el documento que recibe el cliente con su viaje y su valor. No reemplaza la factura. Lo que dejes vacío no aparece en el PDF.</p>
+      <label>Cargar el trip-overview de Expedia (PDF)
+        <input type="file" id="pvExpedia" accept="application/pdf,.pdf" />
+      </label>
+      <p class="hint">Se lee en tu navegador: el archivo no sale del equipo. Llena el formulario para que lo revises; el precio de venta lo escribes tú.</p>
+      <div id="pvExpediaEstado" role="status"></div>
+      <div class="inline-add-row">
+        <button type="button" class="btn-add" id="pvTraerBtn">Traer de la cotización de Paquetes (Europamundo)</button>
+      </div>
+      <p class="hint" id="pvTraerEstado" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h3>El viaje</h3>
+      <div class="grid-2">
+        <label>Destino <input type="text" id="pvDestino" placeholder="Ej. Cancún" /></label>
+        <label>País o región <input type="text" id="pvSubtitulo" placeholder="Ej. México" /></label>
+      </div>
+      <div class="grid-2">
+        <label>Duración <input type="text" id="pvDuracion" placeholder="Ej. 6 días / 5 noches" /></label>
+        <label>Plan <input type="text" id="pvPlan" placeholder="Ej. Todo incluido" /></label>
+      </div>
+      <div class="grid-3">
+        <label>Inicio <input type="date" id="pvInicio" /></label>
+        <label>Fin <input type="date" id="pvFin" /></label>
+        <label>Fecha del documento <input type="date" id="pvFechaVenta" /></label>
+      </div>
+      <label>Foto del destino (opcional)
+        <input type="file" id="pvFoto" accept="image/*" />
+      </label>
+      <img id="pvFotoVista" class="quote-image-preview hidden" alt="Foto del destino elegida" />
+      <div class="inline-add-row">
+        <button type="button" class="btn-secondary hidden" id="pvFotoQuitar">Quitar foto</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Titular y pasajeros</h3>
+      <label>Titular <input type="text" id="pvTitular" /></label>
+      <div class="grid-2">
+        <label>Adultos (uno por línea) <textarea id="pvAdultos" rows="3"></textarea></label>
+        <label>Menores (uno por línea) <textarea id="pvMenores" rows="3"></textarea></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Vuelos</h3>
+      <div class="grid-3">
+        <label>Aerolínea <input type="text" id="pvAerolinea" /></label>
+        <label>Código de reserva <input type="text" id="pvCodigo" /></label>
+        <label>Equipaje <input type="text" id="pvEquipaje" placeholder="Ej. Equipaje de mano incluido" /></label>
+      </div>
+      <h3>Ida</h3>
+      <div class="grid-3">
+        <label>Fecha <input type="date" id="pvIdaFecha" /></label>
+        <label>Origen <input type="text" id="pvIdaOrigen" maxlength="4" placeholder="IAD" /></label>
+        <label>Destino <input type="text" id="pvIdaDestino" maxlength="4" /></label>
+      </div>
+      <div class="grid-3">
+        <label>Vuelo <input type="text" id="pvIdaVuelo" placeholder="Ej. UA 100" /></label>
+        <label>Tipo <input type="text" id="pvIdaTipo" placeholder="Directo o 1 escala en..." /></label>
+        <label>Duración <input type="text" id="pvIdaDuracion" placeholder="Ej. 3 h 48 min" /></label>
+      </div>
+      <label>Horarios y detalle <input type="text" id="pvIdaDetalle" placeholder="Sale 12:40 p. m. de ... · llega 5:28 p. m. a ... · Económica" /></label>
+      <h3>Regreso</h3>
+      <div class="grid-3">
+        <label>Fecha <input type="date" id="pvRegFecha" /></label>
+        <label>Origen <input type="text" id="pvRegOrigen" maxlength="4" /></label>
+        <label>Destino <input type="text" id="pvRegDestino" maxlength="4" /></label>
+      </div>
+      <div class="grid-3">
+        <label>Vuelo <input type="text" id="pvRegVuelo" /></label>
+        <label>Tipo <input type="text" id="pvRegTipo" /></label>
+        <label>Duración <input type="text" id="pvRegDuracion" /></label>
+      </div>
+      <label>Horarios y detalle <input type="text" id="pvRegDetalle" /></label>
+    </section>
+
+    <section class="card">
+      <h3>Hospedaje</h3>
+      <div class="grid-2">
+        <label>Hotel <input type="text" id="pvHotel" /></label>
+        <label>Plan <input type="text" id="pvHotelPlan" placeholder="Ej. Todo incluido" /></label>
+      </div>
+      <div class="grid-2">
+        <label>Habitación y noches <input type="text" id="pvHabitacion" placeholder="Ej. 1 habitación doble · 5 noches" /></label>
+        <label>Confirmación <input type="text" id="pvConfirmacion" /></label>
+      </div>
+      <label>Detalle <input type="text" id="pvHotelDetalle" placeholder="Check-in, check-out y dirección" /></label>
+    </section>
+
+    <section class="card">
+      <h3>Traslados</h3>
+      <div class="grid-2">
+        <label>Servicio <input type="text" id="pvTraslado" placeholder="Ej. Minivan privada" /></label>
+        <label>Detalle <input type="text" id="pvTrasladoDetalle" placeholder="Ej. Aeropuerto - hotel, ida y vuelta" /></label>
+      </div>
+      <details class="plegable">
+        <summary>Voucher del traslado (página aparte)</summary>
+        <p class="hint">Se agrega al PDF solo si escribes el número de referencia.</p>
+        <div class="grid-2">
+          <label>No. de referencia <input type="text" id="pvRef" /></label>
+          <label>Proveedor <input type="text" id="pvProveedor" /></label>
+        </div>
+        <div class="grid-2">
+          <label>Llegada <input type="text" id="pvLlegada" placeholder="Vuelo y hora de llegada" /></label>
+          <label>Regreso <input type="text" id="pvRegreso" placeholder="Hora y lugar de recogida" /></label>
+        </div>
+        <label>Instrucciones (una por línea, "Título: texto") <textarea id="pvInstrucciones" rows="4"></textarea></label>
+        <label>Tenga en cuenta (uno por línea) <textarea id="pvAvisos" rows="3"></textarea></label>
+      </details>
+    </section>
+
+    <section class="card">
+      <h3>Valor</h3>
+      <label>Moneda
+        <select id="pvMoneda">
+          <option value="USD">Dólares (USD)</option>
+          <option value="COP">Pesos (COP)</option>
+        </select>
+      </label>
+      <div class="grid-3">
+        <label>Concepto <input type="text" id="pvConcepto1" /></label>
+        <label>Cantidad <input type="number" min="0" id="pvCantidad1" /></label>
+        <label>Precio unitario <input type="text" inputmode="decimal" id="pvPrecio1" /></label>
+      </div>
+      <div class="grid-3">
+        <label>Concepto <input type="text" id="pvConcepto2" placeholder="Ej. Menor" /></label>
+        <label>Cantidad <input type="number" min="0" id="pvCantidad2" /></label>
+        <label>Precio unitario <input type="text" inputmode="decimal" id="pvPrecio2" /></label>
+      </div>
+      <div class="grid-3">
+        <label>Concepto <input type="text" id="pvConcepto3" /></label>
+        <label>Cantidad <input type="number" min="0" id="pvCantidad3" /></label>
+        <label>Precio unitario <input type="text" inputmode="decimal" id="pvPrecio3" /></label>
+      </div>
+      <p><strong id="pvTotal"></strong></p>
+      <label>Lo que cobró el proveedor (no sale en el PDF del cliente)
+        <input type="text" inputmode="decimal" id="pvCosto" />
+      </label>
+      <p class="hint" id="pvGanancia"></p>
+      <label>Qué incluye el valor <input type="text" id="pvIncluye" placeholder="Ej. Vuelos, hotel y traslados · impuestos incluidos" /></label>
+      <div class="grid-2">
+        <label>Fecha límite del saldo <input type="date" id="pvLimite" /></label>
+        <label>Notas <input type="text" id="pvNotas" /></label>
+      </div>
+      <div class="inline-add-row">
+        <button type="submit" class="btn-primary" id="pvGuardarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Guardar y generar PDF</button>
+        <button type="button" class="btn-add" id="pvVistaBtn">Solo descargar, sin guardar</button>
+        <button type="button" class="btn-secondary hidden" id="pvCancelarEdicion">Cancelar edición</button>
+      </div>
+      <p class="hint" id="pvEstado" role="status"></p>
     </section>
   </form>
 </div>
@@ -1810,45 +1981,48 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261030-113128"></script>
-<script src="assets/guardado-pendiente.js?v=20261030-113128"></script>
-<script src="assets/nombres-archivo.js?v=20261030-113128"></script>
-<script src="assets/iconos.js?v=20261030-113128"></script>
-<script src="assets/version.js?v=20261030-113128"></script>
-<script src="assets/trm.js?v=20261030-113128"></script>
+<script src="assets/logo-animado.js?v=20261030-131102"></script>
+<script src="assets/guardado-pendiente.js?v=20261030-131102"></script>
+<script src="assets/nombres-archivo.js?v=20261030-131102"></script>
+<script src="assets/iconos.js?v=20261030-131102"></script>
+<script src="assets/version.js?v=20261030-131102"></script>
+<script src="assets/trm.js?v=20261030-131102"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261030-113128"></script>
-<script src="assets/country-codes-data.js?v=20261030-113128"></script>
+<script src="assets/catalog-data.js?v=20261030-131102"></script>
+<script src="assets/country-codes-data.js?v=20261030-131102"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261030-113128"></script>
-<script src="assets/obligaciones.js?v=20261030-113128"></script>
-<script src="assets/sales-parse.js?v=20261030-113128"></script>
-<script src="assets/cupon-imagen.js?v=20261030-113128"></script>
-<script src="assets/publicidad-imagen.js?v=20261030-113128"></script>
-<script src="assets/precios-datos.js?v=20261030-113128"></script>
-<script src="app.js?v=20261030-113128"></script>
-<script src="assets/nav-grupos.js?v=20261030-113128"></script>
-<script src="assets/marca.js?v=20261030-113128"></script>
-<script src="assets/vuelos-bloque.js?v=20261030-113128"></script>
-<script src="assets/paquetes.js?v=20261030-113128"></script>
-<script src="assets/inicio.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261030-113128"></script>
-<script src="assets/clientes-autocompletar.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261030-113128"></script>
-<script src="assets/cupones-reglas.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261030-113128"></script>
-<script src="assets/precios-ui.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-history.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261030-113128"></script>
-<script src="assets/plan.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-plan.js?v=20261030-113128"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261030-113128"></script>
+<script src="assets/obligaciones-datos.js?v=20261030-131102"></script>
+<script src="assets/obligaciones.js?v=20261030-131102"></script>
+<script src="assets/sales-parse.js?v=20261030-131102"></script>
+<script src="assets/cupon-imagen.js?v=20261030-131102"></script>
+<script src="assets/publicidad-imagen.js?v=20261030-131102"></script>
+<script src="assets/precios-datos.js?v=20261030-131102"></script>
+<script src="app.js?v=20261030-131102"></script>
+<script src="assets/nav-grupos.js?v=20261030-131102"></script>
+<script src="assets/marca.js?v=20261030-131102"></script>
+<script src="assets/vuelos-bloque.js?v=20261030-131102"></script>
+<script src="assets/paquetes.js?v=20261030-131102"></script>
+<script src="assets/inicio.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261030-131102"></script>
+<script src="assets/clientes-autocompletar.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261030-131102"></script>
+<script src="assets/cupones-reglas.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261030-131102"></script>
+<script src="assets/precios-ui.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-history.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261030-131102"></script>
+<script src="assets/plan.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261030-131102"></script>
+<script src="assets/lector-expedia.js?v=20261030-131102"></script>
+<script src="assets/paquete-resumen.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-paquetes.js?v=20261030-131102"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261030-131102"></script>
 </body>
 </html>

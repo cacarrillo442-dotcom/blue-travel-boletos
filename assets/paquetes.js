@@ -295,6 +295,14 @@
     };
   }
 
+  // Para traer la cotizacion al resumen de compra. Las fechas van en crudo: `recoger`
+  // las deja listas para leer, y el formulario de destino necesita AAAA-MM-DD.
+  window.leerCotizacionPaquete = () => ({
+    ...recoger(),
+    fechaInicioISO: el('pkFechaInicio').value,
+    fechaFinISO: el('pkFechaFin').value,
+  });
+
   // ---------- Mensaje de WhatsApp ----------
 
   function lineasDeLista(texto, vinieta) {
