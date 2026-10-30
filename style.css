@@ -4179,3 +4179,63 @@ select:focus {
 #pvListaEstado:empty {
   display: none;
 }
+
+/* ---------- La esquina donde se unen el panel y el encabezado ----------
+   Cada uno media lo que le daba su contenido, asi que sus lineas inferiores
+   quedaban a alturas distintas y la esquina parecia dos piezas sueltas. Con una
+   sola altura la linea sigue derecha de un lado al otro. */
+@media (min-width: 901px) {
+  :root {
+    --alto-encabezado: 76px;
+  }
+
+  .sidebar-marca {
+    box-sizing: border-box;
+    /* El panel es una columna flexible y la encogia cuando el menu es largo. */
+    flex: 0 0 auto;
+    height: var(--alto-encabezado);
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 8px;
+  }
+
+  .topbar {
+    box-sizing: border-box;
+    height: var(--alto-encabezado);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* Un titulo largo se corta antes que volver a descuadrar la altura. */
+  .topbar-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .topbar-text h1,
+  .topbar-text p {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* El boton de plegar pertenece al panel, no al titulo: sin caja propia deja
+     de ser una pieza suelta pegada a la esquina. */
+  .plegar-btn {
+    border-color: transparent;
+    background: transparent;
+    margin-left: -8px;
+  }
+
+  .plegar-btn:hover {
+    background: var(--surface-sunken);
+    border-color: var(--line);
+  }
+
+  /* Plegada no hay marca: tampoco hay linea que alinear. */
+  body.barra-plegada .sidebar-marca {
+    height: 22px;
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
+}
