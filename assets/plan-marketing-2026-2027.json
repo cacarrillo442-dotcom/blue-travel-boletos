@@ -1,0 +1,400 @@
+{
+  "plan": {
+    "id": "PM-2026-2027",
+    "nombre": "Plan de marketing Blue Travel",
+    "vigencia_inicio": "2026-10-19",
+    "vigencia_fin": "2027-09-30",
+    "moneda": "COP",
+    "tasa_referencia_cop_usd": 3900,
+    "fecha_version": "2026-10-23",
+    "ventas_por_semana_meta": 9.6,
+    "ganancia_promedio_por_venta": 350000
+  },
+  "objetivos": [
+    {
+      "id": "O0",
+      "nombre": "Ganancia del año",
+      "metrica": "Suma de ganancia de ventas entre oct 2026 y sep 2027",
+      "fuente": "ventas",
+      "calculo": "SUM(ventas.ganancia) WHERE ventas.fecha BETWEEN '2026-10-01' AND '2027-09-30'",
+      "unidad": "COP",
+      "linea_base": 175000000,
+      "linea_base_ref": "Estimado oct 2025-sep 2026; confirmar en la app. Ritmo actual ≈ 146 M/año",
+      "meta": 175000000,
+      "comparador": ">=",
+      "fecha_corte": "2027-09-30",
+      "frecuencia": "semanal",
+      "responsable": "Ambos"
+    },
+    {
+      "id": "O1",
+      "nombre": "Ganancia de temporada alta",
+      "metrica": "Ganancia de ventas del 26 oct al 31 dic 2026 frente al mismo periodo de 2025",
+      "fuente": "ventas",
+      "calculo": "SUM(ventas.ganancia) WHERE ventas.fecha BETWEEN '2026-10-26' AND '2026-12-31'",
+      "unidad": "COP",
+      "linea_base": null,
+      "linea_base_ref": "Mismo periodo 2025, calcular en la app (dic 2025 = 24.400.000)",
+      "meta": null,
+      "comparador": ">=",
+      "fecha_corte": "2026-12-31",
+      "frecuencia": "semanal",
+      "meta_relativa": "+10% sobre linea_base",
+      "responsable": "Milena"
+    },
+    {
+      "id": "O2",
+      "nombre": "Salidas de diciembre vendidas",
+      "metrica": "Boletos con fecha de salida en diciembre 2026",
+      "fuente": "boletos",
+      "calculo": "COUNT(boletos) WHERE boletos.fecha_salida BETWEEN '2026-12-01' AND '2026-12-31'",
+      "unidad": "boletos",
+      "linea_base": 13,
+      "linea_base_ref": "13 al 29 sep 2026; ritmo normal ≈ 48",
+      "meta": 60,
+      "comparador": ">=",
+      "fecha_corte": "2026-12-15",
+      "frecuencia": "semanal",
+      "responsable": "Milena"
+    },
+    {
+      "id": "O3",
+      "nombre": "Clientes que repiten",
+      "metrica": "Porcentaje de clientes (o tarjetas si no hay cliente) con 2 o más compras en los últimos 12 meses",
+      "fuente": "ventas",
+      "calculo": "COUNT(clientes con >=2 ventas en 12 meses) / COUNT(clientes con >=1 venta en 12 meses)",
+      "unidad": "porcentaje",
+      "linea_base": 30,
+      "linea_base_ref": "30% en ene-sep 2026 (9 meses); recalcular con ventana de 12 meses",
+      "meta": null,
+      "comparador": ">=",
+      "fecha_corte": "2027-09-30",
+      "frecuencia": "trimestral",
+      "meta_relativa": "+10 puntos sobre la linea base recalculada",
+      "responsable": "Milena"
+    },
+    {
+      "id": "O6",
+      "nombre": "Ventas con cupón de referido",
+      "metrica": "Porcentaje de ventas que canjean un cupón tipo 'referido'",
+      "fuente": "ventas",
+      "calculo": "COUNT(ventas con cupon.tipo = 'referido') / COUNT(ventas) por trimestre",
+      "unidad": "porcentaje",
+      "linea_base": 0,
+      "linea_base_ref": "3 cupones emitidos en total",
+      "meta": 10,
+      "comparador": ">=",
+      "fecha_corte": "2027-09-30",
+      "frecuencia": "trimestral",
+      "fecha_inicio_medicion": "2027-01-01",
+      "responsable": "Milena"
+    },
+    {
+      "id": "O7",
+      "nombre": "Ganancia de verano",
+      "metrica": "Suma de ganancia de ventas junio a agosto 2027",
+      "fuente": "ventas",
+      "calculo": "SUM(ventas.ganancia) WHERE ventas.fecha BETWEEN '2027-06-01' AND '2027-08-31'",
+      "unidad": "COP",
+      "linea_base": 39000000,
+      "linea_base_ref": "Jun-ago 2026 (2025: 43.100.000)",
+      "meta": 43100000,
+      "comparador": ">=",
+      "fecha_corte": "2027-08-31",
+      "frecuencia": "mensual",
+      "responsable": "Ambos"
+    },
+    {
+      "id": "O4",
+      "nombre": "Contactos con autorización verificable",
+      "metrica": "Clientes con autorización de publicidad que tienen fecha y medio de autorización registrados",
+      "fuente": "clientes",
+      "calculo": "COUNT(clientes) WHERE autoriza_publicidad = true AND autorizacion_fecha IS NOT NULL AND autorizacion_medio IS NOT NULL",
+      "unidad": "contactos",
+      "linea_base": 0,
+      "linea_base_ref": "86 marcados, ninguno con evidencia",
+      "meta": 300,
+      "hitos": [
+        {
+          "fecha": "2027-03-31",
+          "valor": 150
+        },
+        {
+          "fecha": "2027-09-30",
+          "valor": 300
+        }
+      ],
+      "comparador": ">=",
+      "fecha_corte": "2027-09-30",
+      "frecuencia": "mensual",
+      "responsable": "Milena pide; César registra"
+    },
+    {
+      "id": "O5",
+      "nombre": "Ventas con cliente y origen registrados",
+      "metrica": "Porcentaje de ventas nuevas con campo origen diligenciado",
+      "fuente": "ventas",
+      "calculo": "COUNT(ventas con cliente y origen) / COUNT(ventas) WHERE ventas.fecha >= '2026-11-01'",
+      "unidad": "porcentaje",
+      "linea_base": 6,
+      "linea_base_ref": "5 de 86 clientes con origen",
+      "meta": 100,
+      "comparador": ">=",
+      "fecha_inicio_medicion": "2026-11-01",
+      "fecha_corte": "2027-09-30",
+      "frecuencia": "semanal",
+      "responsable": "Milena registra; César controla"
+    }
+  ],
+  "fases": [
+    {
+      "id": "F0",
+      "nombre": "Preparación",
+      "inicio": "2026-10-19",
+      "fin": "2026-10-25",
+      "objetivos": [
+        "O4",
+        "O5"
+      ]
+    },
+    {
+      "id": "F1",
+      "nombre": "Campaña de navidad",
+      "inicio": "2026-10-26",
+      "fin": "2026-11-15",
+      "objetivos": [
+        "O0",
+        "O1",
+        "O2",
+        "O6"
+      ]
+    },
+    {
+      "id": "F2",
+      "nombre": "Cierre de temporada y servicio",
+      "inicio": "2026-11-16",
+      "fin": "2027-01-10",
+      "objetivos": [
+        "O1",
+        "O3"
+      ]
+    },
+    {
+      "id": "F3",
+      "nombre": "Diagnóstico y base de datos",
+      "inicio": "2027-01-11",
+      "fin": "2027-02-07",
+      "objetivos": [
+        "O4"
+      ]
+    },
+    {
+      "id": "F4",
+      "nombre": "Semana Santa y Día de la Madre",
+      "inicio": "2027-02-08",
+      "fin": "2027-04-30",
+      "objetivos": [
+        "O3",
+        "O6"
+      ]
+    },
+    {
+      "id": "F5",
+      "nombre": "Verano",
+      "inicio": "2027-05-01",
+      "fin": "2027-08-31",
+      "objetivos": [
+        "O0",
+        "O7"
+      ]
+    },
+    {
+      "id": "F6",
+      "nombre": "Evaluación anual",
+      "inicio": "2027-09-01",
+      "fin": "2027-09-30",
+      "objetivos": [
+        "O0",
+        "O1",
+        "O2",
+        "O3",
+        "O4",
+        "O5",
+        "O6",
+        "O7"
+      ]
+    }
+  ],
+  "ventanas_venta": [
+    {
+      "id": "V1",
+      "nombre": "Venta de navidad",
+      "inicio": "2026-10-26",
+      "fin": "2026-11-15"
+    },
+    {
+      "id": "V2",
+      "nombre": "Venta Semana Santa",
+      "inicio": "2027-02-08",
+      "fin": "2027-03-10"
+    },
+    {
+      "id": "V3",
+      "nombre": "Venta Día de la Madre",
+      "inicio": "2027-03-25",
+      "fin": "2027-04-25"
+    },
+    {
+      "id": "V4",
+      "nombre": "Venta de verano",
+      "inicio": "2027-05-01",
+      "fin": "2027-06-30"
+    }
+  ],
+  "tareas": [
+    {
+      "id": "T01",
+      "fase": "F0",
+      "tarea": "Verificar el estado del RNT en el RUES",
+      "responsable": "César",
+      "fecha_limite": "2026-10-20",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T02",
+      "fase": "F0",
+      "tarea": "Redactar y publicar la política de tratamiento de datos",
+      "responsable": "César",
+      "fecha_limite": "2026-10-22",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T03",
+      "fase": "F0",
+      "tarea": "Activar o completar WhatsApp Business: perfil, catálogo y etiquetas",
+      "responsable": "César",
+      "fecha_limite": "2026-10-22",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T04",
+      "fase": "F0",
+      "tarea": "Armar la lista de compradores de diciembre 2025 y de 2026",
+      "responsable": "Milena",
+      "fecha_limite": "2026-10-23",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T05",
+      "fase": "F0",
+      "tarea": "Configurar cupones de referidos y recompra; hacer obligatorios cliente y origen",
+      "responsable": "César",
+      "fecha_limite": "2026-10-24",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T06",
+      "fase": "F0",
+      "tarea": "Preparar 3 piezas de redes y estados con tarifas de diciembre",
+      "responsable": "César",
+      "fecha_limite": "2026-10-25",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T07",
+      "fase": "F1",
+      "tarea": "Iniciar mensajes uno a uno a compradores de diciembre 2025",
+      "responsable": "Milena",
+      "fecha_limite": "2026-10-26",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T09",
+      "fase": "F1",
+      "tarea": "Confirmar en la app la ganancia del último año y la de oct-dic 2025 (líneas base O0 y O1)",
+      "responsable": "César",
+      "fecha_limite": "2026-10-30",
+      "estado": "pendiente"
+    },
+    {
+      "id": "T08",
+      "fase": "F1",
+      "tarea": "Primera revisión de lunes con cifras de la semana 1 y conteo real de salidas de diciembre",
+      "responsable": "Ambos",
+      "fecha_limite": "2026-11-02",
+      "estado": "pendiente"
+    }
+  ],
+  "catalogos": {
+    "origen_venta": [
+      "referido",
+      "recompra",
+      "redes_sociales",
+      "pauta",
+      "agencia_anterior",
+      "otro"
+    ],
+    "autorizacion_medio": [
+      "whatsapp",
+      "formulario",
+      "correo",
+      "verbal_registrado"
+    ],
+    "tipo_cupon": [
+      "referidor",
+      "referido",
+      "recompra",
+      "temporada"
+    ]
+  },
+  "cupones": [
+    {
+      "tipo": "referidor",
+      "valor_usd": 15,
+      "valor_cop": 58500,
+      "condicion": "Se emite cuando el referido paga",
+      "vigencia_dias": 365
+    },
+    {
+      "tipo": "referido",
+      "valor_usd": 10,
+      "valor_cop": 39000,
+      "condicion": "Primera compra del referido",
+      "vigencia_dias": 90
+    },
+    {
+      "tipo": "recompra",
+      "valor_usd": 10,
+      "valor_cop": 39000,
+      "condicion": "Próxima compra del cliente",
+      "vigencia": "hasta el fin de la siguiente temporada"
+    }
+  ],
+  "equipo": [
+    {
+      "nombre": "Milena",
+      "rol": "Atención al cliente",
+      "responsabilidades": [
+        "Mensajes uno a uno y cotizaciones",
+        "Cierre de ventas con cliente y origen registrados",
+        "Autorización de datos en cada venta",
+        "Seguimiento a referidos"
+      ]
+    },
+    {
+      "nombre": "César",
+      "rol": "Redes y administración",
+      "responsabilidades": [
+        "Estados y publicaciones en Instagram y Facebook",
+        "RNT y política de datos",
+        "Cupones y ajustes de la app",
+        "Cierre semanal e indicadores",
+        "Pauta en Meta desde F4"
+      ]
+    }
+  ],
+  "reglas_cupones": {
+    "tope_porcentaje_tarifa": 25,
+    "nota": "Reemplaza la vigencia fija de 90 días de la app por la vigencia de cada tipo"
+  }
+}

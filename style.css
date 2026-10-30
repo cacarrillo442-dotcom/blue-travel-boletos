@@ -1311,6 +1311,156 @@ textarea {
   color: var(--acento);
 }
 
+/* ---------- Plan de marketing ---------- */
+
+.plan-fase-actual {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+/* Una tarjeta por objetivo. En pantalla ancha van de a dos o tres; en el
+   telefono, una debajo de otra. */
+.plan-objetivos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 14px;
+}
+
+.plan-obj {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-neutral);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.plan-obj-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plan-obj-id {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.plan-obj-nombre {
+  margin: 2px 0 0;
+  font-size: 0.98rem;
+}
+
+.plan-obj-valor {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--titulo, var(--color-primary));
+}
+
+.plan-obj-meta {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.plan-obj-dato {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.plan-obj-nota {
+  margin: 2px 0 0;
+}
+
+.plan-obj .plan-editar-meta {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* Barra de avance contra la meta final. El color de la barra no cambia con el
+   semaforo: el semaforo ya lo dice con palabras arriba, y dos codigos de color
+   distintos en la misma tarjeta confundian. */
+.plan-barra {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--color-neutral);
+  overflow: hidden;
+}
+
+.plan-barra span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--color-primary-2);
+}
+
+.plan-conteos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 12px 16px;
+  margin-top: 14px;
+}
+
+.plan-conteo-semana {
+  margin: 16px 0 8px;
+}
+
+.plan-fases {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-fase {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.plan-fase-fechas {
+  color: var(--ink-soft);
+}
+
+/* La fase en curso se destaca; las que ya pasaron se apagan. */
+.plan-fase-activa {
+  background: #e7f0f7;
+  font-weight: 600;
+}
+
+.plan-fase-pasada {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.plan-ventanas {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 0.86rem;
+}
+
+.plan-tarea select {
+  width: auto;
+  min-width: 130px;
+}
+
+.plan-tarea-hecha .trip-name {
+  text-decoration: line-through;
+  color: var(--ink-soft);
+}
+
 /* ---------- Canje de cupones ----------
    El panel de canje se abre dentro de la tarjeta del cupon y ocupa el ancho
    entero, debajo de los datos. */
@@ -3424,6 +3574,7 @@ select:focus {
   :root:not([data-tema="claro"]) .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
   :root:not([data-tema="claro"]) .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
   :root:not([data-tema="claro"]) .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
+  :root:not([data-tema="claro"]) .plan-fase-activa { background: rgba(255, 255, 255, 0.07); }
   /* El rojo de modo claro (#c0392b) daba 2,99 sobre la tarjeta oscura. */
   :root:not([data-tema="claro"]) .hint.canje-tope.canje-excede,
   :root:not([data-tema="claro"]) .hint.asignar-estado { color: var(--tinte-rojo-tinta); }
@@ -3573,6 +3724,7 @@ select:focus {
 :root[data-tema="oscuro"] .obligacion-riesgo { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .sello-revision.vieja { color: var(--tinte-ambar-tinta); }
 :root[data-tema="oscuro"] .autorizacion-sin-evidencia { color: var(--tinte-ambar-tinta); }
+:root[data-tema="oscuro"] .plan-fase-activa { background: rgba(255, 255, 255, 0.07); }
 :root[data-tema="oscuro"] .hint.canje-tope.canje-excede,
 :root[data-tema="oscuro"] .hint.asignar-estado { color: var(--tinte-rojo-tinta); }
 :root[data-tema="oscuro"] .aviso-permiso {

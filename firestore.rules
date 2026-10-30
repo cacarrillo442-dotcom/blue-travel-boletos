@@ -33,6 +33,10 @@ service cloud.firestore {
     // en el código: aquí solo se guarda la constancia.
     match /obligaciones_cumplidas/{docId} { allow read, write: if esDelEquipo(); }
 
+    // Seguimiento del plan de marketing: metas editadas, estado de las tareas
+    // y lo que se anota a mano cada dia. El plan en si vive en el codigo.
+    match /plan_seguimiento/{docId} { allow read, write: if esDelEquipo(); }
+
     // Catálogos: no tienen datos personales, pero solo el equipo los modifica.
     match /aerolineas_catalogo/{docId} {
       allow read: if true;

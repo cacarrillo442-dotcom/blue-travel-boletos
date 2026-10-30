@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261024-014749" />
+<meta name="app-version" content="20261030-113128" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261024-014749" />
-<script src="assets/tema.js?v=20261024-014749"></script>
+<link rel="stylesheet" href="style.css?v=20261030-113128" />
+<script src="assets/tema.js?v=20261030-113128"></script>
 </head>
 <body>
 
@@ -183,6 +183,8 @@
       <div class="nav-grupo-items" id="grupo-negocio">
         <button type="button" class="tab-btn" data-tab="salesPanel"
       data-desc="Ingresos, reparto semanal y cierre por mes."><svg class="ic" aria-hidden="true"><use href="#ic-ventas"></use></svg><span>Ventas</span><span class="nav-conteo" id="navConteoVentas"></span></button>
+        <button type="button" class="tab-btn" data-tab="planPanel"
+      data-desc="Los objetivos del plan de marketing y cómo vamos contra cada meta."><svg class="ic" aria-hidden="true"><use href="#ic-ruta"></use></svg><span>Plan</span><span class="nav-conteo" id="navConteoPlan"></span></button>
         <button type="button" class="tab-btn" data-tab="pricesPanel"
       data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
         <button type="button" class="tab-btn" data-tab="historyPanel"
@@ -1419,6 +1421,82 @@
   </section>
 </div>
 
+<div id="planPanel" class="tab-panel hidden">
+
+  <section class="card card-principal" id="planCabecera">
+    <div class="card-header">
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-ruta"></use></svg><span id="planTitulo">Plan de marketing</span></h2>
+    </div>
+    <div id="planFase"></div>
+    <p class="aviso-permiso hidden" id="planPermiso"></p>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Objetivos</h2>
+    </div>
+    <p class="hint">
+      Cada cifra se calcula con los datos de la app; ninguna se escribe a mano. El color dice si
+      vas al ritmo de la meta <strong>a la fecha de hoy</strong>, no contra la meta final.
+    </p>
+    <div id="planObjetivos" class="plan-objetivos"></div>
+  </section>
+
+  <!-- Lo que la app no puede ver: los mensajes salen del WhatsApp de Milena y
+       las publicaciones de Instagram y Facebook. Se anotan a mano. -->
+  <section class="card">
+    <div class="card-header">
+      <h2>Registro del día</h2>
+    </div>
+    <p class="hint">Lo que pasa fuera de la app. Milena anota los mensajes; César, las publicaciones.</p>
+    <div class="grid-3">
+      <label>Día
+        <input type="date" id="planConteoDia" />
+      </label>
+    </div>
+    <div class="plan-conteos">
+      <label>Mensajes enviados <span class="hint-inline">(Milena)</span>
+        <input type="number" min="0" step="1" inputmode="numeric" id="planMensajesEnviados" />
+      </label>
+      <label>Mensajes respondidos <span class="hint-inline">(Milena)</span>
+        <input type="number" min="0" step="1" inputmode="numeric" id="planMensajesRespondidos" />
+      </label>
+      <label>Publicaciones <span class="hint-inline">(César)</span>
+        <input type="number" min="0" step="1" inputmode="numeric" id="planPublicaciones" />
+      </label>
+      <label>Estados de WhatsApp <span class="hint-inline">(César)</span>
+        <input type="number" min="0" step="1" inputmode="numeric" id="planEstados" />
+      </label>
+    </div>
+    <div class="inline-add-row">
+      <button type="button" class="btn-primary" id="planConteoGuardar">Guardar el día</button>
+    </div>
+    <p class="hint" id="planConteoEstado"></p>
+    <div id="planConteoResumen"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Ventas por origen</h2>
+    </div>
+    <p class="hint" id="planOrigenRango"></p>
+    <div id="planOrigen"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Tareas</h2>
+    </div>
+    <div id="planTareas" class="promo-list"></div>
+  </section>
+
+  <section class="card card-utilidad">
+    <h3>Fases y ventanas de venta</h3>
+    <div id="planFases"></div>
+  </section>
+
+</div>
+
 <div id="obligacionesPanel" class="tab-panel hidden">
 
   <section class="card card-principal">
@@ -1732,43 +1810,45 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261024-014749"></script>
-<script src="assets/guardado-pendiente.js?v=20261024-014749"></script>
-<script src="assets/nombres-archivo.js?v=20261024-014749"></script>
-<script src="assets/iconos.js?v=20261024-014749"></script>
-<script src="assets/version.js?v=20261024-014749"></script>
-<script src="assets/trm.js?v=20261024-014749"></script>
+<script src="assets/logo-animado.js?v=20261030-113128"></script>
+<script src="assets/guardado-pendiente.js?v=20261030-113128"></script>
+<script src="assets/nombres-archivo.js?v=20261030-113128"></script>
+<script src="assets/iconos.js?v=20261030-113128"></script>
+<script src="assets/version.js?v=20261030-113128"></script>
+<script src="assets/trm.js?v=20261030-113128"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261024-014749"></script>
-<script src="assets/country-codes-data.js?v=20261024-014749"></script>
+<script src="assets/catalog-data.js?v=20261030-113128"></script>
+<script src="assets/country-codes-data.js?v=20261030-113128"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261024-014749"></script>
-<script src="assets/obligaciones.js?v=20261024-014749"></script>
-<script src="assets/sales-parse.js?v=20261024-014749"></script>
-<script src="assets/cupon-imagen.js?v=20261024-014749"></script>
-<script src="assets/publicidad-imagen.js?v=20261024-014749"></script>
-<script src="assets/precios-datos.js?v=20261024-014749"></script>
-<script src="app.js?v=20261024-014749"></script>
-<script src="assets/nav-grupos.js?v=20261024-014749"></script>
-<script src="assets/marca.js?v=20261024-014749"></script>
-<script src="assets/vuelos-bloque.js?v=20261024-014749"></script>
-<script src="assets/paquetes.js?v=20261024-014749"></script>
-<script src="assets/inicio.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261024-014749"></script>
-<script src="assets/clientes-autocompletar.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261024-014749"></script>
-<script src="assets/cupones-reglas.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261024-014749"></script>
-<script src="assets/precios-ui.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-history.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261024-014749"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261024-014749"></script>
+<script src="assets/obligaciones-datos.js?v=20261030-113128"></script>
+<script src="assets/obligaciones.js?v=20261030-113128"></script>
+<script src="assets/sales-parse.js?v=20261030-113128"></script>
+<script src="assets/cupon-imagen.js?v=20261030-113128"></script>
+<script src="assets/publicidad-imagen.js?v=20261030-113128"></script>
+<script src="assets/precios-datos.js?v=20261030-113128"></script>
+<script src="app.js?v=20261030-113128"></script>
+<script src="assets/nav-grupos.js?v=20261030-113128"></script>
+<script src="assets/marca.js?v=20261030-113128"></script>
+<script src="assets/vuelos-bloque.js?v=20261030-113128"></script>
+<script src="assets/paquetes.js?v=20261030-113128"></script>
+<script src="assets/inicio.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261030-113128"></script>
+<script src="assets/clientes-autocompletar.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261030-113128"></script>
+<script src="assets/cupones-reglas.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261030-113128"></script>
+<script src="assets/precios-ui.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-history.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261030-113128"></script>
+<script src="assets/plan.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261030-113128"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261030-113128"></script>
 </body>
 </html>

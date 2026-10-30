@@ -791,6 +791,9 @@
     pintarPendientes();
     pintarResumen();
     dibujarCielo();
+    // El plan se recalcula con los mismos cambios de datos que Inicio. Solo
+    // trabaja si su pantalla esta abierta.
+    if (window.pintarPlan) window.pintarPlan();
   };
 
   document.querySelectorAll('.inicio-accion').forEach((btn) => {
