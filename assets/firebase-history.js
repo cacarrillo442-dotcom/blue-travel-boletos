@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp, onSnapshot, query, orderBy,
+  getFirestore, collection, deleteDoc, updateDoc, doc, getDoc, setDoc, serverTimestamp, onSnapshot, query, orderBy,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -99,13 +99,20 @@ window.mensajeDeConfirmacion = function mensajeDeConfirmacion(b) {
 // sobrevive a localStorage. Al reintentar se vuelve a pasar por aqui y la
 // marca de tiempo se crea de nuevo, que es lo correcto -es la hora en que
 // quedo guardado de verdad-.
-window.registrarGuardador('boletos', (boleto) => addDoc(boletosCol, {
-  ...boleto, alertaEnviada: false, creado: serverTimestamp(),
-}));
+// Cada documento llega con su codigo fijo (ver guardado-pendiente.js). En un
+// reintento puede que el primer envio SI haya llegado: entonces no se vuelve a
+// escribir, para no borrarle lo que se le marco despues -el aviso de check-in
+// enviado, la confirmacion del cliente-.
+function guardadorCon(col, extra) {
+  return async (datos, codigo, esReintento) => {
+    const ref = doc(col, codigo);
+    if (esReintento && (await getDoc(ref)).exists()) return;
+    await setDoc(ref, { ...datos, ...extra, creado: serverTimestamp() });
+  };
+}
 
-window.registrarGuardador('facturas', (factura) => addDoc(facturasCol, {
-  ...factura, creado: serverTimestamp(),
-}));
+window.registrarGuardador('boletos', guardadorCon(boletosCol, { alertaEnviada: false }));
+window.registrarGuardador('facturas', guardadorCon(facturasCol, {}));
 
 window.saveBoletoToCloud = function saveBoletoToCloud(boleto) {
   const quien = (boleto.passengers && boleto.passengers[0]) || boleto.bookingRef || '';

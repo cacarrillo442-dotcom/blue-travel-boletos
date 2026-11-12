@@ -16,10 +16,30 @@
 //
 // La cola vive en localStorage a proposito: si el equipo se apaga o se cierra
 // la pestana, al volver a abrir la app el documento sigue ahi esperando.
+//
+// Noviembre 2026: aun asi se perdio un boleto. Se genero en el celular con mala
+// senal y nunca llego a la base. La razon: con la red caida, Firestore NO da
+// error; se queda esperando a que vuelva. La cola solo se llenaba ante un
+// error, asi que no se entero, y al cerrarse Safari el dato se fue con la
+// pestana. Ahora cada documento se anota en la cola ANTES de mandarlo y sale
+// de ella solo cuando Firestore confirma. Y lleva su propio codigo desde el
+// principio: si el primer envio si llego, reintentarlo escribe sobre el mismo
+// documento en vez de crear un duplicado.
 
 (function (global) {
   const LLAVE = 'blue-travel-guardados-pendientes';
   const MAX_INTENTOS_AUTO = 3;
+  // Lo que todavia se esta mandando no se anuncia como problema hasta que pase
+  // este tiempo: en una conexion normal Firestore confirma en un segundo.
+  const ESPERA_AVISO_MS = 15000;
+
+  // Codigo de documento como los de Firestore: 20 letras y numeros.
+  function codigoNuevo() {
+    const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const azar = new Uint8Array(20);
+    crypto.getRandomValues(azar);
+    return Array.from(azar, (n) => letras[n % letras.length]).join('');
+  }
 
   // coleccion -> funcion que guarda y devuelve una promesa
   const guardadores = {};
@@ -31,7 +51,8 @@
     try {
       const crudo = localStorage.getItem(LLAVE);
       const lista = crudo ? JSON.parse(crudo) : [];
-      return Array.isArray(lista) ? lista : [];
+      // Lo que quedo "enviando" en una pestana anterior ya no lo manda nadie.
+      return Array.isArray(lista) ? lista.map((p) => ({ ...p, enviando: false })) : [];
     } catch (e) {
       // localStorage lleno, deshabilitado o con basura: se arranca en blanco
       // antes que romper la app.
@@ -58,15 +79,18 @@
     const texto = document.getElementById('pendienteTexto');
     if (!aviso || !texto) return;
 
-    if (!cola.length) {
+    // Lo que se acaba de mandar en esta pestana todavia no es un problema.
+    const ahora = Date.now();
+    const atascados = cola.filter((p) => !(p.enviando && ahora - p.desde < ESPERA_AVISO_MS));
+    if (!atascados.length) {
       aviso.classList.add('hidden');
       return;
     }
 
-    const etiquetas = cola.map((p) => p.etiqueta).filter(Boolean);
-    texto.textContent = cola.length === 1
+    const etiquetas = atascados.map((p) => p.etiqueta).filter(Boolean);
+    texto.textContent = atascados.length === 1
       ? `No se pudo guardar ${etiquetas[0] || 'un documento'}. El dato no se perdió: sigue aquí esperando.`
-      : `Quedaron ${cola.length} documentos sin guardar (${etiquetas.join(', ')}). Los datos no se perdieron.`;
+      : `Quedaron ${atascados.length} documentos sin guardar (${etiquetas.join(', ')}). Los datos no se perdieron.`;
     aviso.classList.remove('hidden');
   }
 
@@ -84,31 +108,47 @@
   // Firebase confirma el usuario, y eso lo avisa el modulo de historial.
   global.reintentarPendientesAlEntrar = function () { return reintentar(true); };
 
-  // Guarda, y si falla encola en vez de callarse.
+  // Anota, manda, y borra la nota solo cuando Firestore confirma.
   //
   // `etiqueta` es lo que se le muestra a Cesar cuando falla: "la factura
   // FV-0010", no "documento 7". Sin ella el aviso no sirve para actuar.
+  //
+  // El guardador recibe (datos, codigo, esReintento) y escribe en ese codigo.
   global.guardarConRespaldo = function guardarConRespaldo(coleccion, etiqueta, datos) {
     const guardador = guardadores[coleccion];
     if (!guardador) return Promise.resolve(false);
 
-    return guardador(datos)
-      .then(() => true)
+    const item = {
+      id: codigoNuevo(),
+      coleccion,
+      etiqueta: etiqueta || '',
+      datos,
+      intentos: 1,
+      cuando: new Date().toISOString(),
+      // Solo vale en esta pestana: al recargar ya nadie lo esta mandando.
+      enviando: true,
+      desde: Date.now(),
+    };
+    cola.push(item);
+    escribirCola();
+    // Si en 15 segundos no ha confirmado, el aviso aparece aunque no haya error.
+    setTimeout(pintar, ESPERA_AVISO_MS + 100);
+
+    return guardador(datos, item.id, false)
+      .then(() => {
+        quitar(item.id);
+        return true;
+      })
       .catch(() => {
-        encolar(coleccion, etiqueta, datos);
+        item.enviando = false;
+        escribirCola();
+        pintar();
         return false;
       });
   };
 
-  function encolar(coleccion, etiqueta, datos) {
-    cola.push({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      coleccion,
-      etiqueta: etiqueta || '',
-      datos,
-      intentos: 0,
-      cuando: new Date().toISOString(),
-    });
+  function quitar(id) {
+    cola = cola.filter((p) => p.id !== id);
     escribirCola();
     pintar();
   }
@@ -126,12 +166,13 @@
     if (reintentando || !cola.length) return Promise.resolve();
     reintentando = true;
 
-    const candidatos = cola.filter((p) => guardadores[p.coleccion]
+    // Lo que esta pestana sigue mandando no se duplica con un reintento.
+    const candidatos = cola.filter((p) => guardadores[p.coleccion] && !p.enviando
       && (!automatico || p.intentos < MAX_INTENTOS_AUTO));
 
     return Promise.all(candidatos.map((p) => {
       p.intentos += 1;
-      return guardadores[p.coleccion](p.datos)
+      return guardadores[p.coleccion](p.datos, p.id, true)
         .then(() => { p.guardado = true; })
         .catch(() => { /* sigue en cola para el proximo intento */ });
     })).then(() => {
