@@ -4264,3 +4264,137 @@ select:focus {
 #lpListaEstado:empty {
   display: none;
 }
+
+/* ---------- Cobrar con link de pago (Inicio) ----------
+   Dos pasos lado a lado: cuanto y a quien. El monto sale de la calculadora y
+   el boton lo repite, para que se vea que valor lleva el link antes de crearlo. */
+#homePanel .card-cobro { --acento-tarjeta: #2aa77b; }
+#homePanel .card-dolar { --acento-tarjeta: #e0913a; }
+
+.cobro-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.cobro-paso {
+  min-width: 0;
+}
+
+/* El segundo paso se separa con una linea, no con otra tarjeta: es un solo
+   tramite. */
+.cobro-paso + .cobro-paso {
+  padding-left: 28px;
+  border-left: 1px solid var(--line-soft);
+}
+
+.cobro-numero {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--titulo);
+}
+
+.cobro-numero span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2aa77b;
+  color: #fff;
+  font-size: .75rem;
+  letter-spacing: 0;
+}
+
+.cobro-vacio {
+  margin: 16px 0 0;
+}
+
+.cobro-crear {
+  width: 100%;
+  margin-top: 18px;
+  justify-content: center;
+}
+
+.cobro-recientes {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.cobro-recientes h3 {
+  margin-top: 0;
+}
+
+.cobro-reciente {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.cobro-reciente + .cobro-reciente {
+  border-top: 1px solid var(--line-soft);
+}
+
+.cobro-reciente-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: .88rem;
+}
+
+.cobro-reciente-texto .hint {
+  margin: 0;
+  font-size: .78rem;
+}
+
+.cobro-reciente-acciones {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+  .cobro-cols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .cobro-paso + .cobro-paso {
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: 0;
+    border-top: 1px solid var(--line-soft);
+  }
+}
+
+@media (max-width: 520px) {
+  .cobro-reciente {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Sin monto no hay link: el boton se ve apagado, no solo deja de responder. */
+.cobro-crear:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Un link vencido o desactivado ya no se puede usar: se atenua para que el
+   ojo vaya a los que siguen abiertos. */
+.cobro-reciente-apagado .cobro-reciente-texto {
+  opacity: .6;
+}

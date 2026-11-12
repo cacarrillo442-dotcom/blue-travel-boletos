@@ -638,6 +638,15 @@
     if (simbolo) simbolo.textContent = el('calcMoneda').value === 'USD' ? 'US$' : '$';
   }
 
+  // El link de pago de Inicio se crea por el monto que salga de aqui. Se
+  // avisa con un evento para que ese modulo no tenga que repetir la cuenta.
+  function publicarCobro(cobro) {
+    window.cobroCalculado = cobro;
+    const vacio = el('calcVacio');
+    if (vacio) vacio.classList.toggle('hidden', !!cobro);
+    document.dispatchEvent(new CustomEvent('cobro-calculado', { detail: cobro }));
+  }
+
   function calcular() {
     const destino = el('calcResultado');
     if (!destino) return;
@@ -645,6 +654,7 @@
     const bruto = leerMonto(el('calcGanancia').value);
     if (!Number.isFinite(bruto) || bruto <= 0) {
       destino.innerHTML = '';
+      publicarCobro(null);
       return;
     }
 
@@ -653,6 +663,7 @@
     if (enDolares && !t.valor) {
       destino.innerHTML = window.vacio('alerta', 'Falta la tasa del día',
         'Sin ella no puedo convertir desde dólares. Cambia a pesos o vuelve a intentar.');
+      publicarCobro(null);
       return;
     }
 
@@ -698,7 +709,27 @@
         : `${window.icono('alerta')} Usando el 1,99% visto en tus reportes de conciliación. `
           + 'Carga tus ventas en Ventas y la leo de cada transacción.'
       }</p>`;
+
+    publicarCobro({
+      valorCop: enlace,
+      moneda: enDolares ? 'USD' : 'COP',
+      quiereGanar: bruto,
+      // La TRM exacta, con centavos: es la que se uso en la cuenta.
+      tasa: enDolares ? t.valor : null,
+      tasaFecha: enDolares ? t.fecha : null,
+      comisionEstimada: Math.round(comision),
+      porcentajeWompi: tarifa.porcentaje,
+      cubreRetenciones: !!cubrirRet,
+    });
   }
+
+  // Despues de crear el link se limpia el monto, para no crear otro igual
+  // por un segundo clic.
+  window.limpiarCalculadora = function limpiarCalculadora() {
+    if (!el('calcGanancia')) return;
+    el('calcGanancia').value = '';
+    calcular();
+  };
 
   if (el('calcGanancia')) {
     el('calcGanancia').addEventListener('input', () => { formatearCampo(); calcular(); });

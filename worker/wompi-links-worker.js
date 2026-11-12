@@ -9,8 +9,12 @@
  * Va en un Worker aparte del de precios a proposito: si uno de los dos tuviera
  * un problema, el otro no expone sus llaves.
  *
- * Solo hace UNA cosa: crear un link de pago. No consulta transacciones, no
- * reembolsa, no reenvia nada mas a Wompi.
+ * Solo hace DOS cosas: crear un link de pago y desactivar uno. No consulta
+ * transacciones, no reembolsa, no reenvia nada mas a Wompi.
+ *
+ * Desactivar existe porque en la prueba un link "de un solo uso" siguio
+ * aceptando pagos despues de uno aprobado. Apagarlo a mano evita que un
+ * cliente pague dos veces lo mismo.
  *
  * Se despliega en Cloudflare Workers. Ver worker/README-wompi.md.
  */
@@ -137,6 +141,15 @@ export function validarPedido(p) {
   };
 }
 
+// El id de un link de Wompi: letras y numeros, y en pruebas empieza por
+// "test_". Se exige que coincida con el ambiente para no apagar por error un
+// link real desde pruebas, ni al reves.
+export function validarIdLink(id, entorno) {
+  const s = String(id || '');
+  if (!/^(test_)?[A-Za-z0-9]{4,32}$/.test(s)) return false;
+  return entorno === 'produccion' ? !s.startsWith('test_') : s.startsWith('test_');
+}
+
 // ---------- El Worker ----------
 
 export default {
@@ -149,7 +162,9 @@ export default {
     if (!ORIGENES_PERMITIDOS.includes(origen)) return json({ error: 'Origen no autorizado.' }, 403, origen);
 
     const url = new URL(request.url);
-    if (request.method !== 'POST' || url.pathname !== '/links') {
+    // POST /links crea; POST /links/<id>/desactivar apaga ese link.
+    const desactivar = url.pathname.match(/^\/links\/([^/]+)\/desactivar$/);
+    if (request.method !== 'POST' || (url.pathname !== '/links' && !desactivar)) {
       return json({ error: 'Ruta no disponible.' }, 404, origen);
     }
 
@@ -171,6 +186,24 @@ export default {
       await verificarToken(auth.replace(/^Bearer\s+/i, ''), permitidos);
     } catch (e) {
       return json({ error: `No autorizado: ${e.message}` }, 401, origen);
+    }
+
+    if (desactivar) {
+      const id = decodeURIComponent(desactivar[1]);
+      if (!validarIdLink(id, entorno)) {
+        return json({ error: `Ese link no es del ambiente "${entorno}".` }, 400, origen);
+      }
+      const r = await fetch(`${API_WOMPI[entorno]}/payment_links/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${llavePrivada}` },
+        body: JSON.stringify({ active: false }),
+      });
+      const respuesta = await r.json().catch(() => ({}));
+      if (!r.ok || !respuesta.data) {
+        const motivo = respuesta.error ? JSON.stringify(respuesta.error.messages || respuesta.error.type || '') : `HTTP ${r.status}`;
+        return json({ error: `Wompi no desactivó el link: ${motivo}` }, 502, origen);
+      }
+      return json({ id, activo: respuesta.data.active === true }, 200, origen);
     }
 
     let pedido;
