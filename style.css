@@ -4239,3 +4239,28 @@ select:focus {
     margin-bottom: 0;
   }
 }
+
+/* Links de pago */
+.lp-convertir {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.lp-resultado {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.lp-url,
+#lpLista a {
+  overflow-wrap: anywhere;
+}
+
+#lpListaEstado:empty {
+  display: none;
+}

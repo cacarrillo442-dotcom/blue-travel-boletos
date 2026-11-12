@@ -502,6 +502,7 @@ function pintarLista() {
         <button type="button" class="btn-add pv-abonar">Registrar abono</button>
         <button type="button" class="btn-add pv-pdf">Descargar resumen</button>
         <button type="button" class="btn-add pv-factura">Llevar a factura</button>
+        ${saldo > 0 && (p.moneda || 'USD') === 'USD' ? '<button type="button" class="btn-add pv-link">Link de pago del saldo</button>' : ''}
         <button type="button" class="btn-secondary pv-editar">Editar</button>
         <button type="button" class="btn-secondary pv-borrar">Eliminar</button>
       </div>`;
@@ -509,6 +510,14 @@ function pintarLista() {
     card.querySelector('.pv-abonar').addEventListener('click', () => panelAbono(p, card));
     card.querySelector('.pv-pdf').addEventListener('click', () => R.descargarPDF(p));
     card.querySelector('.pv-factura').addEventListener('click', () => llevarAFactura(p));
+    const botonLink = card.querySelector('.pv-link');
+    if (botonLink && window.prepararLinkDePago) {
+      botonLink.addEventListener('click', () => window.prepararLinkDePago({
+        clienteNombre: p.titular,
+        concepto: `Paquete ${p.destino}`,
+        valorUsd: saldo,
+      }));
+    }
     card.querySelector('.pv-editar').addEventListener('click', () => {
       limpiarFormulario();
       editando = p.id;

@@ -24,7 +24,7 @@ const db = getFirestore(app);
 // que restaurar despues de un problema las habria dado por perdidas.
 const COLECCIONES = [
   'clientes', 'boletos', 'facturas', 'ventas', 'viajes', 'cupones',
-  'obligaciones_cumplidas', 'plan_seguimiento', 'paquetes_vendidos',
+  'obligaciones_cumplidas', 'plan_seguimiento', 'paquetes_vendidos', 'links_pago',
   'config', 'aerolineas_catalogo', 'aeropuertos_catalogo',
 ];
 
