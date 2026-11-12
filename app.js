@@ -1189,6 +1189,17 @@ document.getElementById('ticketForm').addEventListener('submit', (e) => {
 
   const raw = collectTicketRaw();
   const data = ticketDataFromRaw(raw);
+
+  // Un boleto sin aeropuerto sale con "?" en el PDF y en Proximos viajes (paso
+  // con uno de Volaris a SAL). No se bloquea -puede ser un aeropuerto que no
+  // esta en el catalogo-, pero se pregunta antes.
+  const faltan = [];
+  if (!data.ida.origin) faltan.push('el origen de la ida');
+  if (!data.ida.dest) faltan.push('el destino de la ida');
+  if (data.hasReturn && data.regreso && !data.regreso.origin) faltan.push('el origen del regreso');
+  if (data.hasReturn && data.regreso && !data.regreso.dest) faltan.push('el destino del regreso');
+  if (faltan.length && !window.confirm(`Falta ${faltan.join(' y ')}. ¿Generar el boleto así de todas formas?`)) return;
+
   generatePDF(data);
 
   const telefono = buildFullTicketContactPhone();
@@ -1610,6 +1621,17 @@ document.getElementById('quoteForm').addEventListener('submit', (e) => {
   qOutputText.value = buildQuoteText(collectQuoteFields());
   qOutputCard.classList.remove('hidden');
   qOutputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// El cliente acepto: se pasa a la tarjeta de cobro de Inicio con su nombre,
+// su telefono y el viaje. El monto lo escribe quien cobra.
+document.getElementById('qCobrarBtn').addEventListener('click', () => {
+  const q = collectQuoteFields();
+  const ruta = [q.origin, q.dest].filter(Boolean).join('-');
+  const concepto = ['Boleto', ruta, q.departDate].filter(Boolean).join(' ');
+  if (window.prepararCobro) {
+    window.prepararCobro({ clienteNombre: q.clientName, telefono: q.clientPhone, concepto });
+  }
 });
 
 document.getElementById('qCopyBtn').addEventListener('click', () => {

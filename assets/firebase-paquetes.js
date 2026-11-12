@@ -502,7 +502,7 @@ function pintarLista() {
         <button type="button" class="btn-add pv-abonar">Registrar abono</button>
         <button type="button" class="btn-add pv-pdf">Descargar resumen</button>
         <button type="button" class="btn-add pv-factura">Llevar a factura</button>
-        ${saldo > 0 && (p.moneda || 'USD') === 'USD' ? '<button type="button" class="btn-add pv-link">Link de pago del saldo</button>' : ''}
+        <button type="button" class="btn-add pv-link">Cobrar comisión con link</button>
         <button type="button" class="btn-secondary pv-editar">Editar</button>
         <button type="button" class="btn-secondary pv-borrar">Eliminar</button>
       </div>`;
@@ -511,11 +511,20 @@ function pintarLista() {
     card.querySelector('.pv-pdf').addEventListener('click', () => R.descargarPDF(p));
     card.querySelector('.pv-factura').addEventListener('click', () => llevarAFactura(p));
     const botonLink = card.querySelector('.pv-link');
-    if (botonLink && window.prepararLinkDePago) {
-      botonLink.addEventListener('click', () => window.prepararLinkDePago({
+    // Por Wompi solo se cobra la comision de la agencia; el paquete se le paga
+    // al proveedor por otro lado. La comision es el precio menos lo que cobro
+    // el proveedor. Va a la tarjeta de Inicio, que le suma lo de Wompi.
+    if (botonLink && window.prepararCobro) {
+      const ganancia = p.costoProveedor && total ? total - p.costoProveedor : 0;
+      botonLink.addEventListener('click', () => window.prepararCobro({
         clienteNombre: p.titular,
-        concepto: `Paquete ${p.destino}`,
-        valorUsd: saldo,
+        concepto: `Comisión paquete ${p.destino}`,
+        valor: ganancia > 0 ? ganancia : null,
+        moneda: p.moneda || 'USD',
+        paqueteId: p.id,
+        texto: ganancia > 0
+          ? `Comisión del paquete de ${p.titular} a ${p.destino}: ${R.dinero(ganancia, p.moneda)} (precio menos lo que cobró el proveedor).`
+          : `Paquete de ${p.titular} a ${p.destino}. No tiene el costo del proveedor, así que escribe tú la comisión.`,
       }));
     }
     card.querySelector('.pv-editar').addEventListener('click', () => {

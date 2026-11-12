@@ -36,8 +36,36 @@ let unsubscribeTrips = null;
 // guardados antes del cambio, para no perder ningun aviso pendiente.
 let currentBoletos = [];
 
+// Un boleto se corrige generandolo otra vez, y quedan dos guardados: el viejo
+// con la fecha mala y el nuevo. Sin esto los dos pedian aviso (paso con una
+// reserva movida del 14 al 17 de noviembre). Misma reserva y mismos pasajeros
+// es el mismo viaje: manda el ultimo generado. El historial guarda los dos.
+function claveDeViaje(b) {
+  const reserva = String(b.bookingRef || '').trim().toUpperCase();
+  if (!reserva) return null;
+  const pasajeros = (b.passengers || []).map((p) => String(p).trim().toUpperCase()).sort().join('|');
+  return `${reserva}#${pasajeros}`;
+}
+
+function soloElUltimo(boletos) {
+  // Uno recien generado todavia no trae la hora del servidor: es el mas nuevo.
+  const masNuevo = (b) => (b.creado && b.creado.toMillis ? b.creado.toMillis() : Infinity);
+  const ordenados = [...boletos].sort((a, b) => masNuevo(b) - masNuevo(a));
+  const vistos = new Set();
+  return ordenados.filter((b) => {
+    const clave = claveDeViaje(b);
+    if (!clave) return true;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
+}
+
+// Inicio pide confirmacion de datos con la misma regla: solo el ultimo.
+window.soloElUltimoBoleto = soloElUltimo;
+
 window.onBoletosChange = function (boletos) {
-  currentBoletos = boletos.map(boletoAViaje);
+  currentBoletos = soloElUltimo(boletos).map(boletoAViaje);
   renderTrips();
 };
 

@@ -209,6 +209,7 @@ async function crearLink(datos, estado) {
       // ganar y la comision que se le sumo. Sirve para cuadrar despues.
       calculo: datos.calculo || null,
       origen: datos.origen,
+      paqueteId: datos.paqueteId || '',
       wompiId: r.id,
       url: r.url,
       entorno: r.entorno,
@@ -449,6 +450,57 @@ function avisarCambio() {
 
 document.addEventListener('ventas-cambiaron', avisarCambio);
 
+// ---------- Llenar la tarjeta de Inicio desde otras pantallas ----------
+//
+// Por Wompi solo se cobra la comision de la agencia, nunca el precio del
+// boleto ni del paquete: eso se le paga al proveedor por otro lado.
+// Cotizaciones manda el cliente y el concepto; la comision la escribe quien
+// cobra, porque la cotizacion no la dice. Paquetes vendidos manda ademas su
+// ganancia (precio menos costo del proveedor), que ES la comision.
+
+// De donde viene el proximo link, para dejarlo amarrado a su paquete.
+let contextoCobro = null;
+
+function pintarContexto() {
+  const nota = el('cbContexto');
+  if (!contextoCobro) { nota.classList.add('hidden'); return; }
+  nota.classList.remove('hidden');
+  el('cbContextoTexto').textContent = contextoCobro.texto;
+}
+
+el('cbContextoQuitar').addEventListener('click', () => { contextoCobro = null; pintarContexto(); });
+
+window.prepararCobro = ({ clienteNombre, telefono, concepto, valor, moneda, paqueteId, texto }) => {
+  document.querySelector('.tab-btn[data-tab="homePanel"]').click();
+  el('cbCliente').value = clienteNombre || '';
+  el('cbTelefono').value = telefono || '';
+  el('cbConcepto').value = (concepto || '').slice(0, 80);
+  el('cbResultado').classList.add('hidden');
+  el('cbEstado').textContent = '';
+  // Si el cliente esta en la base y no vino telefono, se trae el suyo.
+  if (!telefono) {
+    const c = buscarCliente(clienteNombre);
+    if (c && c.telefono) el('cbTelefono').value = c.telefono;
+  }
+  contextoCobro = paqueteId ? { paqueteId, texto } : null;
+  pintarContexto();
+
+  const campo = el('calcGanancia');
+  const selector = el('calcMoneda');
+  if (valor) {
+    const enPesos = moneda === 'COP';
+    selector.value = enPesos ? 'COP' : 'USD';
+    selector.dispatchEvent(new Event('change'));
+    campo.value = enPesos ? String(Math.round(valor)) : Number(valor).toFixed(2).replace('.', ',');
+  } else {
+    campo.value = '';
+  }
+  campo.dispatchEvent(new Event('input'));
+  el('cobroCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Sin monto, el cursor va directo a escribirlo.
+  if (!valor) setTimeout(() => campo.focus({ preventScroll: true }), 350);
+};
+
 // ---------- Desde Inicio ----------
 //
 // El monto no se escribe aqui: sale de la calculadora de Inicio, que ya pasa
@@ -457,11 +509,15 @@ document.addEventListener('ventas-cambiaron', avisarCambio);
 let cobro = window.cobroCalculado || null;
 
 function pintarBotonCobro() {
-  const listo = !!(cobro && cobro.valorCop >= 1500);
+  // El intermediario no crea links de mas de $30 millones (atrapa un cero de
+  // mas); un saldo grande de paquete puede pasarlo, y se dice antes.
+  const TOPE = 30000000;
+  const listo = !!(cobro && cobro.valorCop >= 1500 && cobro.valorCop <= TOPE);
   el('cbCrearBtn').disabled = !listo;
   el('cbCrearTexto').textContent = !cobro
     ? 'Primero escribe cuánto'
-    : (listo ? `Crear link por ${pesos(cobro.valorCop)}` : 'El mínimo de Wompi es $1.500');
+    : (listo ? `Crear link por ${pesos(cobro.valorCop)}`
+      : (cobro.valorCop > TOPE ? 'Pasa de $30.000.000: divídelo en dos links' : 'El mínimo de Wompi es $1.500'));
 }
 
 document.addEventListener('cobro-calculado', (ev) => {
@@ -487,30 +543,18 @@ el('cobroForm').addEventListener('submit', async (e) => {
     valorUsd: c.moneda === 'USD' ? c.quiereGanar : null,
     tasa: c.tasa,
     calculo: c,
-    origen: 'inicio',
+    origen: contextoCobro ? 'paquete' : 'inicio',
+    // El saldo que este link cubre, para proponerlo como abono cuando se pague.
+    paqueteId: contextoCobro ? contextoCobro.paqueteId : '',
   }, el('cbEstado'));
   pintarBotonCobro();
   if (!hecho) return;
   pintarResultado(el('cbResultado'), hecho.registro, hecho.aviso);
   ['cbCliente', 'cbTelefono', 'cbConcepto'].forEach((id) => { el(id).value = ''; });
+  contextoCobro = null;
+  pintarContexto();
   if (window.limpiarCalculadora) window.limpiarCalculadora();
 });
-
-// ---------- Desde Paquetes vendidos ----------
-
-window.prepararLinkDePago = ({ clienteNombre, telefono, concepto, valorUsd }) => {
-  document.querySelector('.tab-btn[data-tab="linksPanel"]').click();
-  el('lpCliente').value = clienteNombre || '';
-  el('lpTelefono').value = telefono || '';
-  el('lpConcepto').value = concepto || '';
-  el('lpUsd').value = valorUsd ? Number(valorUsd).toFixed(2) : '';
-  el('lpValor').value = '';
-  el('lpResultado').classList.add('hidden');
-  pintarConversion();
-  pintarTotal();
-  el('lpEstado').textContent = valorUsd ? 'Revisa la tasa y pulsa "Pasar a pesos".' : '';
-  el('linkPagoForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
 
 // ---------- Historial ----------
 

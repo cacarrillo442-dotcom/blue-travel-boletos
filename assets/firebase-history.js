@@ -50,7 +50,9 @@ function horasDesde(ts) {
 }
 
 window.boletosSinConfirmar = function boletosSinConfirmar() {
-  return boletos
+  // Un boleto corregido se genera otra vez: se pide confirmar solo el ultimo.
+  const vigentes = window.soloElUltimoBoleto ? window.soloElUltimoBoleto(boletos) : boletos;
+  return vigentes
     .filter((b) => b.confirmado !== true && b.creado)
     .map((b) => ({ ...b, _horas: horasDesde(b.creado) }))
     .filter((b) => b._horas != null && b._horas < DIAS_UTILES_PARA_PEDIRLA * 24)
