@@ -264,8 +264,8 @@ el('linkPagoForm').addEventListener('submit', async (e) => {
 // aprobado. Cuando el pago llega, se apaga desde aqui para que nadie pague dos
 // veces lo mismo.
 
-async function desactivarLink(l, boton) {
-  if (!window.confirm(`¿Desactivar el link de ${l.clienteNombre} por ${pesos(l.valorCop)}? `
+async function desactivarLink(l, boton, { sinPreguntar = false } = {}) {
+  if (!sinPreguntar && !window.confirm(`¿Desactivar el link de ${l.clienteNombre} por ${pesos(l.valorCop)}? `
     + 'Después de esto nadie podrá pagar con él.')) return;
   boton.disabled = true;
   boton.textContent = 'Desactivando…';
@@ -292,14 +292,162 @@ async function desactivarLink(l, boton) {
   }
 }
 
-// Un link sirve si no esta vencido ni desactivado.
+// ---------- Cual link ya se pago ----------
+//
+// El reporte de Wompi que se carga en Ventas (el Conciliar) NO trae la
+// referencia del pago ni el codigo del link: solo fecha, valor y tarjeta. Asi
+// que se empareja por valor. Funciona porque los links que salen de la
+// calculadora tienen montos casi unicos ($343.102, $17.156) al sumarles la
+// comision. Aun asi solo se acepta una pareja si es inequivoca: ese link tiene
+// un solo pago posible y ese pago un solo link posible. Si hay duda, no se
+// adivina.
+
+function isoLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function sumarDias(iso, n) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return isoLocal(new Date(y, m - 1, d + n));
+}
+
+// Un dia de margen a cada lado: el link guarda la hora en UTC y el reporte la
+// fecha en Colombia, y un pago a las 11 p.m. cae en dias distintos.
+function ventanaDe(l) {
+  const creado = l.creado && l.creado.toDate ? l.creado.toDate() : new Date();
+  const desde = sumarDias(isoLocal(creado), -1);
+  const hasta = l.vence ? sumarDias(String(l.vence).slice(0, 10), 1) : sumarDias(isoLocal(creado), 31);
+  return { desde, hasta };
+}
+
+function esPagoDeWompi(v) {
+  return (v.tipo || 'COMPRA') === 'COMPRA' && !!String(v.autorizacion || '').trim();
+}
+
+function emparejar(listaLinks, ventas, { incluirPruebas = false } = {}) {
+  const pagos = new Map();
+  const usadas = new Set();
+  const porId = new Map(ventas.map((v) => [v.id, v]));
+
+  // Lo que ya se confirmo a mano manda sobre cualquier calculo.
+  listaLinks.forEach((l) => {
+    const v = l.ventaId && porId.get(l.ventaId);
+    if (v) { pagos.set(l.id, v); usadas.add(v.id); }
+  });
+
+  const candidatosDe = new Map();
+  const linksDeVenta = new Map();
+  listaLinks.forEach((l) => {
+    if (pagos.has(l.id)) return;
+    if (l.entorno !== 'produccion' && !incluirPruebas) return;
+    const { desde, hasta } = ventanaDe(l);
+    const posibles = ventas.filter((v) => !usadas.has(v.id) && esPagoDeWompi(v)
+      && Math.round(Number(v.bruto)) === Math.round(Number(l.valorCop))
+      && v.fecha >= desde && v.fecha <= hasta);
+    candidatosDe.set(l.id, posibles);
+    posibles.forEach((v) => linksDeVenta.set(v.id, (linksDeVenta.get(v.id) || 0) + 1));
+  });
+
+  candidatosDe.forEach((posibles, id) => {
+    if (posibles.length === 1 && linksDeVenta.get(posibles[0].id) === 1) pagos.set(id, posibles[0]);
+  });
+  return pagos;
+}
+
+let pagos = new Map();
+
+function recalcularPagos() {
+  pagos = emparejar(links, window.obtenerVentas ? window.obtenerVentas() : []);
+}
+
+// Si el link sigue recibiendo pagos despues de pagado, hay riesgo de cobro
+// doble: por eso "pagado y todavia abierto" es un estado aparte.
 function estadoLink(l) {
+  const vencido = l.vence && l.vence < new Date().toISOString();
+  if (pagos.has(l.id)) return l.desactivado || vencido ? 'pagado' : 'pagadoAbierto';
   if (l.desactivado) return 'desactivado';
-  if (l.vence && l.vence < new Date().toISOString()) return 'vencido';
+  if (vencido) return 'vencido';
   return 'activo';
 }
 
-const ROTULO_ESTADO = { activo: 'Vence', vencido: 'Vencido', desactivado: 'Desactivado' };
+const ROTULO_ESTADO = {
+  activo: 'Vence', vencido: 'Vencido', desactivado: 'Desactivado',
+  pagado: 'Pagado', pagadoAbierto: 'Pagado, pero el link sigue abierto',
+};
+
+function textoEstado(l, formatoFecha) {
+  const estado = estadoLink(l);
+  if (estado === 'pagado' || estado === 'pagadoAbierto') {
+    const v = pagos.get(l.id);
+    return `${ROTULO_ESTADO[estado]} · venta del ${escapeHtml(fechaDe(v.fecha, formatoFecha))}`;
+  }
+  if (estado === 'desactivado') return ROTULO_ESTADO[estado];
+  return `${ROTULO_ESTADO[estado]} el ${escapeHtml(new Date(l.vence).toLocaleDateString('es-CO', formatoFecha))}`;
+}
+
+function fechaDe(iso, formato) {
+  const [y, m, d] = String(iso || '').split('-').map(Number);
+  return y ? new Date(y, m - 1, d).toLocaleDateString('es-CO', formato) : '';
+}
+
+// Se confirma desde Ventas, al asignarle el cliente a la venta.
+async function marcarPagado(l, v) {
+  await updateDoc(doc(db, 'links_pago', l.id), { ventaId: v.id, pagadoFecha: v.fecha });
+}
+
+function mensajeRecordatorio(l) {
+  const vence = new Date(l.vence);
+  const hora = vence.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+  const hoy = isoLocal(new Date());
+  const dia = isoLocal(vence) === hoy ? 'hoy'
+    : isoLocal(vence) === sumarDias(hoy, 1) ? 'mañana'
+      : `el ${vence.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}`;
+  return `Hola ${String(l.clienteNombre || '').split(' ')[0]}, te recuerdo el link para tu pago de ${l.concepto}`
+    + ` por ${pesos(l.valorCop)} pesos. Vence ${dia} a las ${hora}:\n${l.url}\n\nSi ya pagaste, ignora este mensaje.`;
+}
+
+// Lo que Inicio muestra en "Necesita tu atencion". Los de prueba no cuentan.
+function pendientesParaInicio() {
+  const lista = [];
+  links.forEach((l) => {
+    if (l.entorno !== 'produccion') return;
+    const estado = estadoLink(l);
+    if (estado === 'pagadoAbierto') lista.push({ tipo: 'cerrar', link: l, venta: pagos.get(l.id) });
+    if (estado === 'activo') {
+      const horas = (new Date(l.vence) - new Date()) / 3600000;
+      lista.push({ tipo: 'esperando', link: l, horas });
+    }
+  });
+  return lista;
+}
+
+window.LinksPago = {
+  emparejar,
+  ventanaDe,
+  linkDeVenta(v) {
+    for (const [id, venta] of pagos) {
+      if (venta.id === v.id) return links.find((l) => l.id === id) || null;
+    }
+    return null;
+  },
+  marcarPagado,
+  pendientesParaInicio,
+  desactivar: desactivarLink,
+  copiar,
+  enlaceRecordatorio(l) {
+    const digitos = String(l.telefono || '').replace(/\D/g, '');
+    return digitos ? `https://wa.me/${digitos}?text=${encodeURIComponent(mensajeRecordatorio(l))}` : '';
+  },
+};
+
+function avisarCambio() {
+  recalcularPagos();
+  pintarLista();
+  document.dispatchEvent(new CustomEvent('links-cambiaron'));
+  if (window.pintarInicio) window.pintarInicio();
+}
+
+document.addEventListener('ventas-cambiaron', avisarCambio);
 
 // ---------- Desde Inicio ----------
 //
@@ -375,20 +523,22 @@ function pintarRecientes() {
   links.slice(0, 3).forEach((l) => {
     const estado = estadoLink(l);
     const activo = estado === 'activo';
+    // Pagado pero abierto: lo unico que se puede hacer es cerrarlo.
+    const cerrar = activo || estado === 'pagadoAbierto';
     const fila = document.createElement('div');
-    fila.className = `cobro-reciente${activo ? '' : ' cobro-reciente-apagado'}`;
+    fila.className = `cobro-reciente${activo || estado === 'pagadoAbierto' ? '' : ' cobro-reciente-apagado'}`;
     fila.innerHTML = `
       <div class="cobro-reciente-texto">
         <strong>${escapeHtml(l.clienteNombre)}</strong>
         <span>${escapeHtml(l.concepto)} · <span class="cifras">${escapeHtml(pesos(l.valorCop))}</span>${
           l.valorUsd ? ` · US$${escapeHtml(Number(l.valorUsd).toFixed(2))}` : ''}</span>
-        <span class="hint">${l.entorno === 'sandbox' ? 'Prueba · ' : ''}${ROTULO_ESTADO[estado]}${
-          estado === 'desactivado' ? '' : ' el ' + escapeHtml(new Date(l.vence).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }))}</span>
+        <span class="hint${estado === 'pagadoAbierto' ? ' cobro-alerta' : ''}">${l.entorno === 'sandbox' ? 'Prueba · ' : ''}${
+          textoEstado(l, { day: 'numeric', month: 'short' })}</span>
       </div>
       <div class="cobro-reciente-acciones">
         ${activo ? '<button type="button" class="btn-add btn-compact lp-copiar">Copiar</button>' : ''}
         ${activo && enlaceWhatsapp(l) ? '<button type="button" class="btn-add btn-compact lp-wa">WhatsApp</button>' : ''}
-        ${activo ? '<button type="button" class="btn-secondary btn-compact lp-apagar">Desactivar</button>' : ''}
+        ${cerrar ? '<button type="button" class="btn-secondary btn-compact lp-apagar">Desactivar</button>' : ''}
       </div>`;
     conectarAcciones(fila, l);
     caja.appendChild(fila);
@@ -420,11 +570,14 @@ function pintarLista() {
     card.innerHTML = `
       <strong>${escapeHtml(l.clienteNombre)}</strong> · ${escapeHtml(l.concepto)} · ${escapeHtml(pesos(l.valorCop))}
       ${l.entorno === 'sandbox' ? '<span class="hint"> (prueba)</span>' : ''}
-      <p class="hint">${ROTULO_ESTADO[estado]}${estado === 'desactivado' ? '' : ' el ' + escapeHtml(new Date(l.vence).toLocaleDateString('es-CO'))}
+      <p class="hint${estado === 'pagadoAbierto' ? ' cobro-alerta' : ''}">${textoEstado(l, { day: 'numeric', month: 'short', year: 'numeric' })}
         · <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.url)}</a></p>
       ${activo ? `<div class="trip-actions">
         <button type="button" class="btn-add lp-copiar">Copiar link</button>
         ${enlaceWhatsapp(l) ? '<button type="button" class="btn-add lp-wa">WhatsApp</button>' : ''}
+        <button type="button" class="btn-secondary lp-apagar">Desactivar</button>
+      </div>` : ''}
+      ${estado === 'pagadoAbierto' ? `<div class="trip-actions">
         <button type="button" class="btn-secondary lp-apagar">Desactivar</button>
       </div>` : ''}`;
     conectarAcciones(card, l);
@@ -437,11 +590,11 @@ el('lpAvisoWorker').classList.toggle('hidden', !!WORKER_WOMPI);
 onAuthStateChanged(auth, (user) => {
   if (unsub) { unsub(); unsub = null; }
   links = [];
-  if (!user) { pintarLista(); return; }
+  if (!user) { avisarCambio(); return; }
   unsub = onSnapshot(query(col, orderBy('creado', 'desc'), limit(50)), (snap) => {
     links = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     el('lpListaEstado').textContent = '';
-    pintarLista();
+    avisarCambio();
   }, (err) => {
     if (err && err.code === 'permission-denied') {
       el('lpListaEstado').textContent = 'Para ver el historial falta pegar la línea de links_pago en las reglas de Firebase.';

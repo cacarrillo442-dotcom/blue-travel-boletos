@@ -213,8 +213,10 @@
     // Las ventas sin cliente ni origen cuentan como UNA tarea, no una por
     // venta: son diez minutos de trabajo seguidos, no diez pendientes.
     const porAsignar = window.obtenerVentasPorAsignar ? window.obtenerVentasPorAsignar() : [];
+    // Links de pago: los pagados que siguen abiertos y los que esperan pago.
+    const links = window.LinksPago ? window.LinksPago.pendientesParaInicio() : [];
     const total = viajes.length + cupones.length + confirmar.length + obligaciones.length
-      + (porAsignar.length ? 1 : 0);
+      + (porAsignar.length ? 1 : 0) + links.length;
 
     marcarEnLaBarra('navConteoViajes', viajes.length);
     marcarEnLaBarra('navConteoCupones', cupones.length);
@@ -254,6 +256,49 @@
         acciones: [{ icono: 'clientes', texto: 'Asignar', alPulsar: () => irA('salesPanel') }],
       }));
     }
+
+    // Un link pagado que sigue abierto puede cobrarle dos veces al cliente:
+    // va de primero.
+    links.filter((p) => p.tipo === 'cerrar').forEach(({ link, venta }) => {
+      destino.appendChild(filaPendiente({
+        tono: 'urgent',
+        cuando: 'Pagado',
+        titulo: `${escapeHtml(link.clienteNombre)} <span class="trip-leg">link abierto</span>`,
+        detalle: `${window.icono('dinero')} Pagó ${escapeHtml(window.Ventas ? window.Ventas.pesos(link.valorCop) : link.valorCop)}`
+          + ` el ${fechaCorta(venta.fecha)} · ${escapeHtml(link.concepto)} · ciérralo para que no pague dos veces`,
+        acciones: [{
+          icono: 'anular', texto: 'Desactivar', clase: 'btn-add btn-compact',
+          alPulsar: (btn) => window.LinksPago.desactivar(link, btn),
+        }],
+      }));
+    });
+
+    // Los que esperan pago: un recordatorio a tiempo cierra la venta.
+    links.filter((p) => p.tipo === 'esperando').forEach(({ link, horas }) => {
+      const recordar = window.LinksPago.enlaceRecordatorio(link);
+      const acciones = [];
+      if (recordar) {
+        acciones.push({
+          icono: 'mensaje', texto: 'Recordarle',
+          alPulsar: () => window.open(recordar, '_blank', 'noopener'),
+        });
+      }
+      acciones.push({
+        icono: 'copiar', texto: 'Copiar link', clase: 'btn-add btn-compact',
+        alPulsar: (btn) => window.LinksPago.copiar(link.url, btn),
+      });
+      const h = Math.max(0, Math.floor(horas));
+      destino.appendChild(filaPendiente({
+        tono: horas <= 6 ? 'soon' : 'later',
+        cuando: h < 1 ? 'Vence ya' : `Vence en ${h} h`,
+        titulo: `${escapeHtml(link.clienteNombre)} <span class="trip-leg">sin pago</span>`,
+        detalle: `${window.icono('dinero')} ${escapeHtml(link.concepto)} · `
+          + `${escapeHtml(window.Ventas ? window.Ventas.pesos(link.valorCop) : link.valorCop)}`
+          + ' · si ya pagó, aparece al cargar el reporte de Wompi en Ventas'
+          + (recordar ? '' : ' · sin teléfono guardado'),
+        acciones,
+      }));
+    });
 
     // Las obligaciones van de primeras: un RNT sin renovar deja la agencia sin
     // poder operar, que pesa mas que un check-in de pasado mañana.

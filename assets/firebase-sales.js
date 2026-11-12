@@ -53,6 +53,8 @@ onAuthStateChanged(auth, (user) => {
       pintarAsignaciones();
       // Una venta asignada como referido puede pedir un cupon nuevo.
       if (window.pintarCuponesReferidos) window.pintarCuponesReferidos();
+      // Los links de pago se marcan como pagados al aparecer su venta.
+      document.dispatchEvent(new CustomEvent('ventas-cambiaron'));
       if (window.pintarInicio) window.pintarInicio();
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('ventas');
     }, (err) => {
@@ -833,6 +835,14 @@ function marcarPendientes(n) {
 
 window.obtenerVentasPorAsignar = () => (ventas || []).filter(V.requiereAsignacion);
 
+// Cuando cambian los links, una venta pendiente puede ganar su sugerencia.
+document.addEventListener('links-cambiaron', () => pintarAsignaciones());
+
+function fechaLinkCorta(l) {
+  const f = l && l.creado && l.creado.toDate ? l.creado.toDate() : null;
+  return f ? f.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) : '';
+}
+
 function pintarAsignaciones() {
   const card = el('asignarCard');
   const lista = el('asignarLista');
@@ -866,7 +876,12 @@ function pintarAsignaciones() {
 
   pendientes.forEach((v) => {
     // Solo se sugiere si todavia no tiene cliente: no se pisa lo ya escrito.
-    const sug = !String(v.cliente || '').trim() ? V.sugerenciaPorTarjeta(v, ventas) : null;
+    // El link de pago manda sobre la tarjeta: dice quien pago, no quien uso
+    // antes esa tarjeta.
+    const sinCliente = !String(v.cliente || '').trim();
+    const link = window.LinksPago ? window.LinksPago.linkDeVenta(v) : null;
+    const sugLink = sinCliente && link ? link : null;
+    const sug = sinCliente && !sugLink ? V.sugerenciaPorTarjeta(v, ventas) : null;
     const tarjeta = String(v.tarjeta || '').trim();
     const fila = document.createElement('div');
     fila.className = 'trip-card asignar-fila';
@@ -877,7 +892,7 @@ function pintarAsignaciones() {
         <div class="asignar-campos">
           <label>Cliente
             <input type="text" class="asig-cliente" list="listaClientes" autocomplete="off"
-              value="${escapeHtml(v.cliente || (sug ? sug.cliente : ''))}" placeholder="Nombre de quien compró" />
+              value="${escapeHtml(v.cliente || (sugLink ? sugLink.clienteNombre : (sug ? sug.cliente : '')))}" placeholder="Nombre de quien compró" />
           </label>
           <label>¿De dónde vino?
             <select class="asig-origen">${opcionesOrigen(v.origen || (sug ? 'recompra' : ''))}</select>
@@ -887,6 +902,7 @@ function pintarAsignaciones() {
               value="${escapeHtml(v.referidoPor || '')}" placeholder="Cliente que lo recomendó" />
           </label>
         </div>
+        ${sugLink ? `<p class="hint asignar-sugerencia asignar-link">${window.icono('dinero', 'ic-izq')}Es el pago del link de ${escapeHtml(sugLink.clienteNombre)} · ${escapeHtml(sugLink.concepto)}, creado el ${escapeHtml(fechaLinkCorta(sugLink))}.</p>` : ''}
         ${sug ? `<p class="hint asignar-sugerencia">Sugerido: esta tarjeta ya la usó ${escapeHtml(sug.cliente)} el ${escapeHtml(V.fechaCorta(sug.desde))}.</p>` : ''}
         <p class="hint asignar-estado"></p>
       </div>
@@ -928,6 +944,17 @@ function pintarAsignaciones() {
           referidoPorId: o === 'referido' && r ? r.id : '',
           asignadoEn: new Date().toISOString(),
         });
+        // Si se acepto el cliente del link, el link queda como pagado y se
+        // ofrece cerrarlo: en la prueba uno "de un solo uso" siguio abierto.
+        if (sugLink && (c ? c.nombre : nombre).trim().toLowerCase() === sugLink.clienteNombre.trim().toLowerCase()) {
+          try {
+            await window.LinksPago.marcarPagado(sugLink, v);
+            if (!sugLink.desactivado && window.confirm(`El link de ${sugLink.clienteNombre} ya se pagó. `
+              + '¿Lo desactivo para que nadie pague dos veces?')) {
+              await window.LinksPago.desactivar(sugLink, {}, { sinPreguntar: true });
+            }
+          } catch (e) { /* la venta ya quedo; el link se puede cerrar desde Inicio */ }
+        }
         // La fila desaparece sola con el siguiente pintado.
       } catch (e) {
         estadoFila.textContent = `No se pudo guardar: ${e.message}`;

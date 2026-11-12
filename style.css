@@ -4398,3 +4398,20 @@ select:focus {
 .cobro-reciente-apagado .cobro-reciente-texto {
   opacity: .6;
 }
+
+/* Pagado pero con el link abierto: es el unico estado que pide hacer algo. */
+.cobro-alerta {
+  color: #a5520a;
+  font-weight: 600;
+}
+
+:root[data-tema="oscuro"] .cobro-alerta { color: #f2b56b; }
+
+/* La sugerencia que viene de un link de pago es casi segura; la de la
+   tarjeta es solo una pista. Se distinguen. */
+.asignar-link {
+  color: #1f7a5a;
+  font-weight: 600;
+}
+
+:root[data-tema="oscuro"] .asignar-link { color: #7fd3b0; }
