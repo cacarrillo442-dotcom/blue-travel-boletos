@@ -173,14 +173,18 @@ function buildCheckinMessage(t) {
 
 // Un viaje de ida y vuelta necesita dos avisos: al salir y al regresar. Cada
 // tramo se marca por separado, porque se avisan en semanas distintas.
-function tramosPendientes(t) {
+//
+// `conAvisados` es para el buscador: quien busca a un pasajero quiere saber si
+// viaja, aunque ya se le haya avisado.
+function tramosPendientes(t, conAvisados = false) {
   const out = [];
 
-  if (t.fechaSalidaIda && !t.alertaEnviada) {
+  if (t.fechaSalidaIda && (conAvisados || !t.alertaEnviada)) {
     out.push({
       ...t,
       _tramo: 'ida',
       _campoAlerta: 'alertaEnviada',
+      _avisado: !!t.alertaEnviada,
       _fecha: t.fechaSalidaIda,
       _hora: t.horaSalidaIda || '',
       _origen: t.origenIda || '',
@@ -189,11 +193,12 @@ function tramosPendientes(t) {
     });
   }
 
-  if (t.hasReturn && t.fechaSalidaRegreso && !t.alertaRegresoEnviada) {
+  if (t.hasReturn && t.fechaSalidaRegreso && (conAvisados || !t.alertaRegresoEnviada)) {
     out.push({
       ...t,
       _tramo: 'regreso',
       _campoAlerta: 'alertaRegresoEnviada',
+      _avisado: !!t.alertaRegresoEnviada,
       _fecha: t.fechaSalidaRegreso,
       _hora: t.horaSalidaRegreso || '',
       // Los viajes viejos no guardaron la ruta de regreso; si falta, se
@@ -212,7 +217,7 @@ function tramosPendientes(t) {
 // asi que sale de aqui y no de una copia de esta logica.
 function avisosPendientes() {
   return [...currentBoletos, ...currentTrips]
-    .flatMap(tramosPendientes)
+    .flatMap((t) => tramosPendientes(t))
     .map((t) => ({ ...t, _dias: daysUntil(t._fecha) }))
     .filter((t) => t._dias >= 0)
     .sort((a, b) => a._dias - b._dias);
@@ -220,15 +225,73 @@ function avisosPendientes() {
 
 window.avisosPendientes = avisosPendientes;
 
+// ---------- Buscar ----------
+//
+// Los nombres vienen del pasaporte -"CASTANEDA"- y se buscan como se dicen
+// -"castañeda"-: se compara sin tildes ni mayusculas, y por palabras sueltas
+// en cualquier orden. El destino se encuentra por codigo, ciudad o pais.
+
+const tripsBuscar = document.getElementById('tripsBuscar');
+const tripsConteo = document.getElementById('tripsConteo');
+
+function normalizar(t) {
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function lugarBuscable(codigo) {
+  if (!codigo) return '';
+  const a = (window.AIRPORTS || []).find((x) => x.code === codigo);
+  return a ? [codigo, a.city, a.country, a.name].join(' ') : codigo;
+}
+
+function textoBuscable(t) {
+  return normalizar([
+    (t.pasajeros || []).join(' '), t.bookingRef, t.telefono,
+    lugarBuscable(t._origen), lugarBuscable(t._destino), t._aerolinea,
+    formatIsoDate(t._fecha), t._tramo,
+  ].filter(Boolean).join(' '));
+}
+
+// Todos los tramos que aun no salen, avisados o no.
+function viajesPorSalir() {
+  return [...currentBoletos, ...currentTrips]
+    .flatMap((t) => tramosPendientes(t, true))
+    .map((t) => ({ ...t, _dias: daysUntil(t._fecha) }))
+    .filter((t) => t._dias >= 0)
+    .sort((a, b) => a._dias - b._dias);
+}
+
+if (tripsBuscar) tripsBuscar.addEventListener('input', renderTrips);
+
 function renderTrips() {
   // Inicio resume estos mismos avisos: se entera cada vez que cambian.
   if (window.pintarInicio) window.pintarInicio();
-  const upcoming = avisosPendientes();
+
+  const palabras = normalizar(tripsBuscar ? tripsBuscar.value : '').split(' ').filter(Boolean);
+  const buscando = palabras.length > 0;
+  const upcoming = buscando
+    ? viajesPorSalir().filter((t) => {
+      const texto = textoBuscable(t);
+      return palabras.every((p) => texto.includes(p));
+    })
+    : avisosPendientes();
+
+  if (tripsConteo) {
+    tripsConteo.textContent = buscando && upcoming.length
+      ? `${upcoming.length} ${upcoming.length === 1 ? 'vuelo coincide' : 'vuelos coinciden'}, `
+        + 'incluidos los que ya se avisaron.'
+      : '';
+  }
 
   tripsList.innerHTML = '';
   if (!upcoming.length) {
-    tripsList.innerHTML = window.vacio('check', 'Nadie espera aviso',
-      'Cuando emitas un boleto, el recordatorio de check-in aparece aquí solo.', true);
+    tripsList.innerHTML = buscando
+      ? window.vacio('viajes', 'Sin resultados',
+        `Ningún vuelo por salir coincide con «${escapeHtml(tripsBuscar.value.trim())}». `
+        + 'Si viaja pronto y no aparece, revisa que su boleto se haya generado en Boletos.')
+      : window.vacio('check', 'Nadie espera aviso',
+        'Cuando emitas un boleto, el recordatorio de check-in aparece aquí solo.', true);
     return;
   }
 
@@ -251,6 +314,7 @@ function renderTrips() {
     info.innerHTML = `
       <div class="trip-name">${escapeHtml(nombres)}
         <span class="trip-leg ${esRegreso ? 'vuelta' : ''}">${esRegreso ? 'regreso' : 'ida'}</span>
+        ${t._avisado ? `<span class="trip-leg trip-avisado">${window.icono('check')} ya avisado</span>` : ''}
       </div>
       <div class="trip-route">${window.icono('viajes')} ${escapeHtml(t._origen || '?')} → ${escapeHtml(t._destino || '?')}${t._aerolinea ? ' · ' + escapeHtml(t._aerolinea) : ''}</div>
       <div class="trip-sub">${window.icono('calendario')} ${formatIsoDate(t._fecha)}${hora} &nbsp;·&nbsp; ${window.icono('telefono')} ${escapeHtml(t.telefono || '-')}${t.bookingRef ? ' &nbsp;·&nbsp; ' + window.icono('reserva') + ' ' + escapeHtml(t.bookingRef) : ''}</div>
@@ -285,7 +349,8 @@ function renderTrips() {
     });
 
     actions.appendChild(waBtn);
-    actions.appendChild(doneBtn);
+    // Ya avisado: no hay nada que marcar, pero se puede volver a escribir.
+    if (!t._avisado) actions.appendChild(doneBtn);
     card.appendChild(badge);
     card.appendChild(info);
     card.appendChild(actions);

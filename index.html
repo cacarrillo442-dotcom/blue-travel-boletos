@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261112-151449" />
+<meta name="app-version" content="20261117-085559" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261112-151449" />
-<script src="assets/tema.js?v=20261112-151449"></script>
+<link rel="stylesheet" href="style.css?v=20261117-085559" />
+<script src="assets/tema.js?v=20261117-085559"></script>
 </head>
 <body>
 
@@ -1861,8 +1861,10 @@
       o usarlo como base para uno nuevo, sin tener que escribir todo otra vez.
     </p>
     <label>Buscar
-      <input type="text" id="histSearch" placeholder="Nombre, código de reserva, ruta..." />
+      <input type="search" id="histSearch" autocomplete="off"
+        placeholder="Pasajero, destino o código de reserva" />
     </label>
+    <p class="hint" id="histConteo" role="status"></p>
     <div id="histList" class="promo-list"></div>
   </section>
 </div>
@@ -1961,6 +1963,11 @@
       check-in y alistar su equipaje. Cada botón abre WhatsApp con el mensaje listo; al enviarlo,
       marca el aviso como hecho para que no vuelva a aparecer.
     </p>
+    <label>Buscar
+      <input type="search" id="tripsBuscar" autocomplete="off"
+        placeholder="Pasajero, destino o código de reserva" />
+    </label>
+    <p class="hint" id="tripsConteo" role="status"></p>
     <div id="tripsList" class="promo-list"></div>
   </section>
 </div>
@@ -2080,49 +2087,49 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261112-151449"></script>
-<script src="assets/guardado-pendiente.js?v=20261112-151449"></script>
-<script src="assets/nombres-archivo.js?v=20261112-151449"></script>
-<script src="assets/iconos.js?v=20261112-151449"></script>
-<script src="assets/version.js?v=20261112-151449"></script>
-<script src="assets/trm.js?v=20261112-151449"></script>
+<script src="assets/logo-animado.js?v=20261117-085559"></script>
+<script src="assets/guardado-pendiente.js?v=20261117-085559"></script>
+<script src="assets/nombres-archivo.js?v=20261117-085559"></script>
+<script src="assets/iconos.js?v=20261117-085559"></script>
+<script src="assets/version.js?v=20261117-085559"></script>
+<script src="assets/trm.js?v=20261117-085559"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261112-151449"></script>
-<script src="assets/country-codes-data.js?v=20261112-151449"></script>
+<script src="assets/catalog-data.js?v=20261117-085559"></script>
+<script src="assets/country-codes-data.js?v=20261117-085559"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261112-151449"></script>
-<script src="assets/obligaciones.js?v=20261112-151449"></script>
-<script src="assets/sales-parse.js?v=20261112-151449"></script>
-<script src="assets/cupon-imagen.js?v=20261112-151449"></script>
-<script src="assets/publicidad-imagen.js?v=20261112-151449"></script>
-<script src="assets/precios-datos.js?v=20261112-151449"></script>
-<script src="app.js?v=20261112-151449"></script>
-<script src="assets/nav-grupos.js?v=20261112-151449"></script>
-<script src="assets/marca.js?v=20261112-151449"></script>
-<script src="assets/vuelos-bloque.js?v=20261112-151449"></script>
-<script src="assets/paquetes.js?v=20261112-151449"></script>
-<script src="assets/inicio.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261112-151449"></script>
-<script src="assets/clientes-autocompletar.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261112-151449"></script>
-<script src="assets/cupones-reglas.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261112-151449"></script>
-<script src="assets/precios-ui.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-history.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261112-151449"></script>
-<script src="assets/plan.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-plan.js?v=20261112-151449"></script>
-<script src="assets/lector-expedia.js?v=20261112-151449"></script>
-<script src="assets/paquete-resumen.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-paquetes.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-links.js?v=20261112-151449"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261112-151449"></script>
+<script src="assets/obligaciones-datos.js?v=20261117-085559"></script>
+<script src="assets/obligaciones.js?v=20261117-085559"></script>
+<script src="assets/sales-parse.js?v=20261117-085559"></script>
+<script src="assets/cupon-imagen.js?v=20261117-085559"></script>
+<script src="assets/publicidad-imagen.js?v=20261117-085559"></script>
+<script src="assets/precios-datos.js?v=20261117-085559"></script>
+<script src="app.js?v=20261117-085559"></script>
+<script src="assets/nav-grupos.js?v=20261117-085559"></script>
+<script src="assets/marca.js?v=20261117-085559"></script>
+<script src="assets/vuelos-bloque.js?v=20261117-085559"></script>
+<script src="assets/paquetes.js?v=20261117-085559"></script>
+<script src="assets/inicio.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261117-085559"></script>
+<script src="assets/clientes-autocompletar.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261117-085559"></script>
+<script src="assets/cupones-reglas.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261117-085559"></script>
+<script src="assets/precios-ui.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-history.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261117-085559"></script>
+<script src="assets/plan.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261117-085559"></script>
+<script src="assets/lector-expedia.js?v=20261117-085559"></script>
+<script src="assets/paquete-resumen.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-paquetes.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-links.js?v=20261117-085559"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261117-085559"></script>
 </body>
 </html>

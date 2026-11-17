@@ -186,21 +186,55 @@ function airlineOf(f) {
   return f.airlineSelect === 'OTRA' ? (f.airlineOther || '') : (f.airlineSelect || '');
 }
 
-function textoBuscableBoleto(b) {
+// ---------- Buscar ----------
+//
+// Los nombres se digitan como vienen del pasaporte -"CASTANEDA", sin tilde ni
+// enie- y se buscan como se dicen -"castañeda"-. Por eso se compara sin tildes
+// ni mayusculas. Y por palabras sueltas: "maria sal" encuentra a Maria con
+// destino San Salvador, aunque las dos palabras no vayan seguidas.
+
+function normalizar(t) {
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// El codigo solo ("SAL") no lo encuentra quien busca "San Salvador" o "El
+// Salvador": se suma la ciudad, el pais y el nombre del aeropuerto.
+function lugarBuscable(codigo) {
+  if (!codigo) return '';
+  const a = (window.AIRPORTS || []).find((x) => x.code === codigo);
+  return a ? [codigo, a.city, a.country, a.name].join(' ') : codigo;
+}
+
+function tramoBuscable(t) {
+  if (!t) return '';
+  const escalas = (t.escalas || []).map((e) => lugarBuscable(e && e.lugar)).join(' ');
   return [
+    lugarBuscable(t.origin), lugarBuscable(t.dest), lugarBuscable(t.escalaLugar), escalas,
+    airlineOf(t), formatIsoDate(t.fechaSalida),
+  ].join(' ');
+}
+
+function textoBuscableBoleto(b) {
+  return normalizar([
     (b.passengers || []).join(' '), b.bookingRef, b.ticketNumber, b.telefono,
-    b.ida && b.ida.origin, b.ida && b.ida.dest, airlineOf(b.ida),
-  ].filter(Boolean).join(' ').toLowerCase();
+    tramoBuscable(b.ida), b.hasReturn ? tramoBuscable(b.regreso) : '',
+  ].filter(Boolean).join(' '));
 }
 
 function textoBuscableFactura(f) {
-  return [
+  return normalizar([
     f.numero, f.comprador, f.buyerName, f.city, f.country,
     (f.items || []).map((i) => i.description).join(' '),
     // Buscar "anulada" lista todas las anuladas, que es justo lo que se
     // necesita al cuadrar el consecutivo.
     f.anulada ? 'anulada ' + (f.motivoAnulacion || '') : '',
-  ].filter(Boolean).join(' ').toLowerCase();
+  ].filter(Boolean).join(' '));
+}
+
+// Coincide si TODAS las palabras buscadas aparecen, en cualquier orden.
+function coincide(texto, palabras) {
+  return palabras.every((p) => texto.includes(p));
 }
 
 function fila({ titulo, sub, meta, acciones, clase }) {
@@ -241,12 +275,22 @@ function irAPestana(id) {
 
 function render() {
   if (!histList) return;
-  const filtro = (histSearch.value || '').trim().toLowerCase();
+  const filtro = (histSearch.value || '').trim();
+  const palabras = normalizar(filtro).split(' ').filter(Boolean);
   histList.innerHTML = '';
 
   const items = vista === 'boletos'
-    ? boletos.filter((b) => !filtro || textoBuscableBoleto(b).includes(filtro))
-    : facturas.filter((f) => !filtro || textoBuscableFactura(f).includes(filtro));
+    ? boletos.filter((b) => !palabras.length || coincide(textoBuscableBoleto(b), palabras))
+    : facturas.filter((f) => !palabras.length || coincide(textoBuscableFactura(f), palabras));
+
+  // Cuantos hay: con 100 boletos, saber que son 3 ahorra bajar a contarlos.
+  const conteo = document.getElementById('histConteo');
+  if (conteo) {
+    const que = vista === 'boletos' ? ['boleto', 'boletos'] : ['factura', 'facturas'];
+    conteo.textContent = palabras.length && items.length
+      ? `${items.length} ${items.length === 1 ? que[0] : que[1]} ${items.length === 1 ? 'coincide' : 'coinciden'}`
+      : '';
+  }
 
   if (!items.length) {
     const vacio = vista === 'boletos' ? 'boletos' : 'facturas';

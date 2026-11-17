@@ -4442,3 +4442,14 @@ select:focus {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Sin busqueda no hay conteo, y la linea vacia no debe dejar aire. */
+#histConteo { margin: 8px 0 0; }
+#histConteo:empty { display: none; }
+
+/* Buscador de Proximos viajes */
+#tripsConteo { margin: 8px 0 0; }
+#tripsConteo:empty { display: none; }
+#tripsBuscar { margin-bottom: 4px; }
+.trip-leg.trip-avisado { background: var(--surface-sunken); color: var(--ink-soft); }
+.trip-avisado .ic { width: 12px; height: 12px; vertical-align: -1px; }
