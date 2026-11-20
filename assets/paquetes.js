@@ -471,6 +471,9 @@
     // El aviso del archivo se quedaba diciendo lo que se cargo, con el
     // formulario ya vacio.
     el('pkArchivoEstado').textContent = '';
+    el('pkTarifasDelDoc').classList.add('hidden');
+    el('pkTarifasDelDoc').innerHTML = '';
+    preciosEuropamundo = null;
     camposVuelo.classList.add('hidden');
     pintarPrecios();
     avisarItinerario();
@@ -738,6 +741,252 @@
     return r;
   }
 
+
+  // ---------- Presupuesto en PDF de Europamundo ----------
+  //
+  // Es lo mas util que entrega Europamundo para cotizar: a diferencia del
+  // itinerario Word, trae la FECHA de salida, el precio exacto de esa salida
+  // para esos pasajeros, los suplementos, el dia a dia con fechas reales y los
+  // hoteles. Se saca con "Imprimir > Guardar como PDF" desde su pagina.
+  //
+  // El texto lo da el mismo lector de PDF de los paquetes de Expedia, y como
+  // ahi, el archivo se lee en el navegador sin salir del equipo.
+
+  const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  // "1.234,56" o "602,00" -> 1234.56
+  function numeroEuropeo(t) {
+    const n = Number(String(t || '').replace(/\./g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // La acomodacion del presupuesto, en las filas de la tabla de precios.
+  function acomodacionDe(pasajero) {
+    if (/ni[ñn]o|menor|child/i.test(pasajero.tipo)) return 'nino';
+    if (/single|indiv/i.test(pasajero.acomodacion)) return 'individual';
+    if (/triple/i.test(pasajero.acomodacion)) return 'triple';
+    return 'doble';
+  }
+
+  // Los parrafos del PDF vienen partidos al ancho de la pagina. Se pegan las
+  // lineas que no terminan en punto, para que el WhatsApp no salga cortado
+  // a mitad de frase.
+  //
+  // En el itinerario (`prosa`) se pega toda linea que siga a otra sin punto
+  // final: "el hermoso" + "Puente de Carlos". En la lista de lo que incluye
+  // no, porque ahi cada linea es un item sin punto ("Incluye traslado de
+  // llegada"); solo se pega lo que arranca en minuscula.
+  function unirRenglones(lineas, prosa) {
+    const salida = [];
+    lineas.forEach((l) => {
+      const anterior = salida[salida.length - 1];
+      const sigue = prosa || /^[a-záéíóúñ0-9(«"]/.test(l);
+      if (anterior !== undefined && !/[.!?:)]$/.test(anterior) && sigue) {
+        salida[salida.length - 1] = `${anterior} ${l}`;
+      } else {
+        salida.push(l);
+      }
+    });
+    return salida;
+  }
+
+  function leerPresupuestoEuropamundo(texto) {
+    const lineas = String(texto || '').split('\n').map((l) => l.replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+      // El pie de pagina del navegador se repite en cada hoja.
+      .filter((l) => !/Presupuesto_imprimir\.aspx|^\d{1,2}\/\d{1,2}\/\d{2},.*Presupuesto Europamundo/i.test(l));
+    const todo = lineas.join('\n');
+    const r = { formato: 'presupuesto', lineas: lineas.length };
+
+    const num = todo.match(/Presupuesto N[uú]mero\s*(PR\d+)/i);
+    if (!num) return r;
+    r.presupuesto = num[1];
+    const iNum = lineas.findIndex((l) => l.includes(num[1]));
+    r.nombre = lineas[iNum + 1] || '';
+
+    const cab = todo.match(/(\d{1,2})\s*d[ií]as\s*-[^\n]*\(id:\s*(\d+)\)/i);
+    if (cab) { r.dias = Number(cab[1]); r.codigo = cab[2]; }
+    const serie = todo.match(/^Serie:\s*(.+)$/im);
+    if (serie) r.categoria = serie[1].trim();
+    const salida = todo.match(/Fecha de salida:\s*(\d{4}-\d{2}-\d{2})/i);
+    if (salida) r.fechaInicio = salida[1];
+    const valido = todo.match(/v[aá]lido hasta el d[ií]a\s*(\d{4})\/(\d{2})\/(\d{2})/i);
+    if (valido) r.validoHasta = `${valido[1]}-${valido[2]}-${valido[3]}`;
+
+    // ---- Precios ----
+    const pasajeros = [];
+    const reP = /Pasajero\s+\d+:\s*(Adulto|Ni[ñn]o|Menor|Junior|Senior)\s+([A-ZÁÉÍÓÚ]+)/gi;
+    let m;
+    while ((m = reP.exec(todo)) !== null) pasajeros.push({ tipo: m[1], acomodacion: m[2] });
+    const viaje = todo.match(/Precio del Viaje\s+(\d+)\s+USD\s*([\d.,]+)/i);
+    const total = todo.match(/para todos los pasajeros es de\s*USD\s*([\d.,]+)/i);
+    const supl = todo.match(/Suplemento Individual\s+USD\s*([\d.,]+)/i);
+    // Lo demas que cobra aparte: noches adicionales, traslado de salida...
+    const otros = [];
+    lineas.forEach((l) => {
+      const c = l.match(/^(.+?)\s+USD\s*([\d.,]+)$/);
+      if (!c || /Precio del Viaje|Suplemento Individual|todos los pasajeros/i.test(l)) return;
+      const valor = numeroEuropeo(c[2]);
+      if (valor > 0) otros.push({ concepto: c[1].replace(/\s+(S[ií]|No|Incluido)$/i, '').replace(/:$/, ''), valor });
+    });
+
+    if (viaje && total && pasajeros.length) {
+      const cantidad = Number(viaje[1]) || pasajeros.length;
+      const importe = numeroEuropeo(viaje[2]);
+      const suplemento = supl ? numeroEuropeo(supl[1]) : 0;
+      const extras = otros.reduce((s, o) => s + o.valor, 0);
+      const totalPres = numeroEuropeo(total[1]);
+      const n = pasajeros.length;
+      const individuales = pasajeros.filter((p) => acomodacionDe(p) === 'individual').length;
+
+      // "Precio del Viaje 2 USD 1.204" puede ser el total de los dos o el de
+      // cada uno: con un pasajero no se nota. Se queda la lectura que cuadra
+      // con el total del presupuesto.
+      const cuadra = (base) => Math.abs(base * n + suplemento + extras - totalPres) < 1;
+      let base = importe / cantidad;
+      if (!cuadra(base) && cuadra(importe)) base = importe;
+
+      const porPersona = { doble: 0, triple: 0, individual: 0, nino: 0 };
+      const personas = { doble: 0, triple: 0, individual: 0, nino: 0 };
+      pasajeros.forEach((p) => { personas[acomodacionDe(p)] += 1; });
+      Object.keys(porPersona).forEach((k) => {
+        if (!personas[k]) return;
+        porPersona[k] = base + extras / n + (k === 'individual' && individuales ? suplemento / individuales : 0);
+      });
+      const suma = Object.keys(porPersona).reduce((s, k) => s + porPersona[k] * personas[k], 0);
+      r.precios = {
+        personas, porPersona, total: totalPres, otros,
+        // Con ninos el reparto es una suposicion: Europamundo les da otro
+        // precio y el presupuesto no lo separa.
+        cuadra: Math.abs(suma - totalPres) < 1 && !personas.nino,
+      };
+    }
+
+    // ---- Itinerario ----
+    // "Día 1 sá. 10 abr. 2027 PRAGA" -> "Día 1 - sá. 10 abr. 2027" + "PRAGA",
+    // el mismo formato que ya entiende el resto del modulo.
+    const iIt = lineas.findIndex((l) => /^D[ií]a\s+1\s/i.test(l));
+    const iInc = lineas.findIndex((l) => /^El Precio Incluye$/i.test(l));
+    if (iIt >= 0) {
+      const hasta = iInc > iIt ? iInc : lineas.length;
+      const salidaIt = [];
+      let dias = 0;
+      let cuerpo = [];
+      const cerrarDia = () => { salidaIt.push(...unirRenglones(cuerpo, true)); cuerpo = []; };
+      lineas.slice(iIt, hasta).forEach((l) => {
+        // El dia de la semana va abreviado y a veces con tilde: "sá.", "mi.".
+        const d = l.match(/^D[ií]a\s+(\d{1,2})\s+([a-záéíóú]{2,3}\.\s+\d{1,2}\s+[a-záéíóú]{3,4}\.?\s+\d{4})\s*(.*)$/i);
+        if (d) {
+          cerrarDia();
+          dias += 1;
+          if (salidaIt.length) salidaIt.push('');
+          salidaIt.push(`Día ${Number(d[1])} - ${d[2]}`);
+          if (d[3]) salidaIt.push(d[3].toUpperCase());
+        } else {
+          cuerpo.push(l);
+        }
+      });
+      cerrarDia();
+      if (dias) { r.itinerario = salidaIt.join('\n'); r.diasLeidos = dias; }
+      // Inicio y fin, del primer y el ultimo dia: "PRAGA" y "... - VIENA".
+      const ciudadesDia = salidaIt.filter((l, k) => k > 0 && /^D[ií]a \d/.test(salidaIt[k - 1]));
+      const nombrePropio = (t) => t.toLowerCase().replace(/(^|[\s-])([a-záéíóúñ])/g, (x, a, b) => a + b.toUpperCase());
+      if (ciudadesDia.length) {
+        r.ciudadInicio = nombrePropio(ciudadesDia[0].split(' - ')[0].trim());
+        const ultima = ciudadesDia[ciudadesDia.length - 1].split(' - ');
+        r.ciudadFin = nombrePropio(ultima[ultima.length - 1].trim());
+      }
+    }
+
+    // ---- Lo que incluye y hoteles ----
+    const iHot = lineas.findIndex((l) => /^Hoteles Previstos/i.test(l));
+    if (iInc >= 0) {
+      const hasta = iHot > iInc ? iHot : lineas.length;
+      r.incluye = unirRenglones(lineas.slice(iInc + 1, hasta)).join('\n').trim();
+    }
+    if (iHot >= 0) {
+      const fin = lineas.findIndex((l, k) => k > iHot && /^El presente correo/i.test(l));
+      const bloque = lineas.slice(iHot + 1, fin > iHot ? fin : lineas.length);
+      const hoteles = [];
+      const paises = [];
+      bloque.forEach((linea, i) => {
+        const h = linea.match(/^(.+?)\s*(\*{1,5})$/);
+        if (h) {
+          let ciudad = '';
+          for (let k = i + 1; k < Math.min(i + 7, bloque.length); k += 1) {
+            const cp = bloque[k].match(/^\d{4,6}\s+(.+)$/);
+            if (cp) { ciudad = cp[1].trim(); break; }
+          }
+          hoteles.push(`${h[1].trim()} ${h[2]}${ciudad ? ` · ${ciudad}` : ''}`);
+        }
+        const pais = linea.toUpperCase();
+        if (PAISES.includes(pais) && !paises.includes(pais)) paises.push(pais);
+      });
+      r.hoteles = [...new Set(hoteles)];
+      if (paises.length) r.paises = paises.map((x) => x.charAt(0) + x.slice(1).toLowerCase()).join(', ');
+    }
+
+    r.esDeEuropamundo = /Europamundo/i.test(todo);
+    return r;
+  }
+
+  // Lo que se pagaria a Europamundo por persona, para sumarle la ganancia.
+  let preciosEuropamundo = null;
+
+  function aplicarPrecios(margen) {
+    if (!preciosEuropamundo) return;
+    const { personas, porPersona } = preciosEuropamundo;
+    ACOMODACIONES.forEach((a) => {
+      const n = personas[a.clave] || 0;
+      el(a.num).value = n ? String(n) : '';
+      el(a.precio).value = n ? (porPersona[a.clave] + (margen || 0)).toFixed(2) : '';
+    });
+    el('pkMoneda').value = 'USD';
+    pintarPrecios();
+  }
+
+  function fechaCorta(iso) {
+    const [a, m, d] = String(iso || '').split('-').map(Number);
+    return a ? `${d} ${MESES_CORTOS[m - 1]} ${a}` : '';
+  }
+
+  // El recuadro bajo el archivo: que dijo Europamundo y cuanto se le suma.
+  // Cuanto sumar depende del caso -a veces se cobra el precio de Europamundo
+  // tal cual y la comision la paga el operador-, asi que arranca en cero.
+  function pintarPresupuesto(r) {
+    const caja = el('pkTarifasDelDoc');
+    const p = r.precios;
+    if (!p) { caja.classList.add('hidden'); caja.innerHTML = ''; return; }
+    const pax = ACOMODACIONES.filter((a) => p.personas[a.clave])
+      .map((a) => `${p.personas[a.clave]} ${a.etiqueta}`).join(', ');
+    const otros = p.otros.length
+      ? ` Incluye ${p.otros.map((o) => `${escapar(o.concepto.toLowerCase())} (US$ ${o.valor.toFixed(2)})`).join(', ')}.`
+      : '';
+    caja.innerHTML = `<p><strong>Presupuesto ${escapar(r.presupuesto)}</strong> · Europamundo cobra `
+      + `<strong>US$ ${p.total.toFixed(2)}</strong> por ${escapar(pax)}.${otros}`
+      + (r.validoHasta ? ` Lo sostienen hasta el <strong>${escapar(fechaCorta(r.validoHasta))}</strong>.` : '')
+      + '</p>'
+      + (p.cuadra ? '' : '<p class="aviso-permiso">⚠️ No pude repartir el precio exacto por persona'
+        + (p.personas.nino ? ' porque hay niños y el presupuesto no separa su precio' : '')
+        + '. Revisa los precios por acomodación antes de enviar.</p>')
+      + '<div class="grid-2"><label>Sumarle a cada persona (US$)'
+      + '<input type="text" inputmode="decimal" id="pkMargen" placeholder="0" /></label>'
+      + '<p class="hint" id="pkMargenResumen"></p></div>';
+    caja.classList.remove('hidden');
+    const resumen = () => {
+      const margen = parseMoney(el('pkMargen').value);
+      const n = Object.values(p.personas).reduce((s, x) => s + x, 0);
+      el('pkMargenResumen').textContent = margen
+        ? `Al cliente: US$ ${(p.total + margen * n).toFixed(2)} · Tu ganancia: US$ ${(margen * n).toFixed(2)}`
+        : 'Con 0 se cotiza el precio de Europamundo tal cual.';
+    };
+    el('pkMargen').addEventListener('input', () => {
+      aplicarPrecios(parseMoney(el('pkMargen').value));
+      resumen();
+    });
+    resumen();
+  }
+
   function aplicarLectura(r) {
     const puesto = [];
     const poner = (id, valor, etiqueta) => {
@@ -752,15 +1001,75 @@
     poner('pkCategoria', r.categoria, 'categoría');
     poner('pkCiudadInicio', r.ciudadInicio, 'ciudad de inicio');
     poner('pkCiudadFin', r.ciudadFin, 'ciudad de fin');
+    poner('pkFechaInicio', r.fechaInicio, 'fecha de salida');
+    poner('pkValidUntil', r.validoHasta, 'vigencia');
     poner('pkItinerario', r.itinerario, `itinerario (${r.diasLeidos || 0} días)`);
     poner('pkIncluye', r.incluye, 'lo que incluye');
     if (r.hoteles && r.hoteles.length) {
       el('pkHoteles').value = r.hoteles.join('\n');
       puesto.push(`${r.hoteles.length} hoteles`);
     }
+    // El catalogo sabe paises y ciudades de inicio y fin mejor que el
+    // documento: se completan con el ID si quedaron vacios.
+    const delCatalogo = window.Catalogo && r.codigo && window.Catalogo.porId(r.codigo);
+    if (delCatalogo) {
+      // Los paises del catalogo van con tildes ("República Checa"); los del
+      // documento salen de mayusculas sin tilde. Mandan los del catalogo.
+      if (delCatalogo.paisesTexto.length) {
+        el('pkPaises').value = delCatalogo.paisesTexto.join(', ');
+        if (!puesto.includes('países')) puesto.push('países');
+      }
+      if (!el('pkCiudadInicio').value) poner('pkCiudadInicio', delCatalogo.ruta[0], 'ciudad de inicio');
+    }
+    preciosEuropamundo = r.precios || null;
+    if (r.precios) {
+      aplicarPrecios(0);
+      puesto.push('precios');
+    }
     calcularFechaFin();
     avisarItinerario();
     return puesto;
+  }
+
+  function terminarLectura(r, estado) {
+    if (!r.nombre && !r.itinerario) {
+      estado.textContent = 'Ese archivo no parece un itinerario ni un presupuesto de Europamundo. '
+        + 'Descárgalo desde la página del circuito.';
+      return;
+    }
+    const puesto = aplicarLectura(r);
+    let msg = `✅ Se llenó: ${puesto.join(', ')}.`;
+    // Los dias declarados y los del itinerario tienen que cuadrar. Si no,
+    // se avisa en vez de dejar pasar una cotizacion con un dia de menos.
+    if (r.dias && r.diasLeidos && r.dias !== r.diasLeidos) {
+      msg += ` ⚠️ Ojo: el circuito dice ${r.dias} días pero el itinerario trae ${r.diasLeidos}. Revísalo.`;
+    }
+    if (r.recorrido) msg += ` Recorrido: ${r.recorrido}.`;
+    estado.textContent = msg;
+
+    if (r.formato === 'presupuesto') { pintarPresupuesto(r); return; }
+
+    // Los precios del Word no se rellenan solos porque dependen de la
+    // temporada de la salida. Se muestran para que se copie el que corresponde.
+    const caja = el('pkTarifasDelDoc');
+    if (r.tarifas && r.tarifas.length) {
+      caja.innerHTML = '<strong>Precios por persona que trae el documento</strong>'
+        + ' <span class="hint-inline">(elige según la temporada de la salida; no se llenan solos)</span>'
+        + '<table class="tarifas-doc"><tr><th>Temporada</th><th>Doble</th><th>Individual</th></tr>'
+        + r.tarifas.map((t) => `<tr><td>${escapar(t.temporada)}</td>`
+          + `<td>${escapar(t.doble)}</td><td>${escapar(t.individual)}</td></tr>`).join('')
+        + '</table>';
+      caja.classList.remove('hidden');
+    } else {
+      caja.classList.add('hidden');
+      caja.innerHTML = '';
+    }
+  }
+
+  // Todo PDF empieza con "%PDF".
+  function esPdf(buffer) {
+    const b = new Uint8Array(buffer.slice(0, 4));
+    return b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46;
   }
 
   el('pkArchivo').addEventListener('change', (ev) => {
@@ -768,10 +1077,21 @@
     const estado = el('pkArchivoEstado');
     if (!archivo) return;
     estado.textContent = 'Leyendo…';
+    preciosEuropamundo = null;
 
     const lector = new FileReader();
     lector.onerror = () => { estado.textContent = 'No se pudo leer el archivo.'; };
     lector.onload = () => {
+      // El presupuesto es PDF: su texto sale con el lector de PDF, que es
+      // asincrono, y de paso se carga el catalogo para completar paises.
+      if (esPdf(lector.result)) {
+        if (!window.LectorExpedia) { estado.textContent = 'No se pudo cargar el lector de PDF.'; return; }
+        const catalogo = window.Catalogo ? window.Catalogo.cargar().catch(() => null) : Promise.resolve();
+        Promise.all([window.LectorExpedia.textoDePDF({ data: new Uint8Array(lector.result) }), catalogo])
+          .then(([texto]) => terminarLectura(leerPresupuestoEuropamundo(texto), estado))
+          .catch((e) => { estado.textContent = `No se pudo entender el PDF: ${e.message}`; });
+        return;
+      }
       let r;
       try {
         // El formato se decide por la firma del archivo, no por su extension:
@@ -787,39 +1107,10 @@
         estado.textContent = `No se pudo entender el archivo: ${e.message}`;
         return;
       }
-      if (!r.nombre && !r.itinerario) {
-        estado.textContent = 'Ese archivo no parece un itinerario de Europamundo. '
-          + 'Descárgalo desde la página del circuito.';
-        return;
-      }
-      const puesto = aplicarLectura(r);
-      let msg = `✅ Se llenó: ${puesto.join(', ')}.`;
-      // Los dias declarados y los del itinerario tienen que cuadrar. Si no,
-      // se avisa en vez de dejar pasar una cotizacion con un dia de menos.
-      if (r.dias && r.diasLeidos && r.dias !== r.diasLeidos) {
-        msg += ` ⚠️ Ojo: el circuito dice ${r.dias} días pero el itinerario trae ${r.diasLeidos}. Revísalo.`;
-      }
-      if (r.recorrido) msg += ` Recorrido: ${r.recorrido}.`;
-      estado.textContent = msg;
-
-      // Los precios no se rellenan solos porque dependen de la temporada de la
-      // salida. Se muestran para que se copie el que corresponde.
-      const caja = el('pkTarifasDelDoc');
-      if (r.tarifas && r.tarifas.length) {
-        caja.innerHTML = '<strong>Precios por persona que trae el documento</strong>'
-          + ' <span class="hint-inline">(elige según la temporada de la salida; no se llenan solos)</span>'
-          + '<table class="tarifas-doc"><tr><th>Temporada</th><th>Doble</th><th>Individual</th></tr>'
-          + r.tarifas.map((t) => `<tr><td>${escapar(t.temporada)}</td>`
-            + `<td>${escapar(t.doble)}</td><td>${escapar(t.individual)}</td></tr>`).join('')
-          + '</table>';
-        caja.classList.remove('hidden');
-      } else {
-        caja.classList.add('hidden');
-        caja.innerHTML = '';
-      }
+      terminarLectura(r, estado);
     };
     // Se lee como bytes y no como texto: hasta no ver la firma no se sabe si
-    // es HTML en UTF-8 o un Word binario en UTF-16.
+    // es PDF, HTML en UTF-8 o un Word binario en UTF-16.
     lector.readAsArrayBuffer(archivo);
   });
 
@@ -1039,5 +1330,24 @@
   pintarPrecios();
 
   // Para poder probarlo y para que otros modulos lo reusen despues.
-  window.paquetes = { recoger, armarMensaje, parsearItinerario, ciudadesDelDia, leerPrecios };
+  // Al cambiar de circuito desde el Catalogo: se borra todo lo del circuito
+  // anterior (itinerario, hoteles, precios, fechas) y se conserva el cliente.
+  // Sin esto, el itinerario de Praga se quedaba debajo del nombre de Turquia.
+  function limpiarCircuito() {
+    ['pkNombre', 'pkCodigo', 'pkCategoria', 'pkPaises', 'pkFechaInicio', 'pkDias',
+      'pkCiudadInicio', 'pkCiudadFin', 'pkFechaFin', 'pkItinerario', 'pkHoteles', 'pkValidUntil']
+      .forEach((id) => { el(id).value = ''; });
+    ACOMODACIONES.forEach((a) => { el(a.num).value = ''; el(a.precio).value = ''; });
+    el('pkIncluye').value = INCLUYE_POR_DEFECTO;
+    el('pkArchivo').value = '';
+    el('pkArchivoEstado').textContent = '';
+    el('pkTarifasDelDoc').classList.add('hidden');
+    el('pkTarifasDelDoc').innerHTML = '';
+    preciosEuropamundo = null;
+    pintarPrecios();
+    avisarItinerario();
+    el('pkOutputCard').classList.add('hidden');
+  }
+
+  window.paquetes = { limpiarCircuito, recoger, armarMensaje, parsearItinerario, ciudadesDelDia, leerPrecios, leerPresupuestoEuropamundo };
 })();

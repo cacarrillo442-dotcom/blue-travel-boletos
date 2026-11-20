@@ -14,11 +14,12 @@
     boleto: '<path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h15A1.5 1.5 0 0 1 21 8.5v2a2 2 0 0 0 0 3v2A1.5 1.5 0 0 1 19.5 17h-15A1.5 1.5 0 0 1 3 15.5v-2a2 2 0 0 0 0-3z"/><path d="M14 7v10" stroke-dasharray="1.5 2"/>',
     cotizacion: '<path d="M20 12a7.5 7.5 0 0 1-10.9 6.7L4 20l1.3-4A7.5 7.5 0 1 1 20 12z"/><path d="M9 11h6M9 14h4"/>',
     factura: '<path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.4z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    // Un libro abierto: el catalogo del operador.
+    catalogo: '<path d="M12 6.5C10 5 7.2 4.5 3.5 4.8v13.4c3.7-.3 6.5.2 8.5 1.8 2-1.6 4.8-2.1 8.5-1.8V4.8C16.8 4.5 14 5 12 6.5z"/><path d="M12 6.5V20"/>',
     paquete: '<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9"/><path d="M3 12.5h18"/>',
     clientes: '<circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.9M17.5 19a6 6 0 0 0-2.2-4.6"/>',
     viajes: '<path d="M3.5 13.5 21 5l-3 8.5L21 22l-6.5-4.5-3.5 3-1-4.5-6.5-2.5z"/>',
     cupon: '<path d="M3 9.5V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2.5a2.5 2.5 0 0 0 0 5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M9.5 9.5h.01M14.5 14.5h.01M15 9l-6 6"/>',
-    precios: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.7-4.7"/><path d="M10.5 7.8v5.4M12.2 9.2a1.7 1.7 0 0 0-3.4.3c0 1.7 3.4.9 3.4 2.6a1.7 1.7 0 0 1-3.4.3"/>',
     historial: '<path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h9A1.5 1.5 0 0 1 21 10v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18z"/>',
     ventas: '<path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4M12.5 16V8M17 16v-6"/>',
     respaldo: '<path d="M12 3l7.5 3v6c0 4.6-3.2 8.3-7.5 9.5C7.7 20.3 4.5 16.6 4.5 12V6z"/><path d="M9 12.2l2.2 2.2L15.5 10"/>',
@@ -48,6 +49,7 @@
     alerta: '<path d="M12 3.5 21 19H3z"/><path d="M12 9.5v4M12 16.3h.01"/>',
     // Senal de prohibido, a proposito distinta de la caneca: anular no es borrar.
     anular: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
+    externo: '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
     ruta: '<circle cx="12" cy="10" r="2.6"/><path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21z"/>',
 
     // Barra lateral

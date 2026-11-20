@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261117-085559" />
+<meta name="app-version" content="20261120-145543" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261117-085559" />
-<script src="assets/tema.js?v=20261117-085559"></script>
+<link rel="stylesheet" href="style.css?v=20261120-145543" />
+<script src="assets/tema.js?v=20261120-145543"></script>
 </head>
 <body>
 
@@ -155,8 +155,12 @@
       data-desc="Prepara la cotización para enviarla por WhatsApp."><svg class="ic" aria-hidden="true"><use href="#ic-cotizacion"></use></svg><span>Cotizaciones</span></button>
         <button type="button" class="tab-btn" data-tab="packagesPanel"
       data-desc="Cotiza un circuito de varios días, con su itinerario."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes</span></button>
-        <button type="button" class="tab-btn" data-tab="paqVentaPanel"
-      data-desc="El resumen de compra de cada paquete vendido, con sus abonos."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Paquetes vendidos</span></button>
+        <!-- Catalogo y Vendidos cuelgan de Paquetes: son el antes y el despues
+             de cotizar un circuito. -->
+        <button type="button" class="tab-btn tab-sub" data-tab="catalogoPanel" data-titulo="Catálogo Europamundo"
+      data-desc="Busca entre los circuitos vigentes de Europamundo y cotízalo en su página."><svg class="ic" aria-hidden="true"><use href="#ic-catalogo"></use></svg><span>Catálogo</span></button>
+        <button type="button" class="tab-btn tab-sub" data-tab="paqVentaPanel" data-titulo="Paquetes vendidos"
+      data-desc="El resumen de compra de cada paquete vendido, con sus abonos."><svg class="ic" aria-hidden="true"><use href="#ic-paquete"></use></svg><span>Vendidos</span></button>
         <button type="button" class="tab-btn" data-tab="linksPanel"
       data-desc="Crea en Wompi un link de pago amarrado al cliente."><svg class="ic" aria-hidden="true"><use href="#ic-dinero"></use></svg><span>Links de pago</span></button>
         <button type="button" class="tab-btn" data-tab="invoicePanel"
@@ -189,8 +193,6 @@
       data-desc="Ingresos, reparto semanal y cierre por mes."><svg class="ic" aria-hidden="true"><use href="#ic-ventas"></use></svg><span>Ventas</span><span class="nav-conteo" id="navConteoVentas"></span></button>
         <button type="button" class="tab-btn" data-tab="planPanel"
       data-desc="Los objetivos del plan de marketing y cómo vamos contra cada meta."><svg class="ic" aria-hidden="true"><use href="#ic-ruta"></use></svg><span>Plan</span><span class="nav-conteo" id="navConteoPlan"></span></button>
-        <button type="button" class="tab-btn" data-tab="pricesPanel"
-      data-desc="Cómo está el mercado en tus rutas, y publicidad lista."><svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg><span>Precios</span></button>
         <button type="button" class="tab-btn" data-tab="historyPanel"
       data-desc="Todo lo que has generado, listo para volver a usar."><svg class="ic" aria-hidden="true"><use href="#ic-historial"></use></svg><span>Historial</span></button>
       </div>
@@ -377,11 +379,6 @@
         <strong>Hacer una factura</strong>
         <span>Cuando el cliente la pide</span>
       </button>
-      <button type="button" class="atajo inicio-accion" data-ir="pricesPanel">
-        <svg class="ic" aria-hidden="true"><use href="#ic-precios"></use></svg>
-        <strong>Revisar precios</strong>
-        <span>Cómo está el mercado hoy</span>
-      </button>
     </div>
   </section>
 
@@ -500,6 +497,75 @@
   </form>
 </div>
 
+<div id="catalogoPanel" class="tab-panel hidden">
+  <section class="card card-principal">
+    <div class="card-header">
+      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-catalogo"></use></svg>Catálogo Europamundo</h2>
+      <span class="hint" id="catActualizado"></span>
+    </div>
+    <p class="hint">
+      Los circuitos que Europamundo tiene a la venta hoy, de esta temporada y la siguiente.
+      El precio es <strong>desde</strong>, por persona en doble: para el precio exacto de una
+      fecha, ábrelo en Europamundo, saca el presupuesto y cárgalo en <strong>Paquetes</strong>.
+    </p>
+    <label>Buscar
+      <input type="search" id="catBuscar" placeholder="Ciudad, país, nombre del circuito o ID" autocomplete="off" />
+    </label>
+    <div class="grid-3">
+      <label>Serie
+        <select id="catSerie"><option value="">Todas</option></select>
+      </label>
+      <label>Días
+        <select id="catDias">
+          <option value="">Cualquiera</option>
+          <option value="1-7">Hasta 7 días</option>
+          <option value="8-12">De 8 a 12 días</option>
+          <option value="13-16">De 13 a 16 días</option>
+          <option value="17-99">Más de 16 días</option>
+        </select>
+      </label>
+      <label>Precio hasta (US$)
+        <input type="number" id="catPrecio" min="0" step="100" placeholder="Sin límite" />
+      </label>
+    </div>
+    <div class="grid-3">
+      <label>Temporada
+        <select id="catTemporada"><option value="">Las dos</option></select>
+      </label>
+      <label>Sale los
+        <select id="catSalida">
+          <option value="">Cualquier día</option>
+          <option value="L">Lunes</option>
+          <option value="M">Martes</option>
+          <option value="X">Miércoles</option>
+          <option value="J">Jueves</option>
+          <option value="V">Viernes</option>
+          <option value="S">Sábados</option>
+          <option value="D">Domingos</option>
+        </select>
+      </label>
+      <label>Ordenar por
+        <select id="catOrden">
+          <option value="precio">Precio, de menor a mayor</option>
+          <option value="dias">Días, de menos a más</option>
+          <option value="nombre">Nombre</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>Circuitos</h2>
+      <span class="hint" id="catConteo" role="status"></span>
+    </div>
+    <div id="catLista" class="cat-lista"></div>
+    <div class="actions">
+      <button type="button" class="btn-secondary hidden" id="catMasBtn">Ver más</button>
+    </div>
+  </section>
+</div>
+
 <div id="packagesPanel" class="tab-panel hidden">
   <form id="packageForm">
     <section class="card">
@@ -508,10 +574,10 @@
     </section>
 
     <section class="card card-principal">
-      <h3>Cargar desde el itinerario de Europamundo</h3>
-      <p class="hint">En la página del circuito descarga <strong>«Itinerario Word»</strong> y suelta aquí el archivo. Llena el nombre, los días, los países, el itinerario completo, lo que incluye y los hoteles. Todo queda editable.</p>
-      <label>Archivo del itinerario
-        <input type="file" id="pkArchivo" accept=".doc,.docx,.html,.htm" />
+      <h3>Cargar el presupuesto de Europamundo</h3>
+      <p class="hint">Cotiza la fecha en Europamundo (desde el <strong>Catálogo</strong> llegas directo), abre el presupuesto y guárdalo con <strong>Imprimir → Guardar como PDF</strong>. Suéltalo aquí: llena el circuito, la fecha de salida, los precios por persona, el día a día, lo que incluye y los hoteles. Todo queda editable. También sirve el «Itinerario Word».</p>
+      <label>Presupuesto en PDF o itinerario Word
+        <input type="file" id="pkArchivo" accept=".pdf,.doc,.docx,.html,.htm" />
       </label>
       <p class="hint" id="pkArchivoEstado"></p>
       <div id="pkTarifasDelDoc" class="hidden"></div>
@@ -1503,120 +1569,6 @@
   </section>
 </div>
 
-<div id="pricesPanel" class="tab-panel hidden">
-  <section class="card card-principal">
-    <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-precios"></use></svg>Precios de mercado</h2>
-    <p class="hint">
-      Compara los tres aeropuertos de Washington de una sola vez y te dice desde cuál sale
-      más barato. Son <strong>precios de referencia del mercado</strong>, no tarifas tuyas:
-      úsalos para decidir qué promocionar, no para publicar la cifra tal cual.
-    </p>
-    <div class="grid-3">
-      <label>Salida
-        <select id="precioOrigen">
-          <option value="WAS">Washington (compara IAD, BWI y DCA)</option>
-          <option value="IAD">Solo Dulles (IAD)</option>
-          <option value="BWI">Solo Baltimore (BWI)</option>
-          <option value="DCA">Solo Reagan (DCA)</option>
-        </select>
-      </label>
-      <label>Destino
-        <select id="precioDestino">
-          <option value="SAL">San Salvador (SAL)</option>
-          <option value="MEX">Ciudad de México (MEX)</option>
-          <option value="TGU">Tegucigalpa (TGU)</option>
-          <option value="SAP">San Pedro Sula (SAP)</option>
-          <option value="GUA">Guatemala (GUA)</option>
-          <option value="MGA">Managua (MGA)</option>
-          <option value="SJO">San José (SJO)</option>
-          <option value="MIA">Miami (MIA)</option>
-          <option value="BOG">Bogotá (BOG)</option>
-        </select>
-      </label>
-      <label>Mes (opcional)
-        <input type="month" id="precioMes" />
-      </label>
-    </div>
-    <div class="actions">
-      <button type="button" class="btn-primary" id="precioBuscarBtn">Buscar precios</button>
-    </div>
-    <p class="hint" id="precioEstado" style="text-align:right"></p>
-  </section>
-
-  <section class="card">
-    <div class="card-header">
-      <h2>Precio día a día</h2>
-      <select id="precioDiarioRuta" style="width:auto; min-width:230px">
-        <option value="SAL">Washington → San Salvador</option>
-        <option value="GUA">Washington → Guatemala</option>
-        <option value="MEX">Washington → Ciudad de México</option>
-        <option value="PUJ">Washington → Punta Cana</option>
-        <option value="CUN">Washington → Cancún</option>
-      </select>
-    </div>
-    <p class="hint" id="precioDiarioAviso">
-      Muestra cómo se mueve el precio a lo largo de un mes y si cada día está barato o caro
-      <strong>para esa misma ruta</strong>. Elige una ruta para empezar.
-    </p>
-    <div class="stat-row hidden" id="precioDiarioResumen"></div>
-    <div id="precioDiarioGrafica" class="chart-wrap"></div>
-    <div id="precioDiarioLeyenda" class="hidden">
-      <div class="nivel-leyenda">
-        <span><i class="nivel-punto bajo"></i> Bajo</span>
-        <span><i class="nivel-punto medio"></i> Medio</span>
-        <span><i class="nivel-punto alto"></i> Alto</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="card" id="precioRutasCard">
-    <div class="card-header">
-      <h2>Tus rutas más vendidas</h2>
-      <span class="hint" id="precioRutasResumen"></span>
-    </div>
-    <p class="hint">
-      Salen de los boletos que has generado. Haz clic en una para consultar su precio de
-      mercado — y así sabes si la que más vendes está cara o barata ahora mismo.
-    </p>
-    <div id="precioRutasLista" class="promo-list"></div>
-  </section>
-
-  <section class="card hidden" id="precioResultado">
-    <h2>Resultado</h2>
-    <div class="stat-row" id="precioResumen"></div>
-    <h3>Ofertas encontradas</h3>
-    <div id="precioLista" class="promo-list"></div>
-  </section>
-
-  <section class="card hidden" id="precioPublicidad">
-    <div class="card-header">
-      <h2>Publicidad</h2>
-      <div class="inline-add-row" style="margin-top:0">
-        <button type="button" class="btn-add" id="precioCopiarTextoBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-copiar"></use></svg>Copiar texto</button>
-        <button type="button" class="btn-add" id="precioCopiarImagenBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-imagen"></use></svg>Copiar imagen</button>
-        <button type="button" class="btn-add" id="precioDescargarBtn"><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-descargar"></use></svg>Descargar</button>
-      </div>
-    </div>
-    <p class="hint">
-      Ajusta el precio al que <strong>tú</strong> vas a vender antes de publicar. En Colombia
-      estás obligado a cumplir el precio que anuncies.
-    </p>
-    <div class="grid-2">
-      <label>Precio a publicar (US$)
-        <input type="number" id="precioPublicar" min="0" step="1" />
-      </label>
-      <label>Vigencia del anuncio
-        <input type="text" id="precioVigencia" placeholder="Ej. Reserva antes del 15 de septiembre" />
-      </label>
-    </div>
-    <img id="precioImagen" alt="Publicidad Blue Travel" class="quote-image-preview" style="margin-top:16px" />
-    <details style="margin-top:14px">
-      <summary class="hint" style="cursor:pointer">Ver el texto para WhatsApp</summary>
-      <textarea id="precioTexto" rows="10" readonly style="margin-top:10px"></textarea>
-    </details>
-  </section>
-</div>
-
 <div id="couponsPanel" class="tab-panel hidden">
   <section class="card card-principal">
     <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-cupon"></use></svg>Generar cupón</h2>
@@ -2087,49 +2039,47 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261117-085559"></script>
-<script src="assets/guardado-pendiente.js?v=20261117-085559"></script>
-<script src="assets/nombres-archivo.js?v=20261117-085559"></script>
-<script src="assets/iconos.js?v=20261117-085559"></script>
-<script src="assets/version.js?v=20261117-085559"></script>
-<script src="assets/trm.js?v=20261117-085559"></script>
+<script src="assets/logo-animado.js?v=20261120-145543"></script>
+<script src="assets/guardado-pendiente.js?v=20261120-145543"></script>
+<script src="assets/nombres-archivo.js?v=20261120-145543"></script>
+<script src="assets/iconos.js?v=20261120-145543"></script>
+<script src="assets/version.js?v=20261120-145543"></script>
+<script src="assets/trm.js?v=20261120-145543"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261117-085559"></script>
-<script src="assets/country-codes-data.js?v=20261117-085559"></script>
+<script src="assets/catalog-data.js?v=20261120-145543"></script>
+<script src="assets/country-codes-data.js?v=20261120-145543"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261117-085559"></script>
-<script src="assets/obligaciones.js?v=20261117-085559"></script>
-<script src="assets/sales-parse.js?v=20261117-085559"></script>
-<script src="assets/cupon-imagen.js?v=20261117-085559"></script>
-<script src="assets/publicidad-imagen.js?v=20261117-085559"></script>
-<script src="assets/precios-datos.js?v=20261117-085559"></script>
-<script src="app.js?v=20261117-085559"></script>
-<script src="assets/nav-grupos.js?v=20261117-085559"></script>
-<script src="assets/marca.js?v=20261117-085559"></script>
-<script src="assets/vuelos-bloque.js?v=20261117-085559"></script>
-<script src="assets/paquetes.js?v=20261117-085559"></script>
-<script src="assets/inicio.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261117-085559"></script>
-<script src="assets/clientes-autocompletar.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261117-085559"></script>
-<script src="assets/cupones-reglas.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261117-085559"></script>
-<script src="assets/precios-ui.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-history.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261117-085559"></script>
-<script src="assets/plan.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-plan.js?v=20261117-085559"></script>
-<script src="assets/lector-expedia.js?v=20261117-085559"></script>
-<script src="assets/paquete-resumen.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-paquetes.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-links.js?v=20261117-085559"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261117-085559"></script>
+<script src="assets/obligaciones-datos.js?v=20261120-145543"></script>
+<script src="assets/obligaciones.js?v=20261120-145543"></script>
+<script src="assets/sales-parse.js?v=20261120-145543"></script>
+<script src="assets/cupon-imagen.js?v=20261120-145543"></script>
+<script src="app.js?v=20261120-145543"></script>
+<script src="assets/nav-grupos.js?v=20261120-145543"></script>
+<script src="assets/marca.js?v=20261120-145543"></script>
+<script src="assets/vuelos-bloque.js?v=20261120-145543"></script>
+<script src="assets/catalogo.js?v=20261120-145543"></script>
+<script src="assets/paquetes.js?v=20261120-145543"></script>
+<script src="assets/inicio.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261120-145543"></script>
+<script src="assets/clientes-autocompletar.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261120-145543"></script>
+<script src="assets/cupones-reglas.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-history.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261120-145543"></script>
+<script src="assets/plan.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261120-145543"></script>
+<script src="assets/lector-expedia.js?v=20261120-145543"></script>
+<script src="assets/paquete-resumen.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-paquetes.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-links.js?v=20261120-145543"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261120-145543"></script>
 </body>
 </html>

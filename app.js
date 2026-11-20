@@ -2484,6 +2484,9 @@ document.getElementById('qReservaCopiarBtn').addEventListener('click', async () 
   const plegarBtn = document.getElementById('plegarBtn');
 
   function nombreDeModulo(btn) {
+    // Las subsecciones del menu llevan un nombre corto ("Vendidos") que solo
+    // se entiende debajo de su padre; arriba va el completo.
+    if (btn.dataset.titulo) return btn.dataset.titulo;
     const etiqueta = btn.querySelector('span:not(.nav-conteo)');
     return (etiqueta ? etiqueta.textContent : btn.textContent).trim();
   }

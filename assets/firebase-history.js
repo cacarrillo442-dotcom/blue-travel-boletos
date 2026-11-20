@@ -140,8 +140,6 @@ onAuthStateChanged(auth, (user) => {
       render();
       // Proximos viajes se alimenta de estos mismos boletos.
       if (typeof window.onBoletosChange === 'function') window.onBoletosChange(boletos);
-      // Precios se apoya en estos boletos para saber que rutas vende la agencia.
-      if (typeof window.onBoletosParaRutas === 'function') window.onBoletosParaRutas(boletos);
       if (window.limpiarFalloConexion) window.limpiarFalloConexion('boletos');
     }, (err) => {
       if (window.reportarFalloConexion) window.reportarFalloConexion('boletos', err);
