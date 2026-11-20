@@ -463,9 +463,23 @@
         // en su `change`. Desmarcando a secas, la casilla quedaba apagada y los
         // campos abiertos: un estado que no se puede llegar a mano.
         c.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (c.type === 'radio') {
+        // Un radio no se vacia: su valor ("DIRECTO", "ESCALA") es la opcion
+        // misma. Antes se le borraba y despues de Limpiar la cotizacion ya
+        // no sabia si el vuelo era directo. Vuelve a la opcion de fabrica.
+        c.checked = c.defaultChecked;
+        if (c.checked) c.dispatchEvent(new Event('change', { bubbles: true }));
       } else if (c.id !== 'pkOperador') {
         c.value = '';
       }
+    });
+    // Los menus (aeropuertos y aerolineas del vuelo) tambien: antes Limpiar
+    // los dejaba con el vuelo anterior y quedaba "medio limpio". El
+    // indicativo del telefono se respeta: es casi siempre el mismo.
+    panel.querySelectorAll('select').forEach((c) => {
+      if (c.id === 'pkClientCountryCode' || c.selectedIndex === 0) return;
+      c.selectedIndex = 0;
+      c.dispatchEvent(new Event('change', { bubbles: true }));
     });
     ponerValoresPorDefecto();
     // El aviso del archivo se quedaba diciendo lo que se cargo, con el
@@ -1349,5 +1363,5 @@
     el('pkOutputCard').classList.add('hidden');
   }
 
-  window.paquetes = { limpiarCircuito, recoger, armarMensaje, parsearItinerario, ciudadesDelDia, leerPrecios, leerPresupuestoEuropamundo };
+  window.paquetes = { incluyePorDefecto: INCLUYE_POR_DEFECTO, limpiarCircuito, recoger, armarMensaje, parsearItinerario, ciudadesDelDia, leerPrecios, leerPresupuestoEuropamundo };
 })();

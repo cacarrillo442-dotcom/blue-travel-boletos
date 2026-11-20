@@ -1327,6 +1327,64 @@ textarea {
   font-style: italic;
 }
 
+/* Resultado de leer capturas en Paquetes: que se lleno, que revisar y los
+   precios encontrados, cada uno con botones para mandarlo a su fila. */
+.capturas-resultado {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 0.88rem;
+}
+
+.capturas-resultado p { margin: 0 0 6px; }
+
+.capturas-revisar {
+  margin: 6px 0;
+  padding-left: 18px;
+  color: var(--color-text);
+}
+
+.capturas-bloque { margin-top: 12px; }
+
+.capturas-bloque summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.capturas-bloque textarea { margin-top: 8px; font-size: 0.8rem; }
+
+.captura-monto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.captura-monto small {
+  display: block;
+  color: var(--ink-soft);
+}
+
+.captura-tipo {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-2);
+}
+
+.captura-monto-acciones {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 /* Catalogo Europamundo: una ficha por circuito. Lo primero que se lee es el
    nombre y el precio desde; la ruta va debajo, en letra chica, porque es el
    itinerario resumido y puede pasar de quince ciudades. */

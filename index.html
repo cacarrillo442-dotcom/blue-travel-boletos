@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261120-145543" />
+<meta name="app-version" content="20261120-151752" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261120-145543" />
-<script src="assets/tema.js?v=20261120-145543"></script>
+<link rel="stylesheet" href="style.css?v=20261120-151752" />
+<script src="assets/tema.js?v=20261120-151752"></script>
 </head>
 <body>
 
@@ -581,6 +581,16 @@
       </label>
       <p class="hint" id="pkArchivoEstado"></p>
       <div id="pkTarifasDelDoc" class="hidden"></div>
+    </section>
+
+    <section class="card">
+      <h3>Cargar capturas de otra página</h3>
+      <p class="hint">¿Cotizaste en Despegar, Expedia, una aerolínea u otra agencia? Sube las capturas de pantalla de los vuelos, el hotel y el precio, o pégalas aquí con <strong>⌘V / Ctrl+V</strong>. La app lee el texto en tu equipo (la imagen no sale de aquí) y llena lo que reconoce: aeropuertos, fechas, horas, aerolínea, escalas, hotel, noches y viajeros. <strong>Revisa siempre</strong>: reconoce datos, no entiende la página.</p>
+      <label>Capturas (puedes elegir varias)
+        <input type="file" id="pkCapturas" accept="image/*" multiple />
+      </label>
+      <p class="hint" id="pkCapturasEstado" role="status"></p>
+      <div id="pkCapturasResultado" class="capturas-resultado hidden"></div>
     </section>
 
     <section class="card">
@@ -2039,47 +2049,49 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261120-145543"></script>
-<script src="assets/guardado-pendiente.js?v=20261120-145543"></script>
-<script src="assets/nombres-archivo.js?v=20261120-145543"></script>
-<script src="assets/iconos.js?v=20261120-145543"></script>
-<script src="assets/version.js?v=20261120-145543"></script>
-<script src="assets/trm.js?v=20261120-145543"></script>
+<script src="assets/logo-animado.js?v=20261120-151752"></script>
+<script src="assets/guardado-pendiente.js?v=20261120-151752"></script>
+<script src="assets/nombres-archivo.js?v=20261120-151752"></script>
+<script src="assets/iconos.js?v=20261120-151752"></script>
+<script src="assets/version.js?v=20261120-151752"></script>
+<script src="assets/trm.js?v=20261120-151752"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261120-145543"></script>
-<script src="assets/country-codes-data.js?v=20261120-145543"></script>
+<script src="assets/catalog-data.js?v=20261120-151752"></script>
+<script src="assets/country-codes-data.js?v=20261120-151752"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261120-145543"></script>
-<script src="assets/obligaciones.js?v=20261120-145543"></script>
-<script src="assets/sales-parse.js?v=20261120-145543"></script>
-<script src="assets/cupon-imagen.js?v=20261120-145543"></script>
-<script src="app.js?v=20261120-145543"></script>
-<script src="assets/nav-grupos.js?v=20261120-145543"></script>
-<script src="assets/marca.js?v=20261120-145543"></script>
-<script src="assets/vuelos-bloque.js?v=20261120-145543"></script>
-<script src="assets/catalogo.js?v=20261120-145543"></script>
-<script src="assets/paquetes.js?v=20261120-145543"></script>
-<script src="assets/inicio.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261120-145543"></script>
-<script src="assets/clientes-autocompletar.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261120-145543"></script>
-<script src="assets/cupones-reglas.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-history.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261120-145543"></script>
-<script src="assets/plan.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-plan.js?v=20261120-145543"></script>
-<script src="assets/lector-expedia.js?v=20261120-145543"></script>
-<script src="assets/paquete-resumen.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-paquetes.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-links.js?v=20261120-145543"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261120-145543"></script>
+<script src="assets/obligaciones-datos.js?v=20261120-151752"></script>
+<script src="assets/obligaciones.js?v=20261120-151752"></script>
+<script src="assets/sales-parse.js?v=20261120-151752"></script>
+<script src="assets/cupon-imagen.js?v=20261120-151752"></script>
+<script src="app.js?v=20261120-151752"></script>
+<script src="assets/nav-grupos.js?v=20261120-151752"></script>
+<script src="assets/marca.js?v=20261120-151752"></script>
+<script src="assets/vuelos-bloque.js?v=20261120-151752"></script>
+<script src="assets/lector-capturas.js?v=20261120-151752"></script>
+<script src="assets/catalogo.js?v=20261120-151752"></script>
+<script src="assets/paquetes.js?v=20261120-151752"></script>
+<script src="assets/paquetes-capturas.js?v=20261120-151752"></script>
+<script src="assets/inicio.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261120-151752"></script>
+<script src="assets/clientes-autocompletar.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261120-151752"></script>
+<script src="assets/cupones-reglas.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-history.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261120-151752"></script>
+<script src="assets/plan.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261120-151752"></script>
+<script src="assets/lector-expedia.js?v=20261120-151752"></script>
+<script src="assets/paquete-resumen.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-paquetes.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-links.js?v=20261120-151752"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261120-151752"></script>
 </body>
 </html>
