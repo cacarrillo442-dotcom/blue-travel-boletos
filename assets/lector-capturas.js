@@ -302,7 +302,8 @@
   function analizar(texto) {
     const conocidos = aeropuertosConocidos();
     const lineas = String(texto || '').split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
-    const r = { fechas: [], montos: [], hoteles: [], incluye: [], noches: 0, adultos: 0, ninos: 0, regimen: '' };
+    const r = { fechas: [], montos: [], hoteles: [], incluye: [], noches: 0, adultos: 0, ninos: 0, infantes: 0, regimen: '',
+      equipaje: { personal: false, mano: false, bodega: false } };
 
     const puntos = [];
     const escalasVistas = [];   // { linea, codigo, tiempo }
@@ -351,6 +352,17 @@
       if (adultos) r.adultos = Math.max(r.adultos, Number(adultos[1] || adultos[2]));
       const ninos = n.match(/(\d{1,2})\s*(?:ninos?|menores?|children|child)\b/);
       if (ninos) r.ninos = Math.max(r.ninos, Number(ninos[1]));
+      const personas = n.match(/(\d{1,2})\s*(?:personas|pasajeros|viajeros|travell?ers|passengers)\b/);
+      if (personas) r.personas = Math.max(r.personas || 0, Number(personas[1]));
+      const infantes = n.match(/(\d{1,2})\s*(?:bebes?|infantes?|infants?|lap)\b/);
+      if (infantes) r.infantes = Math.max(r.infantes, Number(infantes[1]));
+      // Equipaje: solo lo que la pagina dice que SI va. Un renglon con "no
+      // incluye" o "sin" se salta, para no marcar una maleta que no esta.
+      if (!/no incluye|no incluido|\bsin\b|not included|no permite|cargo adicional|con costo/.test(n)) {
+        if (/articulo personal|bolso|mochila pequena|personal item/.test(n)) r.equipaje.personal = true;
+        if (/equipaje de mano|maleta de mano|carry.?on|cabina/.test(n)) r.equipaje.mano = true;
+        if (/equipaje de bodega|bodega|documentad|facturad|checked bag|maleta de 2[03]|\d\s*maletas?\b(?! de mano)/.test(n)) r.equipaje.bodega = true;
+      }
       const regimen = l.match(REGIMEN);
       if (regimen && !r.regimen) r.regimen = regimen[1].charAt(0).toUpperCase() + regimen[1].slice(1).toLowerCase();
       if (PALABRAS_HOTEL.test(l) && l.length <= 80 && !/\$|usd|cop/i.test(l) && !INCLUYE.test(l)) {
@@ -360,6 +372,8 @@
       if (INCLUYE.test(l) && l.length <= 120 && !/\$/.test(l)) r.incluye.push(l);
     });
 
+    // "Total para 2 personas" sin decir adultos: se toman como adultos.
+    if (!r.adultos && r.personas) r.adultos = Math.max(0, r.personas - r.ninos - r.infantes);
     r.fechas = [...new Set(r.fechas)].sort();
     r.hoteles = [...new Set(r.hoteles)];
     r.incluye = [...new Set(r.incluye)];
