@@ -49,6 +49,7 @@
     alerta: '<path d="M12 3.5 21 19H3z"/><path d="M12 9.5v4M12 16.3h.01"/>',
     // Senal de prohibido, a proposito distinta de la caneca: anular no es borrar.
     anular: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
+    buscar: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.7-4.7"/>',
     externo: '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
     ruta: '<circle cx="12" cy="10" r="2.6"/><path d="M12 21s6.5-6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15 12 21 12 21z"/>',
 

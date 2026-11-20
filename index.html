@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/logo.png" />
 <!-- La sella bin/publicar.sh en cada despliegue. La app la compara contra
      version.json para saber si hay algo mas nuevo publicado. -->
-<meta name="app-version" content="20261120-152402" />
+<meta name="app-version" content="20261120-154856" />
 
 <!-- Instalable como programa: en el Mac con Safari → Archivo → Añadir al Dock,
      y en el iPhone con Compartir → Añadir a pantalla de inicio. Las rutas van
@@ -23,8 +23,8 @@
 <meta name="apple-mobile-web-app-title" content="Blue Travel" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css?v=20261120-152402" />
-<script src="assets/tema.js?v=20261120-152402"></script>
+<link rel="stylesheet" href="style.css?v=20261120-154856" />
+<script src="assets/tema.js?v=20261120-154856"></script>
 </head>
 <body>
 
@@ -498,66 +498,98 @@
 </div>
 
 <div id="catalogoPanel" class="tab-panel hidden">
-  <section class="card card-principal">
-    <div class="card-header">
-      <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-catalogo"></use></svg>Catálogo Europamundo</h2>
-      <span class="hint" id="catActualizado"></span>
+  <section class="card card-principal cat-buscador">
+    <div class="cat-encabezado">
+      <div>
+        <h2><svg class="ic ic-izq" aria-hidden="true"><use href="#ic-catalogo"></use></svg>Catálogo Europamundo</h2>
+        <p class="hint">Encuentra aquí el circuito, cotízalo en la página de Europamundo y carga su presupuesto en <strong>Paquetes</strong>.</p>
+      </div>
+      <span class="cat-actualizado" id="catActualizado"></span>
     </div>
-    <p class="hint">
-      Los circuitos que Europamundo tiene a la venta hoy, de esta temporada y la siguiente.
-      El precio es <strong>desde</strong>, por persona en doble: para el precio exacto de una
-      fecha, ábrelo en Europamundo, saca el presupuesto y cárgalo en <strong>Paquetes</strong>.
-    </p>
-    <label>Buscar
-      <input type="search" id="catBuscar" placeholder="Ciudad, país, nombre del circuito o ID" autocomplete="off" />
+
+    <label class="cat-busqueda">
+      <span class="sr-only">Buscar circuitos</span>
+      <svg class="ic" aria-hidden="true"><use href="#ic-buscar"></use></svg>
+      <input type="search" id="catBuscar" placeholder="¿A dónde quiere ir tu cliente? Ej. Italia, Praga, Japón…" autocomplete="off" />
     </label>
-    <div class="grid-3">
-      <label>Serie
-        <select id="catSerie"><option value="">Todas</option></select>
+    <div class="cat-rapidas" id="catRapidas" aria-label="Búsquedas rápidas"></div>
+
+    <div class="cat-regiones" id="catRegiones" role="group" aria-label="Región"></div>
+
+    <div class="cat-filtros">
+      <label>Mes de salida
+        <select id="catMes"><option value="">Cualquier mes</option></select>
       </label>
-      <label>Días
+      <label>Duración
         <select id="catDias">
           <option value="">Cualquiera</option>
           <option value="1-7">Hasta 7 días</option>
-          <option value="8-12">De 8 a 12 días</option>
-          <option value="13-16">De 13 a 16 días</option>
+          <option value="8-12">8 a 12 días</option>
+          <option value="13-16">13 a 16 días</option>
           <option value="17-99">Más de 16 días</option>
         </select>
       </label>
-      <label>Precio hasta (US$)
-        <input type="number" id="catPrecio" min="0" step="100" placeholder="Sin límite" />
-      </label>
-    </div>
-    <div class="grid-3">
-      <label>Temporada
-        <select id="catTemporada"><option value="">Las dos</option></select>
-      </label>
-      <label>Sale los
-        <select id="catSalida">
-          <option value="">Cualquier día</option>
-          <option value="L">Lunes</option>
-          <option value="M">Martes</option>
-          <option value="X">Miércoles</option>
-          <option value="J">Jueves</option>
-          <option value="V">Viernes</option>
-          <option value="S">Sábados</option>
-          <option value="D">Domingos</option>
+      <label>Presupuesto
+        <select id="catPrecio">
+          <option value="">Cualquiera</option>
+          <option value="1000">Hasta US$ 1.000 por persona</option>
+          <option value="1500">Hasta US$ 1.500</option>
+          <option value="2000">Hasta US$ 2.000</option>
+          <option value="3000">Hasta US$ 3.000</option>
+          <option value="5000">Hasta US$ 5.000</option>
         </select>
       </label>
-      <label>Ordenar por
+      <label>Ordenar
         <select id="catOrden">
-          <option value="precio">Precio, de menor a mayor</option>
-          <option value="dias">Días, de menos a más</option>
+          <option value="relevancia">Más relevantes</option>
+          <option value="precio">Precio, menor primero</option>
+          <option value="dias">Duración, más corto primero</option>
           <option value="nombre">Nombre</option>
         </select>
       </label>
     </div>
+
+    <details class="cat-mas" id="catMas">
+      <summary>Más filtros <span class="conteo-pill hidden" id="catMasConteo"></span></summary>
+      <div class="cat-filtros">
+        <label>País
+          <select id="catPais"><option value="">Cualquier país</option></select>
+        </label>
+        <label>Empieza en
+          <input type="text" id="catInicio" list="catListaInicio" placeholder="Cualquier ciudad" autocomplete="off" />
+        </label>
+        <label>Termina en
+          <input type="text" id="catFin" list="catListaFin" placeholder="Cualquier ciudad" autocomplete="off" />
+        </label>
+        <label>Sale los
+          <select id="catSalida">
+            <option value="">Cualquier día</option>
+            <option value="L">Lunes</option>
+            <option value="M">Martes</option>
+            <option value="X">Miércoles</option>
+            <option value="J">Jueves</option>
+            <option value="V">Viernes</option>
+            <option value="S">Sábados</option>
+            <option value="D">Domingos</option>
+          </select>
+        </label>
+      </div>
+      <div class="cat-casillas">
+        <label class="checkbox-label"><input type="checkbox" id="catNovedad" /> Solo novedades</label>
+        <label class="checkbox-label" title="El pasajero puede empezar en cualquier ciudad de la ruta"><input type="checkbox" id="catRotativo" /> <span>Solo rotativos <span class="hint-inline">(empiezan en cualquier ciudad de la ruta)</span></span></label>
+        <label class="checkbox-label"><input type="checkbox" id="catMini" /> Incluir minipaquetes y extensiones</label>
+      </div>
+      <datalist id="catListaInicio"></datalist>
+      <datalist id="catListaFin"></datalist>
+    </details>
+
+    <div class="cat-activos hidden" id="catActivos"></div>
   </section>
 
-  <section class="card">
-    <div class="card-header">
-      <h2>Circuitos</h2>
-      <span class="hint" id="catConteo" role="status"></span>
+  <section class="cat-resultados" aria-live="polite">
+    <div class="cat-resultados-cabeza">
+      <h2 id="catTitulo">Circuitos</h2>
+      <span class="hint" id="catConteo"></span>
     </div>
     <div id="catLista" class="cat-lista"></div>
     <div class="actions">
@@ -2059,51 +2091,51 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/logo-animado.js?v=20261120-152402"></script>
-<script src="assets/guardado-pendiente.js?v=20261120-152402"></script>
-<script src="assets/nombres-archivo.js?v=20261120-152402"></script>
-<script src="assets/iconos.js?v=20261120-152402"></script>
-<script src="assets/version.js?v=20261120-152402"></script>
-<script src="assets/trm.js?v=20261120-152402"></script>
+<script src="assets/logo-animado.js?v=20261120-154856"></script>
+<script src="assets/guardado-pendiente.js?v=20261120-154856"></script>
+<script src="assets/nombres-archivo.js?v=20261120-154856"></script>
+<script src="assets/iconos.js?v=20261120-154856"></script>
+<script src="assets/version.js?v=20261120-154856"></script>
+<script src="assets/trm.js?v=20261120-154856"></script>
 <script src="assets/logo-blue-data.js"></script>
 <script src="assets/logo-white-data.js"></script>
-<script src="assets/catalog-data.js?v=20261120-152402"></script>
-<script src="assets/country-codes-data.js?v=20261120-152402"></script>
+<script src="assets/catalog-data.js?v=20261120-154856"></script>
+<script src="assets/country-codes-data.js?v=20261120-154856"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="assets/obligaciones-datos.js?v=20261120-152402"></script>
-<script src="assets/obligaciones.js?v=20261120-152402"></script>
-<script src="assets/sales-parse.js?v=20261120-152402"></script>
-<script src="assets/cupon-imagen.js?v=20261120-152402"></script>
-<script src="app.js?v=20261120-152402"></script>
-<script src="assets/nav-grupos.js?v=20261120-152402"></script>
-<script src="assets/marca.js?v=20261120-152402"></script>
-<script src="assets/vuelos-bloque.js?v=20261120-152402"></script>
-<script src="assets/capturas-formulario.js?v=20261120-152402"></script>
-<script src="assets/lector-capturas.js?v=20261120-152402"></script>
-<script src="assets/catalogo.js?v=20261120-152402"></script>
-<script src="assets/paquetes.js?v=20261120-152402"></script>
-<script src="assets/paquetes-capturas.js?v=20261120-152402"></script>
-<script src="assets/cotizaciones-capturas.js?v=20261120-152402"></script>
-<script src="assets/inicio.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-clients.js?v=20261120-152402"></script>
-<script src="assets/clientes-autocompletar.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-catalog.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-numeracion.js?v=20261120-152402"></script>
-<script src="assets/cupones-reglas.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-cupones.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-history.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-sales.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-respaldo.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-trips.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-obligaciones.js?v=20261120-152402"></script>
-<script src="assets/plan.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-plan.js?v=20261120-152402"></script>
-<script src="assets/lector-expedia.js?v=20261120-152402"></script>
-<script src="assets/paquete-resumen.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-paquetes.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-links.js?v=20261120-152402"></script>
-<script type="module" src="assets/firebase-gate.js?v=20261120-152402"></script>
+<script src="assets/obligaciones-datos.js?v=20261120-154856"></script>
+<script src="assets/obligaciones.js?v=20261120-154856"></script>
+<script src="assets/sales-parse.js?v=20261120-154856"></script>
+<script src="assets/cupon-imagen.js?v=20261120-154856"></script>
+<script src="app.js?v=20261120-154856"></script>
+<script src="assets/nav-grupos.js?v=20261120-154856"></script>
+<script src="assets/marca.js?v=20261120-154856"></script>
+<script src="assets/vuelos-bloque.js?v=20261120-154856"></script>
+<script src="assets/capturas-formulario.js?v=20261120-154856"></script>
+<script src="assets/lector-capturas.js?v=20261120-154856"></script>
+<script src="assets/catalogo.js?v=20261120-154856"></script>
+<script src="assets/paquetes.js?v=20261120-154856"></script>
+<script src="assets/paquetes-capturas.js?v=20261120-154856"></script>
+<script src="assets/cotizaciones-capturas.js?v=20261120-154856"></script>
+<script src="assets/inicio.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-clients.js?v=20261120-154856"></script>
+<script src="assets/clientes-autocompletar.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-catalog.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-numeracion.js?v=20261120-154856"></script>
+<script src="assets/cupones-reglas.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-cupones.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-history.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-sales.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-respaldo.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-trips.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-obligaciones.js?v=20261120-154856"></script>
+<script src="assets/plan.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-plan.js?v=20261120-154856"></script>
+<script src="assets/lector-expedia.js?v=20261120-154856"></script>
+<script src="assets/paquete-resumen.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-paquetes.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-links.js?v=20261120-154856"></script>
+<script type="module" src="assets/firebase-gate.js?v=20261120-154856"></script>
 </body>
 </html>
