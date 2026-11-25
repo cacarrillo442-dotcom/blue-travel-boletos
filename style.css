@@ -4972,3 +4972,66 @@ body.barra-plegada .sidebar-nav .tab-btn.tab-sub::after {
 #tripsBuscar { margin-bottom: 4px; }
 .trip-leg.trip-avisado { background: var(--surface-sunken); color: var(--ink-soft); }
 .trip-avisado .ic { width: 12px; height: 12px; vertical-align: -1px; }
+
+/* Clientes que dejaron de comprar (Ventas): accion de descarga arriba y, en
+   cada fila, el boton de WhatsApp o por que no lo hay. */
+.riesgo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 12px 0 4px;
+}
+
+.riesgo-acciones .hint { margin: 0; }
+
+.riesgo-fila .btn-add { margin-left: auto; flex: none; }
+
+.riesgo-nota {
+  margin: 0 0 0 auto;
+  font-size: 0.76rem;
+  text-align: right;
+  max-width: 140px;
+}
+
+.riesgo-sin-nombre {
+  color: var(--ink-soft);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Aviso de borrador recuperado, arriba del formulario: que se note que lo
+   que se ve no es un formulario nuevo, y como empezar de cero. */
+.borrador-aviso {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(18, 111, 153, 0.35);
+  border-radius: 12px;
+  background: rgba(18, 111, 153, 0.08);
+  color: var(--color-text);
+  font-size: 0.86rem;
+}
+
+.borrador-aviso > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 220px;
+}
+
+.borrador-aviso .ic { width: 16px; height: 16px; color: var(--color-primary-2); }
+
+.borrador-cerrar {
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+

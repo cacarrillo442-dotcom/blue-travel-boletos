@@ -284,6 +284,7 @@ function pintarRiesgo() {
   const cuenta = el('riesgoCuenta');
   if (!destino) return;
 
+  escucharClientes();
   const r = V.clientesEnRiesgo(ventas);
 
   if (cuenta) {
@@ -314,16 +315,25 @@ function pintarRiesgo() {
     return;
   }
 
-  const filas = r.clientes.map((c) => `
-    <div class="trip-card">
+  const lista = conContacto(r.clientes);
+  riesgoActual = lista;
+  const conNombre = lista.filter((c) => c.nombre).length;
+
+  const filas = lista.map((c, i) => `
+    <div class="trip-card riesgo-fila">
       <div class="trip-badge ${c.sinComprar > r.umbral * 2 ? 'urgent' : 'soon'}">${c.sinComprar} días</div>
       <div class="trip-info">
-        <div class="trip-name">Tarjeta ${escapeHtml(c.tarjeta.slice(-4))}
+        <div class="trip-name">${c.nombre ? escapeHtml(c.nombre) : '<span class="riesgo-sin-nombre">Sin nombre</span>'}
           <span class="trip-leg">${c.compras} compras</span>
+          <span class="trip-leg">Tarjeta ${escapeHtml(c.tarjeta.slice(-4))}</span>
         </div>
         <div class="trip-route">${window.icono('dinero')} ${V.pesos(c.monto)} en total
-          &nbsp;·&nbsp; última el ${V.fechaCorta(c.ultima)}</div>
+          &nbsp;·&nbsp; última el ${V.fechaCorta(c.ultima)}
+          ${c.telefono ? `&nbsp;·&nbsp; ${window.icono('telefono')} ${escapeHtml(c.telefono)}` : ''}</div>
       </div>
+      ${c.telefono && c.autoriza
+        ? `<button type="button" class="btn-add btn-compact" data-riesgo-wa="${i}">${window.icono('mensaje', 'ic-izq')}WhatsApp</button>`
+        : `<span class="hint riesgo-nota">${c.telefono ? 'No autorizó promociones' : (c.nombre ? 'Sin teléfono en Clientes' : '')}</span>`}
     </div>`).join('');
 
   destino.innerHTML = `
@@ -333,11 +343,104 @@ function pintarRiesgo() {
       ${tile('Lo que facturaban', V.pesos(r.enRiesgo),
         { destacado: true, nota: `${Math.round(r.enRiesgo / (r.totalFacturado || 1) * 100)}% de lo facturado` })}
     </div>
+    <div class="riesgo-acciones">
+      <button type="button" class="btn-secondary btn-compact" id="riesgoDescargar">${window.icono('descargar', 'ic-izq')}Descargar lista (Excel)</button>
+      <span class="hint">${conNombre} de ${lista.length} con nombre. Los que dicen «Sin nombre» son ventas de antes de noviembre que nunca se asignaron a un cliente.</span>
+    </div>
     <div class="promo-list">${filas}</div>
     <p class="hint">${window.icono('alerta')} La tarjeta llega enmascarada, así que esto
       agrupa por los últimos cuatro dígitos: dos clientes podrían mezclarse, y alguien con dos
       tarjetas cuenta como dos. Sirve para ver quién se enfrió, no para afirmar de quién se trata.
+      El botón de WhatsApp solo aparece para quien autorizó recibir promociones.
       ${r.sinTarjeta ? `Además, ${r.sinTarjeta} ventas guardadas no traen tarjeta y quedan fuera.` : ''}</p>`;
+}
+
+// ---------- Contacto de los clientes enfriados ----------
+//
+// La lista se arma por tarjeta, porque es lo unico que trae el reporte de
+// Wompi. Pero desde noviembre cada venta se asigna a un cliente, asi que se
+// puede poner nombre: el de la venta mas reciente de esa tarjeta que lo
+// tenga. Con el nombre (o su id) se busca el telefono y la autorizacion de
+// promociones en la base de Clientes.
+
+let riesgoActual = [];
+
+function normalizarNombre(t) {
+  // Sin tildes, sin mayusculas y sin espacios dobles: "Beto  Prueba" y
+  // "beto prueba" son la misma persona.
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function conContacto(clientes) {
+  const porTarjeta = new Map();
+  [...ventas]
+    .filter((v) => v.tarjeta && String(v.cliente || '').trim())
+    .sort((a, b) => String(V.fechaIngreso(a) || '').localeCompare(String(V.fechaIngreso(b) || '')))
+    .forEach((v) => porTarjeta.set(v.tarjeta, { cliente: v.cliente.trim(), clienteId: v.clienteId || '' }));
+
+  const base = window.obtenerClientes ? window.obtenerClientes() : [];
+  const porId = new Map(base.map((c) => [c.id, c]));
+  const porNombre = new Map(base.map((c) => [normalizarNombre(c.nombre), c]));
+
+  return clientes.map((c) => {
+    const asignado = porTarjeta.get(c.tarjeta);
+    const ficha = asignado && (porId.get(asignado.clienteId) || porNombre.get(normalizarNombre(asignado.cliente)));
+    return {
+      ...c,
+      nombre: (ficha && ficha.nombre) || (asignado && asignado.cliente) || '',
+      telefono: (ficha && ficha.telefono) || '',
+      autoriza: !!(ficha && ficha.autorizaPromos),
+    };
+  });
+}
+
+function mensajeReactivar(c) {
+  const nombre = String(c.nombre || '').split(/\s+/)[0];
+  return `Hola${nombre ? ` ${nombre}` : ''}, te saluda Blue Travel 💙. Hace un tiempo no viajamos `
+    + 'juntos: ¿ya estás pensando en tu próximo viaje? Con gusto te cotizo vuelos o un paquete.';
+}
+
+document.addEventListener('click', (ev) => {
+  const wa = ev.target.closest('[data-riesgo-wa]');
+  if (wa) {
+    const c = riesgoActual[Number(wa.dataset.riesgoWa)];
+    const digitos = String((c && c.telefono) || '').replace(/\D/g, '');
+    if (digitos) window.open(`https://wa.me/${digitos}?text=${encodeURIComponent(mensajeReactivar(c))}`, '_blank');
+    return;
+  }
+  if (ev.target.closest('#riesgoDescargar')) descargarRiesgo();
+});
+
+// CSV con punto y coma y BOM: asi Excel en espanol lo abre en columnas y con
+// las tildes bien, sin pasar por "Importar".
+function descargarRiesgo() {
+  const columnas = ['Nombre', 'Telefono', 'Autoriza promociones', 'Tarjeta (ultimos 4)', 'Compras',
+    'Total facturado', 'Ultima compra', 'Dias sin comprar'];
+  const celda = (x) => `"${String(x == null ? '' : x).replace(/"/g, '""')}"`;
+  const filas = riesgoActual.map((c) => [
+    c.nombre || 'Sin nombre', c.telefono, c.telefono ? (c.autoriza ? 'Si' : 'No') : '',
+    c.tarjeta.slice(-4), c.compras, Math.round(c.monto), c.ultima, c.sinComprar,
+  ].map(celda).join(';'));
+  const blob = new Blob(['﻿' + [columnas.map(celda).join(';'), ...filas].join('\r\n')],
+    { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = window.nombreArchivo ? window.nombreArchivo('clientes-enfriados', [], 'csv') : 'clientes-enfriados.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Si la base de Clientes llega despues que las ventas (o cambia un
+// telefono), se vuelve a pintar para que aparezcan nombre y telefono. Los
+// modulos cargan en cualquier orden: se engancha la primera vez que hace falta.
+let escuchandoClientes = false;
+function escucharClientes() {
+  if (escuchandoClientes || !window.alCambiarClientes) return;
+  escuchandoClientes = true;
+  window.alCambiarClientes(() => { if (ventas.length) pintarRiesgo(); });
 }
 
 function pintarRetenciones(lote) {
